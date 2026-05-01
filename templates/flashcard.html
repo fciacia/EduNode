@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Flashcards — EduNode{% endblock %}
+
+{% block extra_style %}
+.fc-header { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.fc-header h2 { font-size: 1.1rem; color: var(--primary); margin: 0; flex: 1; }
+.sel { border: 1px solid var(--border); border-radius: 8px; padding: .35rem .65rem; font-size: .85rem; background: #fff; }
+.generate-row { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
+.generate-row input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: .5rem .8rem; font-size: .93rem; }
+.btn-primary { padding: .5rem 1.2rem; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+#deckArea { display: none; }
+.deck-nav { display: flex; align-items: center; gap: 1rem; justify-content: center; margin-bottom: 1.25rem; }
+.deck-nav button { padding: .4rem 1.1rem; border: 2px solid var(--primary); border-radius: 20px; background: #fff; color: var(--primary); font-weight: 600; cursor: pointer; }
+.deck-nav button:hover { background: var(--primary); color: #fff; }
+.deck-counter { color: #555; font-size: .9rem; }
+.card-scene { width: 100%; max-width: 520px; height: 240px; margin: 0 auto; perspective: 900px; cursor: pointer; }
+.card-3d { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform .45s ease; }
+.card-3d.flipped { transform: rotateY(180deg); }
+.card-face { position: absolute; inset: 0; border-radius: var(--radius); box-shadow: 0 4px 18px rgba(0,0,0,.13); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.5rem; backface-visibility: hidden; text-align: center; }
+.card-face.front { background: var(--surface); border-top: 5px solid var(--primary); }
+.card-face.back  { background: #e8f0fe; transform: rotateY(180deg); border-top: 5px solid #34a853; }
+.card-label { font-size: .75rem; font-weight: 700; letter-spacing: .08em; color: #aaa; text-transform: uppercase; margin-bottom: .5rem; }
+.card-title { font-size: 1.25rem; font-weight: 700; color: #333; }
+.card-body  { font-size: .93rem; color: #444; line-height: 1.6; margin-top: .5rem; }
+.card-hint  { margin-top: 1rem; font-size: .78rem; color: #aaa; }
+.deck-dots  { display: flex; gap: .35rem; justify-content: center; margin-top: 1rem; }
+.deck-dot   { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+.deck-dot.active { background: var(--primary); }
+{% endblock %}
+
+{% block content %}
+<div class="fc-header">
+  <h2>Flashcards</h2>
+  <select id="subjectSel" class="sel">
+    {% for s in subjects %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+  </select>
+  <select id="langSel" class="sel">
+    {% for l in languages %}<option value="{{ l }}">{{ l }}</option>{% endfor %}
+  </select>
+</div>
+
+<div class="generate-row">
+  <input id="topicInput" type="text" placeholder="Topic (e.g. plant cells, multiplication tables…)">
+  <button class="btn-primary" id="generateBtn" onclick="generateDeck()">Make Cards</button>
+</div>
+
+<div id="deckArea">
+  <div class="card-scene" onclick="flipCard()">
+    <div class="card-3d" id="card3d">
+      <div class="card-face front">
+        <div class="card-label">Concept</div>
+        <div class="card-title" id="cardFront">—</div>
+        <div class="card-hint">Tap to reveal definition</div>
+      </div>
+      <div class="card-face back">
+        <div class="card-label">Definition</div>
+        <div class="card-body" id="cardBack">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="deck-dots" id="deckDots"></div>
+  <div class="deck-nav" style="margin-top:.75rem">
+    <button onclick="prevCard()">‹ Prev</button>
+    <span class="deck-counter" id="deckCounter">1 / 1</span>
+    <button onclick="nextCard()">Next ›</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let cards = [], idx = 0;
+
+function getLang()    { return document.getElementById('langSel').value; }
+function getSubject() { return document.getElementById('subjectSel').value; }
+
+async function generateDeck() {
+  const topic = document.getElementById('topicInput').value.trim();
+  if (!topic) { alert('Please enter a topic.'); return; }
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true; btn.textContent = 'Generating…';
+  try {
+    const r = await fetch('/api/flashcard/generate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({topic, language: getLang(), subject: getSubject()})
+    });
+    const d = await r.json();
+    cards = d.flashcards || [];
+    if (!cards.length) { alert('No flashcards generated. Is Ollama running?'); return; }
+    idx = 0;
+    buildDots();
+    showCard();
+    document.getElementById('deckArea').style.display = 'block';
+  } catch(e) { alert('Error: ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Make Cards'; }
+}
+
+function buildDots() {
+  const c = document.getElementById('deckDots'); c.innerHTML = '';
+  cards.forEach((_, i) => {
+    const d = document.createElement('div'); d.className = 'deck-dot'; d.id = `dot-${i}`;
+    c.appendChild(d);
+  });
+}
+
+function showCard() {
+  document.getElementById('card3d').classList.remove('flipped');
+  document.getElementById('cardFront').textContent = cards[idx].title || '—';
+  document.getElementById('cardBack').textContent  = cards[idx].body  || '—';
+  document.getElementById('deckCounter').textContent = `${idx + 1} / ${cards.length}`;
+  document.querySelectorAll('.deck-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+}
+
+function flipCard() { document.getElementById('card3d').classList.toggle('flipped'); }
+
+function prevCard() { if (idx > 0)              { idx--; showCard(); } }
+function nextCard() { if (idx < cards.length-1) { idx++; showCard(); } }
+
+(function() {
+  const saved = localStorage.getItem('edu_lang');
+  if (saved) [...document.getElementById('langSel').options].forEach(o => o.selected = (o.value === saved));
+})();
+document.getElementById('langSel').addEventListener('change', e => localStorage.setItem('edu_lang', e.target.value));
+</script>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Progress — EduNode{% endblock %}
+
+{% block extra_style %}
+.progress-header { margin-bottom: 1.25rem; }
+.progress-header h2 { font-size: 1.1rem; color: var(--primary); margin-bottom: .75rem; }
+.lookup-row { display: flex; gap: .5rem; }
+.lookup-row input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: .5rem .8rem; font-size: .93rem; }
+.btn-primary { padding: .5rem 1.2rem; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--primary-dark); }
+#progressResult { display: none; margin-top: 1.5rem; }
+.student-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.2rem 1.5rem; margin-bottom: 1.25rem; }
+.student-card h3 { font-size: 1.1rem; color: #333; margin-bottom: .3rem; }
+.student-card .meta { color: #777; font-size: .85rem; }
+.badges-grid { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.25rem; }
+.badge-card { background: #fff; border-radius: 10px; border: 2px solid #fbbc04; padding: .5rem .85rem; font-size: .82rem; font-weight: 600; display: flex; align-items: center; gap: .4rem; color: #b8860b; }
+.section-title { font-size: .9rem; font-weight: 700; color: #555; margin: 1.5rem 0 .75rem; text-transform: uppercase; letter-spacing: .04em; }
+.quiz-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.quiz-table th { background: #f1f3f4; padding: .5rem .75rem; text-align: left; font-weight: 600; color: #444; border-bottom: 2px solid var(--border); }
+.quiz-table td { padding: .5rem .75rem; border-bottom: 1px solid var(--border); }
+.quiz-table tr:last-child td { border-bottom: none; }
+.pct-chip { display: inline-block; padding: .15rem .55rem; border-radius: 12px; font-size: .8rem; font-weight: 700; }
+.pct-pass { background: #e6f4ea; color: #1e8e3e; }
+.pct-fail { background: #fce8e6; color: #c62828; }
+.empty-state { text-align: center; color: #aaa; padding: 2rem; font-size: .9rem; }
+{% endblock %}
+
+{% block content %}
+<div class="progress-header">
+  <h2>My Progress</h2>
+  <div class="lookup-row">
+    <input id="studentIdInput" type="number" min="1" placeholder="Student ID (number)">
+    <button class="btn-primary" onclick="loadProgress()">View Progress</button>
+  </div>
+</div>
+
+<div id="progressResult">
+  <div class="student-card">
+    <h3 id="studentName"></h3>
+    <div class="meta" id="studentMeta"></div>
+    <div class="badges-grid" id="badgesGrid"></div>
+  </div>
+
+  <div class="section-title">Quiz History</div>
+  <div id="quizHistoryWrap">
+    <div class="empty-state">No quizzes yet.</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function loadProgress() {
+  const id = parseInt(document.getElementById('studentIdInput').value);
+  if (!id || id < 1) { alert('Please enter a valid student ID.'); return; }
+  try {
+    const r = await fetch(`/api/progress/${id}`);
+    if (!r.ok) { alert('Student not found.'); return; }
+    const d = await r.json();
+    renderProgress(d);
+    document.getElementById('progressResult').style.display = 'block';
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+function renderProgress(d) {
+  const student = d.student || {};
+  document.getElementById('studentName').textContent = student.name || 'Unknown';
+  document.getElementById('studentMeta').textContent =
+    `Language: ${student.language || '—'}  ·  Sessions: ${d.sessions || 0}  ·  Last active: ${student.last_active || 'never'}`;
+
+  // Badges
+  const badgesGrid = document.getElementById('badgesGrid');
+  badgesGrid.innerHTML = '';
+  const badgeIcons = {'First Step': '🌟', 'Quiz Ace': '🏆', 'Week Warrior': '📅', 'Dialect Pioneer': '🗣️'};
+  (d.badges || []).forEach(b => {
+    const el = document.createElement('div'); el.className = 'badge-card';
+    el.textContent = (badgeIcons[b] || '🎖️') + ' ' + b;
+    badgesGrid.appendChild(el);
+  });
+  if (!d.badges?.length) badgesGrid.innerHTML = '<span style="color:#aaa;font-size:.85rem">No badges yet</span>';
+
+  // Quiz history
+  const wrap = document.getElementById('quizHistoryWrap');
+  const quizzes = d.quiz_results || [];
+  if (!quizzes.length) {
+    wrap.innerHTML = '<div class="empty-state">No quizzes yet.</div>';
+    return;
+  }
+  let html = '<table class="quiz-table"><thead><tr><th>Topic</th><th>Score</th><th>Date</th></tr></thead><tbody>';
+  quizzes.forEach(q => {
+    const pct = Math.round((q.score / q.total) * 100);
+    const cls = pct >= 70 ? 'pct-pass' : 'pct-fail';
+    html += `<tr><td>${escHtml(q.topic)}</td>
+      <td>${q.score}/${q.total} <span class="pct-chip ${cls}">${pct}%</span></td>
+      <td>${q.created_at ? q.created_at.split('T')[0] : '—'}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Pre-fill student ID from localStorage (saved by chat.js after first message)
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('edu_student_id');
+  if (saved) {
+    document.getElementById('studentIdInput').value = saved;
+    loadProgress();
+  }
+});
+</script>
+{% endblock %}

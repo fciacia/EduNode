@@ -1,166 +1,126 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EduNode — Admin</title>
-  <link rel="stylesheet" href="/static/css/style.css">
-  <style>
-    body { background: #f0f4f8; }
-    .admin-wrap { max-width: 780px; margin: 2rem auto; padding: 0 1rem 4rem; }
-    h1 { font-size: 1.4rem; color: var(--primary); margin-bottom: .25rem; }
-    .subtitle { color: #666; font-size: .9rem; margin-bottom: 2rem; }
-    .card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
-    .card h2 { font-size: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: .5rem; }
-    label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .3rem; }
-    input[type="text"], input[type="password"], input[type="file"], select {
-      width: 100%; border: 1px solid var(--border); border-radius: 8px;
-      padding: .5rem .75rem; font-size: .9rem; margin-bottom: .9rem; background: #fafafa;
-    }
-    input[type="file"] { padding: .4rem; cursor: pointer; }
-    .row { display: flex; gap: .75rem; flex-wrap: wrap; }
-    .row > * { flex: 1; min-width: 140px; }
-    .btn { padding: .55rem 1.25rem; border: none; border-radius: 8px; cursor: pointer; font-size: .9rem; font-weight: 600; }
-    .btn-primary { background: var(--primary); color: #fff; }
-    .btn-primary:hover { background: var(--primary-dark); }
-    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-    th, td { text-align: left; padding: .55rem .75rem; border-bottom: 1px solid var(--border); }
-    th { background: #f8f9fa; font-weight: 600; }
-    tr:last-child td { border-bottom: none; }
-    .badge { display: inline-block; padding: .15rem .5rem; border-radius: 20px; font-size: .75rem; background: #e8f0fe; color: var(--primary); }
-    #upload-result { margin-top: .75rem; padding: .6rem .9rem; border-radius: 8px; font-size: .9rem; display: none; }
-    .result-ok  { background: #e6f4ea; color: #1e7e34; }
-    .result-err { background: #fce8e6; color: #c5221f; }
-    .qr-img { display: block; margin: 0 auto; max-width: 200px; border: 1px solid var(--border); border-radius: 8px; }
-  </style>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Admin — EduNode{% endblock %}
 
-  <header>
-    <div class="header-inner">
-      <span class="logo">📚 EduNode Admin</span>
-      <a href="/" style="font-size:.85rem;color:var(--primary)">← Student view</a>
-    </div>
-  </header>
+{% block extra_style %}
+.admin-header { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.5rem; }
+.admin-header h2 { font-size: 1.1rem; color: var(--primary); margin: 0; flex: 1; }
+.hub-badge { padding: .25rem .75rem; background: #e8f0fe; color: var(--primary); border-radius: 12px; font-size: .8rem; font-weight: 700; text-transform: uppercase; }
+.section { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.25rem; margin-bottom: 1.5rem; }
+.section h3 { font-size: .95rem; font-weight: 700; color: #444; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: .5rem; }
+.status-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .75rem; }
+.status-item { background: #f8f9fa; border-radius: 8px; padding: .75rem 1rem; font-size: .88rem; }
+.status-item .label { color: #777; font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .2rem; }
+.status-item .val { font-weight: 700; color: #333; }
+.ok  { color: #34a853; }
+.bad { color: #ea4335; }
+.upload-row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.upload-row input[type=file] { border: 1px solid var(--border); border-radius: 8px; padding: .35rem .65rem; font-size: .85rem; }
+.btn-primary { padding: .5rem 1.2rem; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--primary-dark); }
+.sources-table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+.sources-table th { background: #f1f3f4; padding: .45rem .75rem; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid var(--border); }
+.sources-table td { padding: .45rem .75rem; border-bottom: 1px solid var(--border); }
+.msg-box { padding: .65rem .85rem; border-radius: 8px; font-size: .88rem; margin-top: .75rem; display: none; }
+.msg-ok  { background: #e6f4ea; color: #1e8e3e; }
+.msg-err { background: #fce8e6; color: #c62828; }
+{% endblock %}
 
-  <div class="admin-wrap">
-    <h1>Administration Panel</h1>
-    <p class="subtitle">Model: <strong>{{ model }}</strong></p>
+{% block content %}
+<div class="admin-header">
+  <h2>Admin Panel</h2>
+  <span class="hub-badge">{{ hub_id }}</span>
+</div>
 
-    <!-- ── Upload document ─────────────────────────────────────────────── -->
-    <div class="card">
-      <h2>📄 Upload Curriculum Document</h2>
-      <form id="upload-form" enctype="multipart/form-data">
-
-        <label for="admin-token">Admin Token</label>
-        <input id="admin-token" type="password" placeholder="Enter your admin token" required>
-
-        <label for="upload-file">File (PDF, TXT, or MD — max 32 MB)</label>
-        <input id="upload-file" type="file" name="file" accept=".pdf,.txt,.md" required>
-
-        <div class="row">
-          <div>
-            <label for="upload-subject">Subject</label>
-            <select id="upload-subject" name="subject">
-              <option value="general">General</option>
-              <option value="math">Mathematics</option>
-              <option value="science">Science</option>
-              <option value="english">English</option>
-              <option value="history">History</option>
-              <option value="geography">Geography</option>
-              <option value="bahasa">Bahasa</option>
-              <option value="thai">Thai</option>
-              <option value="vietnamese">Vietnamese</option>
-            </select>
-          </div>
-          <div>
-            <label for="upload-grade">Grade / Level</label>
-            <input id="upload-grade" type="text" name="grade" placeholder="e.g. Grade 7" maxlength="16">
-          </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Upload &amp; Ingest</button>
-        <div id="upload-result"></div>
-      </form>
-    </div>
-
-    <!-- ── Indexed sources ─────────────────────────────────────────────── -->
-    <div class="card">
-      <h2>📚 Indexed Documents ({{ sources | length }})</h2>
-      {% if sources %}
-      <table>
-        <thead>
-          <tr><th>Filename</th><th>Subject</th><th>Grade</th></tr>
-        </thead>
-        <tbody>
-          {% for s in sources %}
-          <tr>
-            <td>{{ s.source }}</td>
-            <td><span class="badge">{{ s.subject or '—' }}</span></td>
-            <td>{{ s.grade or '—' }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <p style="color:#888;font-size:.9rem;">No documents ingested yet. Upload a PDF above to get started.</p>
-      {% endif %}
-    </div>
-
-    <!-- ── QR code ─────────────────────────────────────────────────────── -->
-    <div class="card" style="text-align:center;">
-      <h2>📱 Student Access QR Code</h2>
-      <p style="font-size:.88rem;color:#555;margin-bottom:.75rem;">
-        Print or display this code so students can connect without typing the IP.
-      </p>
-      <img class="qr-img" src="/qr" alt="QR code linking to EduNode student interface">
-    </div>
+<!-- Status -->
+<div class="section">
+  <h3>System Status</h3>
+  <div class="status-grid" id="statusGrid">
+    <div class="status-item"><div class="label">Loading…</div></div>
   </div>
+</div>
 
-  <script>
-    document.getElementById('upload-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const result  = document.getElementById('upload-result');
-      const token   = document.getElementById('admin-token').value;
-      const fileEl  = document.getElementById('upload-file');
-      const subject = document.getElementById('upload-subject').value;
-      const grade   = document.getElementById('upload-grade').value;
+<!-- Upload -->
+<div class="section">
+  <h3>Upload Curriculum File</h3>
+  <div class="upload-row">
+    <input type="file" id="uploadFile" accept=".pdf,.txt">
+    <button class="btn-primary" onclick="uploadFile()">Upload &amp; Ingest</button>
+  </div>
+  <div id="uploadMsg" class="msg-box"></div>
+</div>
 
-      if (!fileEl.files.length) { alert('Please select a file.'); return; }
+<!-- Sources -->
+<div class="section">
+  <h3>Ingested Sources ({{ sources | length }} files)</h3>
+  {% if sources %}
+  <table class="sources-table">
+    <thead><tr><th>File</th><th>Subject</th><th>Chunks</th></tr></thead>
+    <tbody>
+      {% for s in sources %}
+      <tr><td>{{ s.source }}</td><td>{{ s.subject }}</td><td>{{ s.chunks }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#aaa;font-size:.9rem">No curriculum files ingested yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
 
-      const fd = new FormData();
-      fd.append('file',        fileEl.files[0]);
-      fd.append('subject',     subject);
-      fd.append('grade',       grade);
-      fd.append('admin_token', token);
+{% block extra_scripts %}
+<script>
+const TOKEN = new URLSearchParams(location.search).get('token') || '';
 
-      result.style.display = 'none';
-      const btn = e.target.querySelector('button[type=submit]');
-      btn.disabled = true;
-      btn.textContent = 'Uploading…';
-
-      try {
-        const res  = await fetch('/api/ingest', { method: 'POST', body: fd });
-        const data = await res.json();
-        result.style.display = 'block';
-        if (res.ok) {
-          result.className = 'result-ok';
-          result.textContent = `✅ ${data.message}`;
-          fileEl.value = '';
-          setTimeout(() => location.reload(), 1500);
-        } else {
-          result.className = 'result-err';
-          result.textContent = `❌ ${data.error}`;
-        }
-      } catch {
-        result.style.display = 'block';
-        result.className = 'result-err';
-        result.textContent = '❌ Network error — could not reach server.';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Upload & Ingest';
+async function loadStatus() {
+  try {
+    const r = await fetch('/api/status');
+    const d = await r.json();
+    const grid = document.getElementById('statusGrid');
+    grid.innerHTML = '';
+    const items = [
+      {label: 'Ollama SLM',   val: d.ollama,  yes: '● Online',  no: '● Offline'},
+      {label: 'TTS (Piper)',  val: d.tts,     yes: '● Ready',   no: '● Missing'},
+      {label: 'STT (Whisper)',val: d.stt,     yes: '● Ready',   no: '● Missing'},
+      {label: 'Kolibri',      val: d.kolibri, yes: '● Running', no: '● Stopped'},
+      {label: 'RAG Docs',     val: null,      txt: d.docs + ' chunks'},
+      {label: 'Model',        val: null,      txt: d.model},
+      {label: 'Hub',          val: null,      txt: d.hub},
+      {label: 'Region',       val: null,      txt: d.region},
+    ];
+    items.forEach(item => {
+      const el = document.createElement('div'); el.className = 'status-item';
+      let valHtml;
+      if (item.val !== null && item.val !== undefined) {
+        const cls = item.val ? 'ok' : 'bad';
+        valHtml = '<span class="' + cls + '">' + (item.val ? item.yes : item.no) + '</span>';
+      } else {
+        valHtml = '<span>' + item.txt + '</span>';
       }
+      el.innerHTML = '<div class="label">' + item.label + '</div><div class="val">' + valHtml + '</div>';
+      grid.appendChild(el);
     });
-  </script>
-</body>
-</html>
+  } catch(e) { document.getElementById('statusGrid').innerHTML = '<p style="color:#ea4335">Could not load status</p>'; }
+}
+
+async function uploadFile() {
+  const f = document.getElementById('uploadFile').files[0];
+  if (!f) { alert('Select a file first.'); return; }
+  const fd = new FormData(); fd.append('file', f);
+  const msg = document.getElementById('uploadMsg');
+  msg.style.display = 'none';
+  try {
+    const r = await fetch('/api/ingest?token=' + encodeURIComponent(TOKEN), {method:'POST', body: fd});
+    const d = await r.json();
+    msg.className = r.ok ? 'msg-box msg-ok' : 'msg-box msg-err';
+    msg.textContent = r.ok ? d.message + ' — ' + d.chunks + ' chunks indexed.' : (d.error || 'Error');
+    msg.style.display = 'block';
+    if (r.ok) setTimeout(() => location.reload(), 1500);
+  } catch(e) {
+    msg.className = 'msg-box msg-err'; msg.textContent = 'Upload failed: ' + e.message;
+    msg.style.display = 'block';
+  }
+}
+
+loadStatus();
+</script>
+{% endblock %}

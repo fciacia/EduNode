@@ -75,13 +75,48 @@ else
   echo "[5/6] ffmpeg already installed — skipping."
 fi
 
-# ── 6. .env ───────────────────────────────────────────────────────────────────
+# ── 6. Kolibri + Khan Academy ─────────────────────────────────────────────────
+echo "[6/8] Installing Kolibri (offline learning platform)…"
+if ! python -m kolibri --version &>/dev/null 2>&1; then
+  pip install kolibri --quiet
+else
+  echo "      Kolibri already installed — skipping pip install."
+fi
+
+# Start Kolibri once so it initialises its database
+echo "      Initialising Kolibri database…"
+python -m kolibri manage migrate --run-syncdb 2>/dev/null || true
+
+# Import Khan Academy English channel (~3 GB — only if not already imported)
+# Channel ID: 7765d6abe4f5413b9bb35a03b4bcea63
+KHAN_CHANNEL="7765d6abe4f5413b9bb35a03b4bcea63"
+echo "      Checking Khan Academy channel import status…"
+if ! python -m kolibri manage listchannels 2>/dev/null | grep -q "$KHAN_CHANNEL"; then
+  echo "      Importing Khan Academy channel (this may take 15-30 min on Pi)…"
+  python -m kolibri manage importchannel network "$KHAN_CHANNEL"
+  python -m kolibri manage importcontent network "$KHAN_CHANNEL"
+else
+  echo "      Khan Academy channel already imported — skipping."
+fi
+
+# ── 7. Glossary datasets (Tier-2 bridge mode) ─────────────────────────────────
+echo "[7/8] Downloading Tier-2 language glossary datasets…"
+if ! python -c "import datasets" &>/dev/null 2>&1; then
+  pip install datasets --quiet
+fi
+python tools/download_glossaries.py || echo "      ⚠  Glossary download failed — bridge mode will fall back to English."
+
+# ── 8. Kolibri → RAG export ───────────────────────────────────────────────────
+echo "[8/8] Exporting Kolibri curriculum text for RAG indexing…"
+python tools/kolibri_to_rag.py || echo "      ⚠  Kolibri export skipped — run manually after Kolibri content is imported."
+
+# ── .env ──────────────────────────────────────────────────────────────────────
 if [ ! -f ".env" ]; then
-  echo "[6/6] Creating .env from .env.example…"
+  echo "      Creating .env from .env.example…"
   cp .env.example .env
   echo "      ⚠  Edit .env and set a strong ADMIN_TOKEN before deploying!"
 else
-  echo "[6/6] .env already exists — skipping."
+  echo "      .env already exists — skipping."
 fi
 
 echo ""
@@ -89,11 +124,13 @@ echo "============================================================"
 echo "  Setup complete!"
 echo ""
 echo "  Start EduNode:"
-echo "    ollama serve &          # in one terminal"
-echo "    python asean_ai_tutor_project.py"
+echo "    ollama serve &                      # terminal 1"
+echo "    python -m kolibri start &           # terminal 2 (port 8080)"
+echo "    python app.py                       # terminal 3 (port 5000)"
 echo ""
 echo "  Or with gunicorn (production):"
 echo "    ollama serve &"
-echo "    gunicorn -w 2 -b 0.0.0.0:5000 'asean_ai_tutor_project:app'"
+echo "    python -m kolibri start &"
+echo "    gunicorn -w 2 -b 0.0.0.0:5000 'app:app'"
 echo "============================================================"
 echo ""

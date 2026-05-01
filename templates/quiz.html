@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Quiz — EduNode{% endblock %}
+
+{% block extra_style %}
+.quiz-header { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.quiz-header h2 { font-size: 1.1rem; color: var(--primary); margin: 0; flex: 1; }
+.sel { border: 1px solid var(--border); border-radius: 8px; padding: .35rem .65rem; font-size: .85rem; background: #fff; }
+.generate-row { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
+.generate-row input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: .5rem .8rem; font-size: .93rem; }
+.btn-primary { padding: .5rem 1.2rem; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+#quizArea { display: none; }
+.question-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.1rem 1.25rem; margin-bottom: 1rem; }
+.question-card .q-text { font-weight: 600; margin-bottom: .75rem; font-size: .97rem; }
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.opt-btn { padding: .55rem .75rem; border: 2px solid var(--border); border-radius: 8px; background: #fff; cursor: pointer; font-size: .88rem; text-align: left; transition: border-color .15s, background .15s; }
+.opt-btn:hover { border-color: var(--primary); background: #e8f0fe; }
+.opt-btn.selected { border-color: var(--primary); background: #e8f0fe; font-weight: 600; }
+.opt-btn.correct  { border-color: #34a853; background: #e6f4ea; }
+.opt-btn.wrong    { border-color: #ea4335; background: #fce8e6; }
+.submit-row { margin-top: .5rem; }
+.score-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; text-align: center; margin-top: 1.5rem; display: none; }
+.score-card h3 { font-size: 1.4rem; color: var(--primary); }
+.cert-link { display: inline-block; margin-top: .75rem; padding: .5rem 1.1rem; background: #34a853; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; }
+{% endblock %}
+
+{% block content %}
+<div class="quiz-header">
+  <h2>Quiz Generator</h2>
+  <select id="subjectSel" class="sel">
+    {% for s in subjects %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+  </select>
+  <select id="langSel" class="sel">
+    {% for l in languages %}<option value="{{ l }}">{{ l }}</option>{% endfor %}
+  </select>
+  <input id="studentName" class="sel" type="text" placeholder="Your name" style="width:130px">
+</div>
+
+<div class="generate-row">
+  <input id="topicInput" type="text" placeholder="Enter a topic (e.g. the water cycle, fractions…)">
+  <button class="btn-primary" id="generateBtn" onclick="generateQuiz()">Generate Quiz</button>
+</div>
+
+<div id="quizArea">
+  <div id="questionsContainer"></div>
+  <div class="submit-row">
+    <button class="btn-primary" onclick="submitQuiz()">Submit Answers</button>
+  </div>
+</div>
+
+<div class="score-card" id="scoreCard">
+  <h3 id="scoreHeading"></h3>
+  <p id="scoreSub"></p>
+  <div id="certLinks"></div>
+  <button class="btn-primary" style="margin-top:1rem" onclick="resetQuiz()">New Quiz</button>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let currentQuestions = [];
+const selectedAnswers = {};
+
+function getLang()    { return document.getElementById('langSel').value; }
+function getSubject() { return document.getElementById('subjectSel').value; }
+function getName()    { return document.getElementById('studentName').value.trim() || 'Student'; }
+
+async function generateQuiz() {
+  const topic = document.getElementById('topicInput').value.trim();
+  if (!topic) { alert('Please enter a topic.'); return; }
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true; btn.textContent = 'Generating…';
+  document.getElementById('quizArea').style.display = 'none';
+  document.getElementById('scoreCard').style.display = 'none';
+  Object.keys(selectedAnswers).forEach(k => delete selectedAnswers[k]);
+  try {
+    const r = await fetch('/api/quiz/generate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({topic, language: getLang(), subject: getSubject()})
+    });
+    const d = await r.json();
+    currentQuestions = d.questions || [];
+    if (!currentQuestions.length) { alert('Could not generate quiz. Is Ollama running?'); return; }
+    renderQuestions(currentQuestions);
+    document.getElementById('quizArea').style.display = 'block';
+  } catch(e) { alert('Error: ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Generate Quiz'; }
+}
+
+function renderQuestions(qs) {
+  const c = document.getElementById('questionsContainer'); c.innerHTML = '';
+  qs.forEach((q, i) => {
+    const card = document.createElement('div'); card.className = 'question-card';
+    card.innerHTML = `<div class="q-text">Q${i+1}. ${escHtml(q.question)}</div>
+      <div class="options" id="opts-${i}"></div>`;
+    c.appendChild(card);
+    const optsDiv = card.querySelector(`#opts-${i}`);
+    q.options.forEach((opt, oi) => {
+      const letter = 'ABCD'[oi];
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn'; btn.textContent = opt;
+      btn.onclick = () => selectAnswer(i, letter, optsDiv);
+      optsDiv.appendChild(btn);
+    });
+  });
+}
+
+function selectAnswer(qi, letter, optsDiv) {
+  selectedAnswers[qi] = letter;
+  [...optsDiv.querySelectorAll('.opt-btn')].forEach((b, oi) => {
+    b.classList.toggle('selected', 'ABCD'[oi] === letter);
+  });
+}
+
+async function submitQuiz() {
+  if (Object.keys(selectedAnswers).length < currentQuestions.length) {
+    if (!confirm('You have unanswered questions. Submit anyway?')) return;
+  }
+  try {
+    const r = await fetch('/api/quiz/submit', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        questions: currentQuestions,
+        answers: selectedAnswers,
+        topic: document.getElementById('topicInput').value,
+        student_name: getName(),
+        language: getLang()
+      })
+    });
+    const d = await r.json();
+    showResults(d.result, d.microcredentials_earned || []);
+    markAnswers(d.result);
+  } catch(e) { alert('Submit error: ' + e.message); }
+}
+
+function markAnswers(result) {
+  currentQuestions.forEach((q, i) => {
+    const optsDiv = document.querySelector(`#opts-${i}`);
+    if (!optsDiv) return;
+    [...optsDiv.querySelectorAll('.opt-btn')].forEach((b, oi) => {
+      const letter = 'ABCD'[oi];
+      if (letter === q.answer)            b.classList.add('correct');
+      else if (selectedAnswers[i] === letter) b.classList.add('wrong');
+      b.disabled = true;
+    });
+  });
+}
+
+function showResults(result, certs) {
+  const card = document.getElementById('scoreCard');
+  document.getElementById('scoreHeading').textContent = `Score: ${result.score}/${result.total} (${result.pct}%)`;
+  document.getElementById('scoreSub').textContent = result.pct >= 70 ? '🎉 Great work!' : 'Keep practising!';
+  const certDiv = document.getElementById('certLinks'); certDiv.innerHTML = '';
+  certs.forEach(c => {
+    certDiv.innerHTML += `<a class="cert-link" href="${c.cert_url}" target="_blank">📄 Download ${escHtml(c.topic)} Certificate</a> `;
+  });
+  card.style.display = 'block';
+  card.scrollIntoView({behavior:'smooth'});
+}
+
+function resetQuiz() {
+  document.getElementById('quizArea').style.display = 'none';
+  document.getElementById('scoreCard').style.display = 'none';
+  document.getElementById('topicInput').value = '';
+  currentQuestions = [];
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+(function() {
+  const saved = localStorage.getItem('edu_lang');
+  if (saved) [...document.getElementById('langSel').options].forEach(o => o.selected = (o.value === saved));
+})();
+document.getElementById('langSel').addEventListener('change', e => localStorage.setItem('edu_lang', e.target.value));
+</script>
+{% endblock %}

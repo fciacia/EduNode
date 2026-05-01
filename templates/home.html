@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}EduNode — {{ region }}{% endblock %}
+
+{% block extra_style %}
+.hero { text-align: center; padding: 2rem 0 1.5rem; }
+.hero h1 { font-size: 2rem; color: var(--primary); margin-bottom: .4rem; }
+.hero p  { color: #555; font-size: 1rem; }
+.lang-row { display: flex; align-items: center; justify-content: center; gap: .75rem; margin: 1.25rem 0; flex-wrap: wrap; }
+.lang-row label { font-size: .9rem; font-weight: 600; color: #444; }
+.lang-select { border: 1px solid var(--border); border-radius: 8px; padding: .4rem .75rem; font-size: .9rem; background: #fff; }
+.subject-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+.subject-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.4rem 1rem; text-align: center; text-decoration: none; color: inherit; transition: transform .15s, box-shadow .15s; border-top: 4px solid var(--primary); }
+.subject-card:hover { transform: translateY(-3px); box-shadow: 0 4px 14px rgba(0,0,0,.15); }
+.subject-card .icon { font-size: 2rem; margin-bottom: .5rem; display: block; }
+.subject-card .name { font-size: .95rem; font-weight: 600; color: #333; }
+.quick-links { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
+.quick-link { padding: .55rem 1.1rem; border-radius: 20px; text-decoration: none; font-size: .88rem; font-weight: 600; border: 2px solid var(--primary); color: var(--primary); transition: background .15s, color .15s; }
+.quick-link:hover { background: var(--primary); color: #fff; }
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <h1>EduNode</h1>
+  <p>Your offline AI tutor — {{ region }}</p>
+</div>
+
+<div class="lang-row">
+  <label for="globalLang">Language:</label>
+  <select id="globalLang" class="lang-select" onchange="saveLang(this.value)">
+    {% for lang in languages %}
+    <option value="{{ lang }}" {% if loop.first %}selected{% endif %}>{{ lang }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<div class="subject-grid">
+  {% set icons = {"Mathematics": "📐", "Science": "🔬", "English Language": "📖", "Environmental Studies": "🌿", "Digital Literacy": "💻"} %}
+  {% for subject in subjects %}
+  <a href="/chat?subject={{ subject | urlencode }}" class="subject-card" onclick="attachLang(this)">
+    <span class="icon">{{ icons.get(subject, "📚") }}</span>
+    <span class="name">{{ subject }}</span>
+  </a>
+  {% endfor %}
+</div>
+
+<div class="quick-links">
+  <a href="/quiz"      class="quick-link">Take a Quiz</a>
+  <a href="/flashcard" class="quick-link">Flashcards</a>
+  <a href="/podcast"   class="quick-link">Podcast</a>
+  <a href="/progress"  class="quick-link">My Progress</a>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Persist language choice
+  function saveLang(val) { localStorage.setItem('edu_lang', val); }
+  function attachLang(el) {
+    const lang = localStorage.getItem('edu_lang') || '{{ languages[0] }}';
+    el.href = el.href + '&lang=' + encodeURIComponent(lang);
+  }
+  // Restore saved language
+  (function() {
+    const saved = localStorage.getItem('edu_lang');
+    if (saved) {
+      const sel = document.getElementById('globalLang');
+      [...sel.options].forEach(o => o.selected = (o.value === saved));
+    }
+  })();
+</script>
+{% endblock %}

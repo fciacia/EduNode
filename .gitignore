@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Secrets & config
+.env
+
+# Database
+db/*.db
+db/*.db-wal
+db/*.db-shm
+
+# User-generated content (large, not source)
+static/certificates/*.pdf
+static/shared/*.json
+static/shared/*.png
+data/chroma/
+data/curriculum/
+data/glossaries/*.json
+
+# Model binaries (downloaded by setup.sh)
+models/
+whisper.cpp/
+
+# Build artefacts
+builds/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+/tmp/

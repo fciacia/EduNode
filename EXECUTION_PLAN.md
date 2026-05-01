@@ -39,40 +39,125 @@ reportlab>=4.0
 
 ---
 
-## STEP 1 — Create `config.py`
+## STEP 1 — Create `config.py`  ✅ Done
 
-**Goal:** Single place to configure the hub's region and supported languages.
-All other modules import from here.
+**Goal:** Single source of truth for all 13 hub deployments with two-tier language strategy.
 
-**Create:** `config.py`
+All 13 hub configurations are defined in `config.py`. Uncomment the relevant
+block for the target region; the active (uncommented) block becomes the hub identity.
 
-```python
-# config.py — change this file per hub deployment region
+**Two-tier language strategy:**
+- `TIER_1_LANGS` — Full AI generation directly in these languages. The SLM has
+  sufficient training data; `"respond in {language}"` in the system prompt works reliably.
+- `TIER_2_LANGS` — Bridge mode. AI generates in English → key terms translated
+  via HuggingFace glossary datasets. Output shown bilingually. Used for
+  deep-minority languages (Iban, Cebuano, Sundanese, Isan, Hmong, Shan, Tetum, Kedayan).
 
-# ── SARAWAK HUB (default) ─────────────────────────────────────────────────
-HUB_REGION    = "Sarawak, Malaysia"
-HUB_LANGUAGES = ["English", "Bahasa Melayu", "Iban"]
-SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
-HUB_IP        = "192.168.1.1"
+**13 hub configurations defined:**
 
-# ── VISAYAS HUB — swap in for Philippines deployment ──────────────────────
-# HUB_REGION    = "Visayas, Philippines"
-# HUB_LANGUAGES = ["English", "Filipino", "Cebuano"]
+| # | Hub ID | Region | Tier-1 | Tier-2 |
+|---|---|---|---|---|
+| 1 | `singapore` | Singapore | English | — |
+| 2 | `vietnam` | Vietnam | English, Vietnamese | Hmong |
+| 3 | `sarawak` | Sarawak, Malaysia | English, Bahasa Melayu | Iban, Kedayan |
+| 4 | `west_java` | West Java, Indonesia | English, Bahasa Indonesia | Sundanese |
+| 5 | `visayas` | Visayas, Philippines | English, Filipino | Cebuano |
+| 6 | `isan` | Northeast Thailand | English, Thai | Isan |
+| 7 | `cambodia` | Rural Cambodia | English, Khmer | — |
+| 8 | `laos` | Rural Laos | English, Lao | — |
+| 9 | `shan` | Shan State, Myanmar | English | Shan |
+| 10 | `timor_leste` | Timor-Leste | English | Tetum |
+| 11 | `brunei` | Brunei Darussalam | English, Bahasa Melayu | Kedayan |
+| 12 | `kalimantan` | Kalimantan, Indonesia | English, Bahasa Indonesia | Dayak |
+| 13 | `peninsular_malaysia` | Peninsular Malaysia | English, Bahasa Melayu | — |
 
-# ── KALIMANTAN HUB — swap in for Indonesia deployment ─────────────────────
-# HUB_REGION    = "Kalimantan, Indonesia"
-# HUB_LANGUAGES = ["English", "Bahasa Indonesia", "Dayak"]
+**Done check:** `python -c "from config import HUB_LANGUAGES, TIER_1_LANGS, TIER_2_LANGS; print(HUB_LANGUAGES, TIER_1_LANGS, TIER_2_LANGS)"`
 
-AVAILABLE_SUBJECTS = [
-    "Mathematics",
-    "Science",
-    "English Language",
-    "Environmental Studies",
-    "Digital Literacy",
-]
+---
+
+## STEP 1A — Download Tier-2 Glossary Datasets
+
+**Goal:** Download the HuggingFace datasets that power bridge-mode translation
+for Tier-2 languages. Store as JSON files in `data/glossaries/`.
+
+**Create:** `tools/download_glossaries.py`
+
+```bash
+python tools/download_glossaries.py
 ```
 
-**Done check:** `python -c "from config import HUB_LANGUAGES; print(HUB_LANGUAGES)"` prints a list.
+What it downloads:
+- `filbench/cebuano-readability` → `data/glossaries/cebuano.json`
+- `VynerCK/Iban-language-data` → `data/glossaries/iban.json`
+
+Each file is normalised to: `[{"english": "...", "native": "..."}]`
+so `core/llm_engine.py` can inject relevant terms into the bridge prompt.
+
+Future datasets to add as community contributions arrive:
+- Sundanese, Isan, Hmong, Shan, Tetum, Kedayan
+
+**Done check:**
+```bash
+ls -lh data/glossaries/
+# cebuano.json  iban.json
+```
+
+---
+
+## STEP 1B — Kolibri + Khan Academy Integration
+
+**Goal:** Run Kolibri (offline learning platform) alongside EduNode on the same Pi.
+Students watch Khan Academy video lessons in Kolibri, then ask EduNode AI
+follow-up questions — both grounded in the same curriculum content.
+
+**Architecture:**
+```
+Pi port 5000 → EduNode (AI tutor, chat, quiz, voice)
+Pi port 8080 → Kolibri (Khan Academy lessons, exercises, videos)
+
+Student flow:
+  1. Open http://192.168.1.1:8080 → watch Kolibri math video
+  2. Tap "Ask EduNode" button (added to base.html navbar)
+  3. Redirects to http://192.168.1.1:5000/chat?subject=Mathematics
+  4. AI tutor answers from the same Khan Academy text content via RAG
+```
+
+**Setup steps (added to `setup.sh`):**
+```bash
+# Install Kolibri
+pip install kolibri
+python -m kolibri start --background
+
+# Import Khan Academy channel (English, ~3 GB — run once)
+python -m kolibri manage importchannel network 7765d6abe4f5413b9bb35a03b4bcea63
+python -m kolibri manage importcontent network 7765d6abe4f5413b9bb35a03b4bcea63
+
+# For localised channels, use the language-specific channel ID from:
+# https://kolibri-studio.readthedocs.io/en/latest/working_with_content.html
+```
+
+**Kolibri channel IDs for EduNode hubs:**
+
+| Language | Channel | ID |
+|---|---|---|
+| English | Khan Academy (en) | `7765d6abe4f5413b9bb35a03b4bcea63` |
+| Vietnamese | Khan Academy (vi) | Look up on Kolibri Studio |
+| Bahasa Indonesia | Khan Academy (id) | Look up on Kolibri Studio |
+| Khmer | Khan Academy (km) | Look up on Kolibri Studio |
+
+**Curriculum text extraction for RAG:**
+
+Create `tools/kolibri_to_rag.py` — exports Kolibri article text to
+`data/curriculum/kolibri_<subject>_<lang>.txt` so EduNode's RAG pipeline
+can index it alongside official PDF textbooks.
+
+**Done check:**
+```bash
+curl http://localhost:8080/api/public/v1/info/
+# → {"installed": true, ...}
+curl http://localhost:5000/api/status
+# → {"kolibri": true, ...}  (add kolibri field to status endpoint)
+```
 
 ---
 
@@ -122,14 +207,16 @@ print(retrieve_context('what is photosynthesis'))
 ## STEP 4 — Create `core/llm_engine.py`
 
 **Goal:** All Ollama (SLM) interactions in one place — chat, quiz generation,
-podcast script generation.
+podcast script generation, AND the Tier-2 bridge-mode translation layer.
 
 **Create:** `core/llm_engine.py`
 
-Key functions:
+### Core functions:
+
 - `query_tutor(user_message, language, rag_context)` → `str`
-  - System prompt: EduNode persona, respond in `{language}`, stay under 150 words,
-    base answer on `{rag_context}`
+  - Checks `config.TIER_1_LANGS` vs `config.TIER_2_LANGS` to decide mode
+  - **Tier-1 path:** system prompt includes `"You MUST respond in {language}"`
+  - **Tier-2 path:** calls `_bridge_translate()` after English generation
   - Calls `POST /api/generate` on Ollama
 - `generate_quiz(topic, language, rag_context)` → `list[dict]`
   - System prompt: output EXACTLY 3 MCQs as a JSON array
@@ -140,17 +227,75 @@ Key functions:
   - 6–8 exchanges, formatted `MAYA: …\nNIKO: …`
   - Temperature 0.8
 
+### Bridge-mode translation layer (Tier-2 languages):
+
+```python
+def _load_glossary(language: str) -> dict:
+    """
+    Load the HuggingFace glossary JSON for a Tier-2 language.
+    Returns {english_term: native_term} lookup dict.
+    Falls back to {} if glossary file not found.
+    """
+    path = Path(f"data/glossaries/{language.lower()}.json")
+    if not path.exists():
+        return {}
+    entries = json.loads(path.read_text())
+    return {e["english"].lower(): e["native"] for e in entries if "english" in e and "native" in e}
+
+
+def _bridge_translate(english_text: str, language: str) -> str:
+    """
+    Tier-2 bridge mode:
+    1. Ask the SLM to translate the English answer into {language} using
+       the provided glossary terms for accuracy.
+    2. Return bilingual output:
+       [English] {english_text}
+       [{language}] {translated_text}
+    Falls back to English-only if translation fails.
+    """
+    glossary = _load_glossary(language)
+    glossary_hint = ", ".join(f"{k}={v}" for k, v in list(glossary.items())[:30])
+
+    prompt = (
+        f"Translate the following into {language}. "
+        f"Use these key terms where applicable: {glossary_hint}\n\n"
+        f"Text: {english_text}\n\nTranslation:"
+    )
+    translated = _ollama_generate(prompt, temperature=0.3, max_tokens=300)
+    if not translated:
+        return english_text
+    return f"[English] {english_text}\n[{language}] {translated}"
+```
+
+**Two-tier dispatch in `query_tutor`:**
+```python
+def query_tutor(user_message, language, rag_context):
+    from config import TIER_1_LANGS, TIER_2_LANGS
+    if language in TIER_1_LANGS:
+        # Direct generation in target language
+        return _ollama_generate(_build_tutor_prompt(user_message, language, rag_context))
+    elif language in TIER_2_LANGS:
+        # Generate in English, then bridge-translate
+        english_answer = _ollama_generate(_build_tutor_prompt(user_message, "English", rag_context))
+        return _bridge_translate(english_answer, language)
+    else:
+        # Unknown language — fall back to English
+        return _ollama_generate(_build_tutor_prompt(user_message, "English", rag_context))
+```
+
 Implementation notes:
 - Base URL and model read from environment (`OLLAMA_BASE`, `OLLAMA_MODEL`)
-  so they can be overridden in `.env`
-- All requests wrapped in try/except; return graceful fallback strings on error
-- Use `/api/generate` (not `/api/chat`) for single-turn completions
+- All requests wrapped in try/except; graceful fallback strings on error
+- Use `/api/generate` for single-turn completions
+- `_ollama_generate(prompt, temperature, max_tokens)` is a private helper
+  called by all public functions to avoid duplication
 
 **Done check:**
 ```bash
 python -c "
 from core.llm_engine import query_tutor, generate_quiz
 print(query_tutor('What is the water cycle?', 'English', ''))
+print(query_tutor('What is the water cycle?', 'Iban', ''))  # Tier-2 bridge
 print(generate_quiz('water cycle', 'English', ''))
 "
 ```
@@ -591,7 +736,70 @@ Can use any free icon generator; exact design not critical for PoC.
 
 ---
 
-## STEP 23 — Create `sneakernet_sync.py`
+## STEP 23B — Create `tools/build_hub_image.py`
+
+**Goal:** Generate a per-region configuration package (a ready-to-flash Pi
+image config bundle) so teachers receive a single USB drive per hub — plug in,
+flash, done. Zero configuration required on-site.
+
+**Create:** `tools/build_hub_image.py`
+
+```bash
+python tools/build_hub_image.py --hub sarawak
+# → builds/edunode_sarawak/
+#     config.py          (sarawak block uncommented, all others removed)
+#     wifi_setup.sh      (sets SSID to "EduNode_Sarawak", IP to 192.168.1.1)
+#     kolibri_setup.sh   (imports the correct Kolibri channel for this hub)
+#     data/glossaries/   (only the glossaries needed for this hub's Tier-2 langs)
+#     DEPLOY.md          (one-page deploy instructions in the hub's Tier-1 language)
+```
+
+**What the script does:**
+
+1. Reads `HUB_CONFIGS` dict — all 13 hubs defined inline
+2. For the target `--hub` flag:
+   - Generates a `config.py` with only that hub's block active
+   - Generates `wifi_setup.sh`:
+     ```bash
+     nmcli dev wifi hotspot ifname wlan0 ssid "EduNode_Sarawak" password "edunode2026"
+     nmcli connection modify "EduNode_Sarawak" ipv4.addresses 192.168.1.1/24
+     ```
+   - Generates `kolibri_setup.sh` with the correct channel import command
+   - Copies only the relevant glossary JSON files for Tier-2 languages
+   - Writes `DEPLOY.md` in the hub's primary Tier-1 language
+3. Creates `builds/edunode_<hub_id>.tar.gz` — the teacher USB payload
+
+**HUB_CONFIGS structure in the script:**
+```python
+HUB_CONFIGS = {
+    "singapore":           {"region": "Singapore",            "tier1": ["English"],                        "tier2": [],                  "ssid": "EduNode_Singapore",    "kolibri_lang": "en"},
+    "vietnam":             {"region": "Vietnam",              "tier1": ["English", "Vietnamese"],           "tier2": ["Hmong"],           "ssid": "EduNode_Vietnam",      "kolibri_lang": "vi"},
+    "sarawak":             {"region": "Sarawak, Malaysia",    "tier1": ["English", "Bahasa Melayu"],        "tier2": ["Iban", "Kedayan"], "ssid": "EduNode_Sarawak",      "kolibri_lang": "en"},
+    "west_java":           {"region": "West Java, Indonesia", "tier1": ["English", "Bahasa Indonesia"],    "tier2": ["Sundanese"],       "ssid": "EduNode_WestJava",     "kolibri_lang": "id"},
+    "visayas":             {"region": "Visayas, Philippines", "tier1": ["English", "Filipino"],            "tier2": ["Cebuano"],         "ssid": "EduNode_Visayas",      "kolibri_lang": "en"},
+    "isan":                {"region": "Isan, Thailand",       "tier1": ["English", "Thai"],                "tier2": ["Isan"],            "ssid": "EduNode_Isan",         "kolibri_lang": "th"},
+    "cambodia":            {"region": "Rural Cambodia",       "tier1": ["English", "Khmer"],               "tier2": [],                  "ssid": "EduNode_Cambodia",     "kolibri_lang": "km"},
+    "laos":                {"region": "Rural Laos",           "tier1": ["English", "Lao"],                 "tier2": [],                  "ssid": "EduNode_Laos",         "kolibri_lang": "lo"},
+    "shan":                {"region": "Shan State, Myanmar",  "tier1": ["English"],                        "tier2": ["Shan"],            "ssid": "EduNode_Shan",         "kolibri_lang": "en"},
+    "timor_leste":         {"region": "Timor-Leste",          "tier1": ["English"],                        "tier2": ["Tetum"],           "ssid": "EduNode_TimorLeste",   "kolibri_lang": "en"},
+    "brunei":              {"region": "Brunei Darussalam",    "tier1": ["English", "Bahasa Melayu"],        "tier2": ["Kedayan"],         "ssid": "EduNode_Brunei",       "kolibri_lang": "en"},
+    "kalimantan":          {"region": "Kalimantan, Indonesia","tier1": ["English", "Bahasa Indonesia"],    "tier2": ["Dayak"],           "ssid": "EduNode_Kalimantan",   "kolibri_lang": "id"},
+    "peninsular_malaysia": {"region": "Peninsular Malaysia",  "tier1": ["English", "Bahasa Melayu"],        "tier2": [],                  "ssid": "EduNode_Malaysia",     "kolibri_lang": "ms"},
+}
+```
+
+**Done check:**
+```bash
+python tools/build_hub_image.py --hub sarawak
+ls builds/edunode_sarawak/
+# config.py  wifi_setup.sh  kolibri_setup.sh  data/  DEPLOY.md
+python tools/build_hub_image.py --list
+# Lists all 13 available hub IDs
+```
+
+---
+
+## STEP 23B — Create `sneakernet_sync.py`
 
 **Goal:** Run by the teacher when plugging in the monthly USB drive.
 
@@ -682,10 +890,10 @@ curl -s -X POST http://localhost:5000/api/chat \
 
 | Week | Steps | Deliverable |
 |---|---|---|
-| **Week 1** | 0–12 | Core brain: chat + quiz working end-to-end on laptop |
+| **Week 1** | 0–12 | Core brain: chat + quiz + Tier-2 bridge mode working on laptop |
 | **Week 2** | 13–21 | Voice + full UI: speak a question, hear the answer |
-| **Week 3** | 22–24 | Resilience: badges, certs, USB sync, P2P share |
-| **Week 4** | 25–26 | Hardware + polish: running on Pi, demo-ready |
+| **Week 3** | 1A, 1B, 22–23B | Kolibri+Khan Academy, glossaries, USB sync, P2P share |
+| **Week 4** | 23C, 24–26 | Hub image builder, Pi hardware deploy, demo-ready |
 
 ---
 
@@ -709,36 +917,40 @@ curl -s -X POST http://localhost:5000/api/chat \
 ## File Creation Checklist
 
 ```
-[ ] STEP 0   requirements.txt          (add reportlab)
-[ ] STEP 1   config.py
-[ ] STEP 2   core/__init__.py
-[ ] STEP 3   core/rag_engine.py
-[ ] STEP 4   core/llm_engine.py
-[ ] STEP 5   core/voice_engine.py
-[ ] STEP 6   core/quiz_engine.py
-[ ] STEP 7   core/progress_tracker.py
-[ ] STEP 8   core/microcredential_engine.py
-[ ] STEP 9   core/p2p_share.py
-[ ] STEP 10  core/podcast_engine.py
-[ ] STEP 11  core/flashcard_engine.py
-[ ] STEP 12  app.py
-[ ] STEP 13  templates/base.html
-[ ] STEP 14  templates/home.html
-[ ] STEP 15  templates/chat.html       (update)
-[ ] STEP 16  templates/quiz.html
-[ ] STEP 17  templates/podcast.html
-[ ] STEP 18  templates/progress.html
-[ ] STEP 19  templates/share_view.html
-[ ] STEP 20  templates/flashcard.html
-[ ] STEP 21  static/js/chat.js
-[ ] STEP 21  static/js/quiz.js
-[ ] STEP 21  static/js/flashcard.js
-[ ] STEP 21  static/js/podcast.js
-[ ] STEP 22  static/icons/manifest.json
-[ ] STEP 22  static/icons/icon-192.png
-[ ] STEP 22  static/icons/icon-512.png
-[ ] STEP 23  sneakernet_sync.py
-[ ] STEP 24  requirements.txt          (final check)
-[ ] STEP 25  Integration test
-[ ] STEP 26  Pi hardware deploy
+[x] STEP 0    requirements.txt              (reportlab added)
+[x] STEP 1    config.py                     (all 13 hubs, two-tier)
+[x] STEP 1A   tools/download_glossaries.py  (HuggingFace Cebuano + Iban datasets)
+[x] STEP 1B   tools/kolibri_to_rag.py       (Kolibri article text → RAG PDFs)
+              setup.sh update               (Kolibri install + Khan Academy channel)
+[x] STEP 2    core/__init__.py
+[x] STEP 3    core/rag_engine.py
+[x] STEP 4    core/llm_engine.py            (+ Tier-2 bridge-mode translate layer)
+[x] STEP 5    core/voice_engine.py
+[x] STEP 6    core/quiz_engine.py
+[x] STEP 7    core/progress_tracker.py
+[x] STEP 8    core/microcredential_engine.py
+[x] STEP 9    core/p2p_share.py
+[x] STEP 10   core/podcast_engine.py
+[x] STEP 11   core/flashcard_engine.py
+[x] STEP 12   app.py                        (+ /api/status kolibri field)
+[x] STEP 13   templates/base.html           (+ "Open in Kolibri" nav link)
+[x] STEP 14   templates/home.html
+[x] STEP 15   templates/chat.html           (update)
+[x] STEP 16   templates/quiz.html
+[x] STEP 17   templates/podcast.html
+[x] STEP 18   templates/progress.html
+[x] STEP 19   templates/share_view.html
+[x] STEP 20   templates/flashcard.html
+[x] STEP 21   static/js/chat.js
+[x] STEP 21   static/js/quiz.js
+[x] STEP 21   static/js/flashcard.js
+[x] STEP 21   static/js/podcast.js
+[x] STEP 22   static/icons/manifest.json
+[x] STEP 22   static/icons/icon-192.png
+[x] STEP 22   static/icons/icon-512.png
+[x] STEP 23   tools/build_hub_image.py      (13 hub image builder)
+[x] STEP 23B  sneakernet_sync.py
+[x] STEP 24   requirements.txt              (final check — already complete)
+[x] STEP 25   Integration test
+[ ] STEP 26   Pi hardware deploy
 ```

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Shared Content — EduNode{% endblock %}
+
+{% block extra_style %}
+.share-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); max-width: 640px; margin: 2rem auto; padding: 1.75rem; }
+.share-card h2 { font-size: 1.1rem; color: var(--primary); margin-bottom: .5rem; }
+.share-meta { font-size: .8rem; color: #888; margin-bottom: 1.25rem; }
+.share-body { white-space: pre-wrap; word-break: break-word; font-size: .93rem; line-height: 1.65; background: #f8f9fa; border-radius: 8px; padding: 1rem; border: 1px solid var(--border); }
+.share-type-badge { display: inline-block; padding: .15rem .6rem; border-radius: 12px; font-size: .75rem; font-weight: 700; background: #e8f0fe; color: var(--primary); text-transform: uppercase; margin-left: .5rem; }
+.back-link { display: inline-block; margin-top: 1.25rem; color: var(--primary); font-size: .88rem; text-decoration: none; }
+.back-link:hover { text-decoration: underline; }
+{% endblock %}
+
+{% block content %}
+<div class="share-card">
+  <h2>Shared Content <span class="share-type-badge">{{ share.content_type }}</span></h2>
+  <div class="share-meta">
+    Expires: {{ share.expires_at }}
+  </div>
+  <div class="share-body">{{ share.content }}</div>
+  <a href="/" class="back-link">← Back to EduNode</a>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Podcast — EduNode{% endblock %}
+
+{% block extra_style %}
+.podcast-header { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.podcast-header h2 { font-size: 1.1rem; color: var(--primary); margin: 0; flex: 1; }
+.sel { border: 1px solid var(--border); border-radius: 8px; padding: .35rem .65rem; font-size: .85rem; background: #fff; }
+.generate-row { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
+.generate-row input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: .5rem .8rem; font-size: .93rem; }
+.btn-primary { padding: .5rem 1.2rem; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+#podcastResult { display: none; }
+.audio-player { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; gap: .75rem; }
+.audio-player audio { flex: 1; }
+.script-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.25rem; }
+.script-card h3 { font-size: .95rem; color: #555; margin-bottom: 1rem; }
+.script-line { margin-bottom: .55rem; font-size: .93rem; line-height: 1.6; }
+.maya { color: #1a73e8; }
+.niko { color: #34a853; }
+.speaker { font-weight: 700; margin-right: .3rem; }
+{% endblock %}
+
+{% block content %}
+<div class="podcast-header">
+  <h2>EduNode Podcast</h2>
+  <select id="langSel" class="sel">
+    {% for l in languages %}<option value="{{ l }}">{{ l }}</option>{% endfor %}
+  </select>
+</div>
+
+<div class="generate-row">
+  <input id="topicInput" type="text" placeholder="Enter a topic (e.g. photosynthesis, fractions…)">
+  <button class="btn-primary" id="generateBtn" onclick="generatePodcast()">Generate Episode</button>
+</div>
+
+<div id="podcastResult">
+  <div class="audio-player" id="audioPlayer" style="display:none">
+    <audio id="audioEl" controls></audio>
+  </div>
+  <div class="script-card">
+    <h3>📜 Episode Script</h3>
+    <div id="scriptContainer"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function getLang() { return document.getElementById('langSel').value; }
+
+async function generatePodcast() {
+  const topic = document.getElementById('topicInput').value.trim();
+  if (!topic) { alert('Please enter a topic.'); return; }
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true; btn.textContent = 'Generating…';
+  document.getElementById('podcastResult').style.display = 'none';
+  try {
+    const r = await fetch('/api/podcast/generate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({topic, language: getLang()})
+    });
+    const d = await r.json();
+    renderScript(d.script || '');
+    if (d.audio_url) {
+      const el = document.getElementById('audioEl');
+      el.src = d.audio_url;
+      document.getElementById('audioPlayer').style.display = 'flex';
+      el.play().catch(()=>{});
+    } else {
+      document.getElementById('audioPlayer').style.display = 'none';
+    }
+    document.getElementById('podcastResult').style.display = 'block';
+  } catch(e) { alert('Error: ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Generate Episode'; }
+}
+
+function renderScript(script) {
+  const c = document.getElementById('scriptContainer'); c.innerHTML = '';
+  script.split('\n').forEach(line => {
+    if (!line.trim()) return;
+    const div = document.createElement('div'); div.className = 'script-line';
+    const isMaya = /^MAYA\s*:/i.test(line);
+    const isNiko = /^NIKO\s*:/i.test(line);
+    if (isMaya || isNiko) {
+      const who = isMaya ? 'MAYA' : 'NIKO';
+      const cls = isMaya ? 'maya' : 'niko';
+      const text = line.replace(/^(MAYA|NIKO)\s*:\s*/i, '');
+      div.innerHTML = `<span class="speaker ${cls}">${who}:</span>${escHtml(text)}`;
+    } else {
+      div.textContent = line;
+    }
+    c.appendChild(div);
+  });
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+(function() {
+  const saved = localStorage.getItem('edu_lang');
+  if (saved) [...document.getElementById('langSel').options].forEach(o => o.selected = (o.value === saved));
+})();
+document.getElementById('langSel').addEventListener('change', e => localStorage.setItem('edu_lang', e.target.value));
+</script>
+{% endblock %}
