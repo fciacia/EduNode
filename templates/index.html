@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduNode — AI Tutor</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <span class="logo">📚 EduNode</span>
+      <div class="header-controls">
+        <select id="subject-select" aria-label="Subject filter">
+          <option value="">All subjects</option>
+          <option value="math">Mathematics</option>
+          <option value="science">Science</option>
+          <option value="english">English</option>
+          <option value="history">History</option>
+          <option value="geography">Geography</option>
+          <option value="bahasa">Bahasa</option>
+          <option value="thai">Thai</option>
+          <option value="vietnamese">Vietnamese</option>
+        </select>
+        <button id="status-btn" class="icon-btn secondary" title="System status" aria-label="System status">⚙</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="chat-log" role="log" aria-live="polite" aria-label="Chat history">
+    <div class="bubble assistant">
+      <div class="avatar" aria-hidden="true">🤖</div>
+      <div class="message">
+        Hello! I'm <strong>EduNode</strong>, your offline AI tutor.<br>
+        Ask me anything — type your question or tap 🎤 to speak.
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <form id="chat-form" autocomplete="off" novalidate>
+      <button type="button" id="mic-btn" class="icon-btn" title="Tap to record voice" aria-label="Record voice">🎤</button>
+      <input
+        id="question-input"
+        type="text"
+        placeholder="Type your question…"
+        maxlength="2000"
+        aria-label="Your question"
+      >
+      <button type="submit" id="send-btn" class="icon-btn" title="Send" aria-label="Send">➤</button>
+    </form>
+  </footer>
+
+  <!-- Status dialog -->
+  <dialog id="status-modal" aria-labelledby="status-title">
+    <div class="modal-inner">
+      <h2 id="status-title">System Status</h2>
+      <dl id="status-list"><dt>Loading…</dt></dl>
+      <button id="close-modal" class="btn-primary">Close</button>
+    </div>
+  </dialog>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
