@@ -2,58 +2,117 @@
 {% block title %}Quiz — EduNode{% endblock %}
 
 {% block extra_style %}
-.quiz-header { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
-.quiz-header h2 { font-size: 1.1rem; color: var(--primary); margin: 0; flex: 1; }
-.sel { border: 1px solid var(--border); border-radius: 8px; padding: .35rem .65rem; font-size: .85rem; background: #fff; }
-.generate-row { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
-.generate-row input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: .5rem .8rem; font-size: .93rem; }
-.btn-primary { padding: .5rem 1.2rem; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; }
-.btn-primary:hover { background: var(--primary-dark); }
-.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-#quizArea { display: none; }
-.question-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.1rem 1.25rem; margin-bottom: 1rem; }
-.question-card .q-text { font-weight: 600; margin-bottom: .75rem; font-size: .97rem; }
-.options { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
-.opt-btn { padding: .55rem .75rem; border: 2px solid var(--border); border-radius: 8px; background: #fff; cursor: pointer; font-size: .88rem; text-align: left; transition: border-color .15s, background .15s; }
-.opt-btn:hover { border-color: var(--primary); background: #e8f0fe; }
-.opt-btn.selected { border-color: var(--primary); background: #e8f0fe; font-weight: 600; }
-.opt-btn.correct  { border-color: #34a853; background: #e6f4ea; }
-.opt-btn.wrong    { border-color: #ea4335; background: #fce8e6; }
-.submit-row { margin-top: .5rem; }
-.score-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; text-align: center; margin-top: 1.5rem; display: none; }
-.score-card h3 { font-size: 1.4rem; color: var(--primary); }
-.cert-link { display: inline-block; margin-top: .75rem; padding: .5rem 1.1rem; background: #34a853; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; }
+.page-hero {
+  background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 6px 0 #3B1388;
+  animation: fade-in .3s ease;
+}
+.page-hero .hero-emoji { font-size: 3rem; animation: wiggle 2s ease-in-out infinite; }
+.page-hero-text h2 { font-family: var(--font-display); font-size: 1.5rem; color: #fff; margin-bottom: .2rem; }
+.page-hero-text p  { font-size: .9rem; font-weight: 600; color: rgba(255,255,255,.8); }
+
+.controls-row {
+  display: flex;
+  gap: .65rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  background: var(--surface);
+  border: 2.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  box-shadow: var(--shadow-sm);
+}
+.sel {
+  border: 2.5px solid var(--border);
+  border-radius: 99px;
+  padding: .38rem .85rem;
+  font-size: .87rem;
+  font-weight: 700;
+  font-family: var(--font);
+  background: var(--surface2);
+  color: var(--text);
+  outline: none;
+}
+.sel:focus { border-color: var(--primary); }
+.name-input {
+  border: 2.5px solid var(--border);
+  border-radius: 99px;
+  padding: .38rem .85rem;
+  font-size: .87rem;
+  font-weight: 700;
+  font-family: var(--font);
+  background: var(--surface2);
+  color: var(--text);
+  outline: none;
+  width: 130px;
+}
+
+.generate-row {
+  display: flex;
+  gap: .65rem;
+  margin-bottom: 1.75rem;
+}
+.topic-input {
+  flex: 1;
+  border: 2.5px solid var(--border);
+  border-radius: 99px;
+  padding: .6rem 1.1rem;
+  font-size: .95rem;
+  font-weight: 700;
+  font-family: var(--font);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s;
+}
+.topic-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+.topic-input::placeholder { color: var(--text-muted); font-weight: 600; }
 {% endblock %}
 
 {% block content %}
-<div class="quiz-header">
-  <h2>Quiz Generator</h2>
+<div class="page-hero">
+  <div class="hero-emoji">🧠</div>
+  <div class="page-hero-text">
+    <h2>Quiz Challenge!</h2>
+    <p>Test your knowledge and earn certificates 🏆</p>
+  </div>
+</div>
+
+<div class="controls-row">
   <select id="subjectSel" class="sel">
     {% for s in subjects %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
   </select>
   <select id="langSel" class="sel">
     {% for l in languages %}<option value="{{ l }}">{{ l }}</option>{% endfor %}
   </select>
-  <input id="studentName" class="sel" type="text" placeholder="Your name" style="width:130px">
+  <input id="studentName" class="name-input" type="text" placeholder="Your name ✏️">
 </div>
 
 <div class="generate-row">
-  <input id="topicInput" type="text" placeholder="Enter a topic (e.g. the water cycle, fractions…)">
-  <button class="btn-primary" id="generateBtn" onclick="generateQuiz()">Generate Quiz</button>
+  <input id="topicInput" class="topic-input" type="text" placeholder="🔍 Enter a topic (e.g. the water cycle, fractions…)">
+  <button class="btn-primary" id="generateBtn" onclick="generateQuiz()">🎯 Generate Quiz</button>
 </div>
 
-<div id="quizArea">
+<div id="quizArea" style="display:none">
   <div id="questionsContainer"></div>
-  <div class="submit-row">
-    <button class="btn-primary" onclick="submitQuiz()">Submit Answers</button>
+  <div style="margin-top:.5rem">
+    <button class="btn-primary" onclick="submitQuiz()">✅ Submit Answers</button>
   </div>
 </div>
 
 <div class="score-card" id="scoreCard">
-  <h3 id="scoreHeading"></h3>
-  <p id="scoreSub"></p>
+  <div style="font-size:3.5rem;margin-bottom:.5rem" id="scoreEmoji">🎉</div>
+  <div class="score-heading" id="scoreHeading"></div>
+  <p style="color:var(--text-muted);font-weight:700;margin-top:.35rem" id="scoreSub"></p>
   <div id="certLinks"></div>
-  <button class="btn-primary" style="margin-top:1rem" onclick="resetQuiz()">New Quiz</button>
+  <button class="btn-primary" style="margin-top:1.5rem" onclick="resetQuiz()">🔄 New Quiz</button>
 </div>
 {% endblock %}
 
@@ -68,9 +127,9 @@ function getName()    { return document.getElementById('studentName').value.trim
 
 async function generateQuiz() {
   const topic = document.getElementById('topicInput').value.trim();
-  if (!topic) { alert('Please enter a topic.'); return; }
+  if (!topic) { alert('Please enter a topic! 📚'); return; }
   const btn = document.getElementById('generateBtn');
-  btn.disabled = true; btn.textContent = 'Generating…';
+  btn.disabled = true; btn.textContent = '⏳ Generating…';
   document.getElementById('quizArea').style.display = 'none';
   document.getElementById('scoreCard').style.display = 'none';
   Object.keys(selectedAnswers).forEach(k => delete selectedAnswers[k]);
@@ -85,21 +144,26 @@ async function generateQuiz() {
     renderQuestions(currentQuestions);
     document.getElementById('quizArea').style.display = 'block';
   } catch(e) { alert('Error: ' + e.message); }
-  finally { btn.disabled = false; btn.textContent = 'Generate Quiz'; }
+  finally { btn.disabled = false; btn.textContent = '🎯 Generate Quiz'; }
 }
 
 function renderQuestions(qs) {
   const c = document.getElementById('questionsContainer'); c.innerHTML = '';
   qs.forEach((q, i) => {
-    const card = document.createElement('div'); card.className = 'question-card';
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.style.animationDelay = (i * .05) + 's';
+    card.style.animation = 'pop-in .3s ease both';
     card.innerHTML = `<div class="q-text">Q${i+1}. ${escHtml(q.question)}</div>
       <div class="options" id="opts-${i}"></div>`;
     c.appendChild(card);
     const optsDiv = card.querySelector(`#opts-${i}`);
+    const letters = ['🅰️','🅱️','🆎','🆒'];
     q.options.forEach((opt, oi) => {
       const letter = 'ABCD'[oi];
       const btn = document.createElement('button');
-      btn.className = 'opt-btn'; btn.textContent = opt;
+      btn.className = 'opt-btn';
+      btn.textContent = opt;
       btn.onclick = () => selectAnswer(i, letter, optsDiv);
       optsDiv.appendChild(btn);
     });
@@ -115,7 +179,7 @@ function selectAnswer(qi, letter, optsDiv) {
 
 async function submitQuiz() {
   if (Object.keys(selectedAnswers).length < currentQuestions.length) {
-    if (!confirm('You have unanswered questions. Submit anyway?')) return;
+    if (!confirm('You have unanswered questions. Submit anyway? 🤔')) return;
   }
   try {
     const r = await fetch('/api/quiz/submit', {
@@ -140,8 +204,8 @@ function markAnswers(result) {
     if (!optsDiv) return;
     [...optsDiv.querySelectorAll('.opt-btn')].forEach((b, oi) => {
       const letter = 'ABCD'[oi];
-      if (letter === q.answer)            b.classList.add('correct');
-      else if (selectedAnswers[i] === letter) b.classList.add('wrong');
+      if (letter === q.answer)                 b.classList.add('correct');
+      else if (selectedAnswers[i] === letter)  b.classList.add('wrong');
       b.disabled = true;
     });
   });
@@ -149,8 +213,10 @@ function markAnswers(result) {
 
 function showResults(result, certs) {
   const card = document.getElementById('scoreCard');
-  document.getElementById('scoreHeading').textContent = `Score: ${result.score}/${result.total} (${result.pct}%)`;
-  document.getElementById('scoreSub').textContent = result.pct >= 70 ? '🎉 Great work!' : 'Keep practising!';
+  const pct = result.pct;
+  document.getElementById('scoreEmoji').textContent = pct >= 90 ? '🏆' : pct >= 70 ? '🎉' : pct >= 50 ? '😊' : '💪';
+  document.getElementById('scoreHeading').textContent = `${result.score} / ${result.total}  (${pct}%)`;
+  document.getElementById('scoreSub').textContent = pct >= 70 ? 'Amazing work! Keep it up! 🌟' : 'Good try! Keep practising! 💪';
   const certDiv = document.getElementById('certLinks'); certDiv.innerHTML = '';
   certs.forEach(c => {
     certDiv.innerHTML += `<a class="cert-link" href="${c.cert_url}" target="_blank">📄 Download ${escHtml(c.topic)} Certificate</a> `;

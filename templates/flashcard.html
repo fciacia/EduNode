@@ -2,37 +2,90 @@
 {% block title %}Flashcards — EduNode{% endblock %}
 
 {% block extra_style %}
-.fc-header { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
-.fc-header h2 { font-size: 1.1rem; color: var(--primary); margin: 0; flex: 1; }
-.sel { border: 1px solid var(--border); border-radius: 8px; padding: .35rem .65rem; font-size: .85rem; background: #fff; }
-.generate-row { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
-.generate-row input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: .5rem .8rem; font-size: .93rem; }
-.btn-primary { padding: .5rem 1.2rem; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; }
-.btn-primary:hover { background: var(--primary-dark); }
-.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-#deckArea { display: none; }
-.deck-nav { display: flex; align-items: center; gap: 1rem; justify-content: center; margin-bottom: 1.25rem; }
-.deck-nav button { padding: .4rem 1.1rem; border: 2px solid var(--primary); border-radius: 20px; background: #fff; color: var(--primary); font-weight: 600; cursor: pointer; }
-.deck-nav button:hover { background: var(--primary); color: #fff; }
-.deck-counter { color: #555; font-size: .9rem; }
-.card-scene { width: 100%; max-width: 520px; height: 240px; margin: 0 auto; perspective: 900px; cursor: pointer; }
-.card-3d { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform .45s ease; }
-.card-3d.flipped { transform: rotateY(180deg); }
-.card-face { position: absolute; inset: 0; border-radius: var(--radius); box-shadow: 0 4px 18px rgba(0,0,0,.13); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.5rem; backface-visibility: hidden; text-align: center; }
-.card-face.front { background: var(--surface); border-top: 5px solid var(--primary); }
-.card-face.back  { background: #e8f0fe; transform: rotateY(180deg); border-top: 5px solid #34a853; }
-.card-label { font-size: .75rem; font-weight: 700; letter-spacing: .08em; color: #aaa; text-transform: uppercase; margin-bottom: .5rem; }
-.card-title { font-size: 1.25rem; font-weight: 700; color: #333; }
-.card-body  { font-size: .93rem; color: #444; line-height: 1.6; margin-top: .5rem; }
-.card-hint  { margin-top: 1rem; font-size: .78rem; color: #aaa; }
-.deck-dots  { display: flex; gap: .35rem; justify-content: center; margin-top: 1rem; }
-.deck-dot   { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
-.deck-dot.active { background: var(--primary); }
+.page-hero {
+  background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 6px 0 #1E3A8A;
+  animation: fade-in .3s ease;
+}
+.page-hero .hero-emoji { font-size: 3rem; animation: wiggle 2.5s ease-in-out infinite; }
+.page-hero-text h2 { font-family: var(--font-display); font-size: 1.5rem; color: #fff; margin-bottom: .2rem; }
+.page-hero-text p  { font-size: .9rem; font-weight: 600; color: rgba(255,255,255,.8); }
+
+.controls-row {
+  display: flex;
+  gap: .65rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  background: var(--surface);
+  border: 2.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  box-shadow: var(--shadow-sm);
+}
+.sel {
+  border: 2.5px solid var(--border);
+  border-radius: 99px;
+  padding: .38rem .85rem;
+  font-size: .87rem;
+  font-weight: 700;
+  font-family: var(--font);
+  background: var(--surface2);
+  color: var(--text);
+  outline: none;
+}
+
+.generate-row { display: flex; gap: .65rem; margin-bottom: 1.75rem; }
+.topic-input {
+  flex: 1;
+  border: 2.5px solid var(--border);
+  border-radius: 99px;
+  padding: .6rem 1.1rem;
+  font-size: .95rem;
+  font-weight: 700;
+  font-family: var(--font);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s;
+}
+.topic-input:focus { border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+.topic-input::placeholder { color: var(--text-muted); font-weight: 600; }
+
+.btn-blue {
+  padding: .55rem 1.4rem;
+  background: #3B82F6;
+  color: #fff;
+  border: none;
+  border-radius: 99px;
+  font-size: .92rem;
+  font-weight: 800;
+  font-family: var(--font);
+  cursor: pointer;
+  box-shadow: 0 4px 0 #1D4ED8;
+  transition: background .15s, transform .1s;
+}
+.btn-blue:hover { background: #2563EB; transform: translateY(-1px); }
+.btn-blue:active { transform: translateY(2px); box-shadow: 0 2px 0 #1D4ED8; }
+.btn-blue:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
 {% endblock %}
 
 {% block content %}
-<div class="fc-header">
-  <h2>Flashcards</h2>
+<div class="page-hero">
+  <div class="hero-emoji">🃏</div>
+  <div class="page-hero-text">
+    <h2>Flashcard Deck!</h2>
+    <p>Tap a card to flip it and see the answer ✨</p>
+  </div>
+</div>
+
+<div class="controls-row">
   <select id="subjectSel" class="sel">
     {% for s in subjects %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
   </select>
@@ -42,29 +95,31 @@
 </div>
 
 <div class="generate-row">
-  <input id="topicInput" type="text" placeholder="Topic (e.g. plant cells, multiplication tables…)">
-  <button class="btn-primary" id="generateBtn" onclick="generateDeck()">Make Cards</button>
+  <input id="topicInput" class="topic-input" type="text" placeholder="🔍 Topic (e.g. plant cells, multiplication tables…)">
+  <button class="btn-blue" id="generateBtn" onclick="generateDeck()">🃏 Make Cards</button>
 </div>
 
-<div id="deckArea">
-  <div class="card-scene" onclick="flipCard()">
+<div id="deckArea" style="display:none">
+  <div class="card-scene" onclick="flipCard()" title="Click to flip!">
     <div class="card-3d" id="card3d">
       <div class="card-face front">
-        <div class="card-label">Concept</div>
+        <div class="card-label">💡 Concept</div>
         <div class="card-title" id="cardFront">—</div>
-        <div class="card-hint">Tap to reveal definition</div>
+        <div class="card-hint">👆 Tap to reveal!</div>
       </div>
       <div class="card-face back">
-        <div class="card-label">Definition</div>
+        <div class="card-label">📖 Definition</div>
         <div class="card-body" id="cardBack">—</div>
       </div>
     </div>
   </div>
+
   <div class="deck-dots" id="deckDots"></div>
-  <div class="deck-nav" style="margin-top:.75rem">
-    <button onclick="prevCard()">‹ Prev</button>
+
+  <div class="deck-nav" style="margin-top:1rem">
+    <button class="btn-outline" onclick="prevCard()">‹ Prev</button>
     <span class="deck-counter" id="deckCounter">1 / 1</span>
-    <button onclick="nextCard()">Next ›</button>
+    <button class="btn-outline" onclick="nextCard()">Next ›</button>
   </div>
 </div>
 {% endblock %}
@@ -78,9 +133,9 @@ function getSubject() { return document.getElementById('subjectSel').value; }
 
 async function generateDeck() {
   const topic = document.getElementById('topicInput').value.trim();
-  if (!topic) { alert('Please enter a topic.'); return; }
+  if (!topic) { alert('Please enter a topic! 📚'); return; }
   const btn = document.getElementById('generateBtn');
-  btn.disabled = true; btn.textContent = 'Generating…';
+  btn.disabled = true; btn.textContent = '⏳ Generating…';
   try {
     const r = await fetch('/api/flashcard/generate', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -93,8 +148,9 @@ async function generateDeck() {
     buildDots();
     showCard();
     document.getElementById('deckArea').style.display = 'block';
+    document.getElementById('deckArea').scrollIntoView({behavior:'smooth'});
   } catch(e) { alert('Error: ' + e.message); }
-  finally { btn.disabled = false; btn.textContent = 'Make Cards'; }
+  finally { btn.disabled = false; btn.textContent = '🃏 Make Cards'; }
 }
 
 function buildDots() {
@@ -117,6 +173,12 @@ function flipCard() { document.getElementById('card3d').classList.toggle('flippe
 
 function prevCard() { if (idx > 0)              { idx--; showCard(); } }
 function nextCard() { if (idx < cards.length-1) { idx++; showCard(); } }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft')  prevCard();
+  if (e.key === 'ArrowRight') nextCard();
+  if (e.key === ' ')          { e.preventDefault(); flipCard(); }
+});
 
 (function() {
   const saved = localStorage.getItem('edu_lang');

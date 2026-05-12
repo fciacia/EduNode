@@ -2,36 +2,233 @@
 {% block title %}EduNode — {{ region }}{% endblock %}
 
 {% block extra_style %}
-.hero { text-align: center; padding: 2rem 0 1.5rem; }
-.hero h1 { font-size: 2rem; color: var(--primary); margin-bottom: .4rem; }
-.hero p  { color: #555; font-size: 1rem; }
-.lang-row { display: flex; align-items: center; justify-content: center; gap: .75rem; margin: 1.25rem 0; flex-wrap: wrap; }
-.lang-row label { font-size: .9rem; font-weight: 600; color: #444; }
-.lang-select { border: 1px solid var(--border); border-radius: 8px; padding: .4rem .75rem; font-size: .9rem; background: #fff; }
-.subject-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
-.subject-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.4rem 1rem; text-align: center; text-decoration: none; color: inherit; transition: transform .15s, box-shadow .15s; border-top: 4px solid var(--primary); }
-.subject-card:hover { transform: translateY(-3px); box-shadow: 0 4px 14px rgba(0,0,0,.15); }
-.subject-card .icon { font-size: 2rem; margin-bottom: .5rem; display: block; }
-.subject-card .name { font-size: .95rem; font-weight: 600; color: #333; }
-.quick-links { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
-.quick-link { padding: .55rem 1.1rem; border-radius: 20px; text-decoration: none; font-size: .88rem; font-weight: 600; border: 2px solid var(--primary); color: var(--primary); transition: background .15s, color .15s; }
-.quick-link:hover { background: var(--primary); color: #fff; }
+/* ── Hero ── */
+.hero {
+  text-align: center;
+  padding: 2.5rem 1rem 1.75rem;
+  animation: fade-in .4s ease;
+}
+
+.hero-mascot {
+  font-size: 4rem;
+  display: block;
+  animation: float 3s ease-in-out infinite;
+  margin-bottom: .75rem;
+  filter: drop-shadow(0 6px 16px rgba(124,58,237,.25));
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  color: var(--primary);
+  margin-bottom: .35rem;
+  line-height: 1.1;
+}
+
+.hero-sub {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 99px;
+  padding: .35rem .9rem;
+  font-size: .82rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+  letter-spacing: .03em;
+}
+
+/* ── Language row ── */
+.lang-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.lang-row label {
+  font-size: .92rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.lang-select {
+  border: 2.5px solid var(--border);
+  border-radius: 99px;
+  padding: .4rem 1rem;
+  font-size: .9rem;
+  font-weight: 700;
+  background: var(--surface);
+  color: var(--text);
+  max-width: 200px;
+}
+
+/* ── Guide banner ── */
+.guide-banner {
+  background: linear-gradient(135deg, var(--primary) 0%, #5B21B6 100%);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  box-shadow: 0 6px 0 #3B1388;
+  animation: fade-in .5s ease .1s both;
+}
+
+.guide-banner .guide-icon { font-size: 2.5rem; flex-shrink: 0; }
+
+.guide-banner .guide-text h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: #fff;
+  margin-bottom: .3rem;
+}
+
+.guide-banner .guide-text p {
+  font-size: .88rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.82);
+  line-height: 1.5;
+}
+
+/* ── Subject grid ── */
+.grid-label {
+  font-size: .82rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: .85rem;
+  text-align: center;
+}
+
+.subject-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.subject-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 2.5px solid var(--border);
+  box-shadow: 0 4px 0 var(--border);
+  padding: 1.5rem 1rem 1.25rem;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+  animation: pop-in .3s ease both;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .6rem;
+}
+
+.subject-card:nth-child(1) { animation-delay: .05s; border-top: 4px solid #7C3AED; }
+.subject-card:nth-child(2) { animation-delay: .10s; border-top: 4px solid #3B82F6; }
+.subject-card:nth-child(3) { animation-delay: .15s; border-top: 4px solid #10B981; }
+.subject-card:nth-child(4) { animation-delay: .20s; border-top: 4px solid #F59E0B; }
+.subject-card:nth-child(5) { animation-delay: .25s; border-top: 4px solid #EC4899; }
+
+.subject-card:hover {
+  transform: translateY(-4px) rotate(-1deg);
+  box-shadow: 0 8px 0 var(--border);
+  border-color: var(--primary);
+}
+
+.subject-card .icon {
+  font-size: 2.4rem;
+  display: block;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.12));
+}
+
+.subject-card .name {
+  font-size: .9rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+/* ── Quick links ── */
+.quick-links-label {
+  font-size: .82rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: .85rem;
+  text-align: center;
+}
+
+.quick-links {
+  display: flex;
+  gap: .75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.quick-link {
+  padding: .6rem 1.25rem;
+  border-radius: 99px;
+  text-decoration: none;
+  font-size: .9rem;
+  font-weight: 800;
+  border: 2.5px solid var(--primary);
+  color: var(--primary);
+  background: transparent;
+  transition: background .15s, color .15s, transform .1s;
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+.quick-link:hover {
+  background: var(--primary);
+  color: #fff;
+  transform: translateY(-2px);
+}
 {% endblock %}
 
 {% block content %}
 <div class="hero">
-  <h1>EduNode</h1>
-  <p>Your offline AI tutor — {{ region }}</p>
+  <span class="hero-mascot">🤖</span>
+  <h1 class="hero-title">EduNode</h1>
+  <p class="hero-sub">Your offline AI learning buddy! ✨</p>
+  <span class="hero-badge">📍 {{ region }}</span>
+</div>
+
+<div class="guide-banner">
+  <div class="guide-icon">👋</div>
+  <div class="guide-text">
+    <h3>Hey there, learner!</h3>
+    <p>Pick a subject below to start chatting with your AI tutor. You can ask questions, take quizzes, study with flashcards, or even listen to a fun podcast!</p>
+  </div>
 </div>
 
 <div class="lang-row">
-  <label for="globalLang">Language:</label>
+  <label for="globalLang">🌏 Language:</label>
   <select id="globalLang" class="lang-select" onchange="saveLang(this.value)">
     {% for lang in languages %}
     <option value="{{ lang }}" {% if loop.first %}selected{% endif %}>{{ lang }}</option>
     {% endfor %}
   </select>
 </div>
+
+<p class="grid-label">📚 Choose a subject to get started</p>
 
 <div class="subject-grid">
   {% set icons = {"Mathematics": "📐", "Science": "🔬", "English Language": "📖", "Environmental Studies": "🌿", "Digital Literacy": "💻"} %}
@@ -43,23 +240,25 @@
   {% endfor %}
 </div>
 
+<p class="quick-links-label">🚀 Other activities</p>
+
 <div class="quick-links">
-  <a href="/quiz"      class="quick-link">Take a Quiz</a>
-  <a href="/flashcard" class="quick-link">Flashcards</a>
-  <a href="/podcast"   class="quick-link">Podcast</a>
-  <a href="/progress"  class="quick-link">My Progress</a>
+  <a href="/quiz"      class="quick-link">🧠 Take a Quiz</a>
+  <a href="/flashcard" class="quick-link">🃏 Flashcards</a>
+  <a href="/podcast"   class="quick-link">🎧 Podcast</a>
+  <a href="/progress"  class="quick-link">🏆 My Progress</a>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-  // Persist language choice
   function saveLang(val) { localStorage.setItem('edu_lang', val); }
+
   function attachLang(el) {
     const lang = localStorage.getItem('edu_lang') || '{{ languages[0] }}';
     el.href = el.href + '&lang=' + encodeURIComponent(lang);
   }
-  // Restore saved language
+
   (function() {
     const saved = localStorage.getItem('edu_lang');
     if (saved) {

@@ -2,47 +2,82 @@
 {% block title %}Progress — EduNode{% endblock %}
 
 {% block extra_style %}
-.progress-header { margin-bottom: 1.25rem; }
-.progress-header h2 { font-size: 1.1rem; color: var(--primary); margin-bottom: .75rem; }
-.lookup-row { display: flex; gap: .5rem; }
-.lookup-row input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: .5rem .8rem; font-size: .93rem; }
-.btn-primary { padding: .5rem 1.2rem; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; }
-.btn-primary:hover { background: var(--primary-dark); }
-#progressResult { display: none; margin-top: 1.5rem; }
-.student-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.2rem 1.5rem; margin-bottom: 1.25rem; }
-.student-card h3 { font-size: 1.1rem; color: #333; margin-bottom: .3rem; }
-.student-card .meta { color: #777; font-size: .85rem; }
-.badges-grid { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.25rem; }
-.badge-card { background: #fff; border-radius: 10px; border: 2px solid #fbbc04; padding: .5rem .85rem; font-size: .82rem; font-weight: 600; display: flex; align-items: center; gap: .4rem; color: #b8860b; }
-.section-title { font-size: .9rem; font-weight: 700; color: #555; margin: 1.5rem 0 .75rem; text-transform: uppercase; letter-spacing: .04em; }
-.quiz-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-.quiz-table th { background: #f1f3f4; padding: .5rem .75rem; text-align: left; font-weight: 600; color: #444; border-bottom: 2px solid var(--border); }
-.quiz-table td { padding: .5rem .75rem; border-bottom: 1px solid var(--border); }
-.quiz-table tr:last-child td { border-bottom: none; }
-.pct-chip { display: inline-block; padding: .15rem .55rem; border-radius: 12px; font-size: .8rem; font-weight: 700; }
-.pct-pass { background: #e6f4ea; color: #1e8e3e; }
-.pct-fail { background: #fce8e6; color: #c62828; }
-.empty-state { text-align: center; color: #aaa; padding: 2rem; font-size: .9rem; }
+.page-hero {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 6px 0 #B45309;
+  animation: fade-in .3s ease;
+}
+.page-hero .hero-emoji { font-size: 3rem; animation: float 2.8s ease-in-out infinite; }
+.page-hero-text h2 { font-family: var(--font-display); font-size: 1.5rem; color: #fff; margin-bottom: .2rem; }
+.page-hero-text p  { font-size: .9rem; font-weight: 600; color: rgba(255,255,255,.85); }
+
+.lookup-row {
+  display: flex;
+  gap: .65rem;
+  margin-bottom: 1.5rem;
+}
+.id-input {
+  flex: 1;
+  border: 2.5px solid var(--border);
+  border-radius: 99px;
+  padding: .6rem 1.1rem;
+  font-size: .95rem;
+  font-weight: 700;
+  font-family: var(--font);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s;
+}
+.id-input:focus { border-color: #F59E0B; box-shadow: 0 0 0 3px rgba(245,158,11,.15); }
+.id-input::placeholder { color: var(--text-muted); font-weight: 600; }
+
+.btn-amber {
+  padding: .55rem 1.4rem;
+  background: #F59E0B;
+  color: #fff;
+  border: none;
+  border-radius: 99px;
+  font-size: .92rem;
+  font-weight: 800;
+  font-family: var(--font);
+  cursor: pointer;
+  box-shadow: 0 4px 0 #D97706;
+  transition: background .15s, transform .1s;
+}
+.btn-amber:hover { background: #D97706; transform: translateY(-1px); }
+.btn-amber:active { transform: translateY(2px); box-shadow: 0 2px 0 #B45309; }
 {% endblock %}
 
 {% block content %}
-<div class="progress-header">
-  <h2>My Progress</h2>
-  <div class="lookup-row">
-    <input id="studentIdInput" type="number" min="1" placeholder="Student ID (number)">
-    <button class="btn-primary" onclick="loadProgress()">View Progress</button>
+<div class="page-hero">
+  <div class="hero-emoji">🏆</div>
+  <div class="page-hero-text">
+    <h2>My Progress!</h2>
+    <p>See your badges, quiz results and achievements 🌟</p>
   </div>
 </div>
 
-<div id="progressResult">
+<div class="lookup-row">
+  <input id="studentIdInput" class="id-input" type="number" min="1" placeholder="🔍 Enter your Student ID…">
+  <button class="btn-amber" onclick="loadProgress()">View Progress</button>
+</div>
+
+<div id="progressResult" style="display:none">
   <div class="student-card">
-    <h3 id="studentName"></h3>
+    <h3 id="studentName">—</h3>
     <div class="meta" id="studentMeta"></div>
     <div class="badges-grid" id="badgesGrid"></div>
   </div>
 
-  <div class="section-title">Quiz History</div>
-  <div id="quizHistoryWrap">
+  <p class="section-title">📝 Quiz History</p>
+  <div class="card" style="padding:0;overflow:hidden" id="quizHistoryWrap">
     <div class="empty-state">No quizzes yet.</div>
   </div>
 </div>
@@ -52,47 +87,51 @@
 <script>
 async function loadProgress() {
   const id = parseInt(document.getElementById('studentIdInput').value);
-  if (!id || id < 1) { alert('Please enter a valid student ID.'); return; }
+  if (!id || id < 1) { alert('Please enter a valid Student ID! 🔢'); return; }
   try {
     const r = await fetch(`/api/progress/${id}`);
-    if (!r.ok) { alert('Student not found.'); return; }
+    if (!r.ok) { alert('Student not found. Check your ID! 😅'); return; }
     const d = await r.json();
     renderProgress(d);
     document.getElementById('progressResult').style.display = 'block';
+    document.getElementById('progressResult').scrollIntoView({behavior:'smooth'});
   } catch(e) { alert('Error: ' + e.message); }
 }
 
 function renderProgress(d) {
   const student = d.student || {};
-  document.getElementById('studentName').textContent = student.name || 'Unknown';
+  document.getElementById('studentName').textContent = (student.name || 'Unknown') + ' 👋';
   document.getElementById('studentMeta').textContent =
-    `Language: ${student.language || '—'}  ·  Sessions: ${d.sessions || 0}  ·  Last active: ${student.last_active || 'never'}`;
+    `🌏 ${student.language || '—'}  ·  💬 ${d.sessions || 0} sessions  ·  🕐 Last active: ${student.last_active || 'never'}`;
 
-  // Badges
   const badgesGrid = document.getElementById('badgesGrid');
   badgesGrid.innerHTML = '';
-  const badgeIcons = {'First Step': '🌟', 'Quiz Ace': '🏆', 'Week Warrior': '📅', 'Dialect Pioneer': '🗣️'};
+  const badgeIcons = {'First Step':'🌟','Quiz Ace':'🏆','Week Warrior':'📅','Dialect Pioneer':'🗣️'};
   (d.badges || []).forEach(b => {
     const el = document.createElement('div'); el.className = 'badge-card';
     el.textContent = (badgeIcons[b] || '🎖️') + ' ' + b;
     badgesGrid.appendChild(el);
   });
-  if (!d.badges?.length) badgesGrid.innerHTML = '<span style="color:#aaa;font-size:.85rem">No badges yet</span>';
+  if (!d.badges?.length) {
+    badgesGrid.innerHTML = '<span style="color:var(--text-muted);font-size:.88rem;font-weight:700">No badges yet — keep learning! 💪</span>';
+  }
 
-  // Quiz history
   const wrap = document.getElementById('quizHistoryWrap');
   const quizzes = d.quiz_results || [];
   if (!quizzes.length) {
-    wrap.innerHTML = '<div class="empty-state">No quizzes yet.</div>';
+    wrap.innerHTML = '<div class="empty-state">No quizzes yet — go try one! 🧠</div>';
     return;
   }
   let html = '<table class="quiz-table"><thead><tr><th>Topic</th><th>Score</th><th>Date</th></tr></thead><tbody>';
   quizzes.forEach(q => {
     const pct = Math.round((q.score / q.total) * 100);
     const cls = pct >= 70 ? 'pct-pass' : 'pct-fail';
-    html += `<tr><td>${escHtml(q.topic)}</td>
-      <td>${q.score}/${q.total} <span class="pct-chip ${cls}">${pct}%</span></td>
-      <td>${q.created_at ? q.created_at.split('T')[0] : '—'}</td></tr>`;
+    const emoji = pct >= 70 ? '🎉' : '💪';
+    html += `<tr>
+      <td>${escHtml(q.topic)}</td>
+      <td>${emoji} ${q.score}/${q.total} <span class="pct-chip ${cls}">${pct}%</span></td>
+      <td>${q.created_at ? q.created_at.split('T')[0] : '—'}</td>
+    </tr>`;
   });
   html += '</tbody></table>';
   wrap.innerHTML = html;
@@ -102,7 +141,6 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// Pre-fill student ID from localStorage (saved by chat.js after first message)
 document.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('edu_student_id');
   if (saved) {

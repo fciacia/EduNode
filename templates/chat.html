@@ -2,33 +2,64 @@
 {% block title %}Chat — EduNode{% endblock %}
 
 {% block extra_style %}
-.chat-header { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
-.chat-header h2 { font-size: 1.1rem; color: var(--primary); margin: 0; flex: 1; }
-.sel { border: 1px solid var(--border); border-radius: 8px; padding: .35rem .65rem; font-size: .85rem; background: #fff; }
-.chat-log { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); min-height: 340px; max-height: 52vh; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: .75rem; margin-bottom: 1rem; }
-.bubble { max-width: 78%; padding: .65rem .9rem; border-radius: 14px; font-size: .93rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
-.bubble.user { background: var(--user-bg); color: var(--user-fg); align-self: flex-end; border-bottom-right-radius: 4px; }
-.bubble.bot  { background: var(--bot-bg);  color: var(--bot-fg);  align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: var(--shadow); }
-.typing { display: flex; gap: .3rem; align-items: center; padding: .65rem .9rem; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: #aaa; animation: blink 1.2s infinite; }
-.dot:nth-child(2) { animation-delay: .2s; }
-.dot:nth-child(3) { animation-delay: .4s; }
-@keyframes blink { 0%,80%,100% { opacity:.3; } 40% { opacity:1; } }
-.input-row { display: flex; gap: .5rem; align-items: flex-end; }
-.input-row textarea { flex: 1; border: 1px solid var(--border); border-radius: 12px; padding: .6rem .85rem; font-size: .93rem; resize: none; min-height: 44px; max-height: 120px; font-family: var(--font); }
-.input-row textarea:focus { outline: none; border-color: var(--primary); }
-.btn-icon { width: 44px; height: 44px; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; transition: background .15s; }
-.btn-send { background: var(--primary); color: #fff; }
-.btn-send:hover { background: var(--primary-dark); }
-.btn-mic  { background: #f1f3f4; color: #333; }
-.btn-mic.recording { background: #ea4335; color: #fff; animation: pulse 1s infinite; }
-@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
-.play-btn { background: none; border: none; cursor: pointer; font-size: .95rem; margin-top: .3rem; color: var(--primary); padding: 0; }
+.chat-header {
+  display: flex;
+  gap: .75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  background: var(--surface);
+  border: 2.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-sm);
+  animation: fade-in .3s ease;
+}
+
+.chat-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--primary);
+  margin: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+
+.sel {
+  border: 2.5px solid var(--border);
+  border-radius: 99px;
+  padding: .38rem .85rem;
+  font-size: .87rem;
+  font-weight: 700;
+  font-family: var(--font);
+  background: var(--surface2);
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s;
+}
+.sel:focus { border-color: var(--primary); }
+
+.name-input {
+  border: 2.5px solid var(--border);
+  border-radius: 99px;
+  padding: .38rem .85rem;
+  font-size: .87rem;
+  font-weight: 700;
+  font-family: var(--font);
+  background: var(--surface2);
+  color: var(--text);
+  outline: none;
+  width: 130px;
+  transition: border-color .15s;
+}
+.name-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
 {% endblock %}
 
 {% block content %}
 <div class="chat-header">
-  <h2>Ask EduNode</h2>
+  <h2 class="chat-title">🤖 Ask EduNode</h2>
   <select id="subjectSel" class="sel">
     {% for s in subjects %}
     <option value="{{ s }}" {% if s == default_subject %}selected{% endif %}>{{ s }}</option>
@@ -39,19 +70,23 @@
     <option value="{{ l }}" {% if l == default_language %}selected{% endif %}>{{ l }}</option>
     {% endfor %}
   </select>
-  <input id="studentName" class="sel" type="text" placeholder="Your name" style="width:130px"
+  <input id="studentName" class="name-input" type="text" placeholder="Your name ✏️"
          value="{{ request.args.get('name', '') }}">
 </div>
 
 <div id="chatLog" class="chat-log">
-  <div class="bubble bot">Hi! I'm EduNode, your AI tutor. Select a subject and ask me anything 📚</div>
+  <div class="bubble bot">
+    <span class="bubble-avatar">🤖</span>
+    <div class="message">Hi there! I'm <strong>EduNode</strong>, your AI tutor! 🌟<br>Pick a subject up top and ask me anything — I'm here to help you learn! 📚</div>
+  </div>
 </div>
 
 <div class="input-row">
-  <textarea id="msgInput" rows="1" placeholder="Type your question…"
+  <textarea id="msgInput" rows="1" placeholder="Type your question here… 💬"
     onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
-  <button class="btn-icon btn-mic" id="micBtn" title="Hold to record voice" onmousedown="startRec()" onmouseup="stopRec()" ontouchstart="startRec()" ontouchend="stopRec()">🎤</button>
-  <button class="btn-icon btn-send" onclick="sendMsg()" title="Send">➤</button>
+  <button class="btn-icon btn-mic" id="micBtn" title="Hold to record voice"
+    onmousedown="startRec()" onmouseup="stopRec()" ontouchstart="startRec()" ontouchend="stopRec()">🎤</button>
+  <button class="btn-icon btn-send" onclick="sendMsg()" title="Send message">➤</button>
 </div>
 {% endblock %}
 
@@ -66,47 +101,64 @@ function getSubject() { return document.getElementById('subjectSel').value; }
 function getName()    { return document.getElementById('studentName').value.trim() || 'Student'; }
 
 function addBubble(text, who) {
-  const d = document.createElement('div');
-  d.className = 'bubble ' + who;
-  d.textContent = text;
-  log.appendChild(d);
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble ' + who;
+  const avatar = document.createElement('span');
+  avatar.className = 'bubble-avatar';
+  avatar.textContent = who === 'user' ? '🧒' : '🤖';
+  const msg = document.createElement('div');
+  msg.className = 'message';
+  msg.textContent = text;
+  wrap.appendChild(avatar);
+  wrap.appendChild(msg);
+  log.appendChild(wrap);
   log.scrollTop = log.scrollHeight;
-  return d;
+  return msg;
 }
 
 function addTyping() {
-  const d = document.createElement('div');
-  d.className = 'bubble bot typing'; d.id = 'typing';
-  d.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-  log.appendChild(d); log.scrollTop = log.scrollHeight;
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble bot'; wrap.id = 'typing';
+  wrap.innerHTML = '<span class="bubble-avatar">🤖</span><div class="message bot"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>';
+  log.appendChild(wrap);
+  log.scrollTop = log.scrollHeight;
 }
 
 function removeTyping() { document.getElementById('typing')?.remove(); }
 
-function addPlayBtn(bubble, text) {
+function addPlayBtn(msgEl, text) {
   const btn = document.createElement('button');
-  btn.className = 'play-btn'; btn.textContent = '🔊 Listen';
-  btn.onclick = () => playTTS(text);
-  bubble.appendChild(document.createElement('br'));
-  bubble.appendChild(btn);
+  btn.className = 'play-btn';
+  btn.innerHTML = '🔊 Listen';
+  btn.onclick = () => playTTS(text, btn);
+  msgEl.appendChild(document.createElement('br'));
+  msgEl.appendChild(btn);
 }
 
-async function playTTS(text) {
+async function playTTS(text, btn) {
   try {
+    btn.textContent = '⏳ Loading…';
     const r = await fetch('/api/voice/tts', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({text})
     });
-    if (!r.ok) return;
+    if (!r.ok) throw new Error();
     const blob = await r.blob();
-    new Audio(URL.createObjectURL(blob)).play();
-  } catch(e) {}
+    const audio = new Audio(URL.createObjectURL(blob));
+    btn.textContent = '⏸️ Playing';
+    audio.onended = () => { btn.innerHTML = '🔊 Listen'; };
+    audio.play();
+  } catch(e) {
+    btn.innerHTML = '🔊 Listen';
+  }
 }
 
 async function sendMsg() {
-  const msg = input.value.trim(); if (!msg) return;
+  const msg = input.value.trim();
+  if (!msg) return;
   addBubble(msg, 'user');
   input.value = '';
+  input.style.height = 'auto';
   addTyping();
   try {
     const r = await fetch('/api/chat', {
@@ -115,49 +167,59 @@ async function sendMsg() {
     });
     const d = await r.json();
     removeTyping();
-    const bubble = addBubble(d.response || d.error || 'No response', 'bot');
-    if (d.response) addPlayBtn(bubble, d.response);
+    const msgEl = addBubble(d.response || d.error || 'No response', 'bot');
+    if (d.response) addPlayBtn(msgEl, d.response);
+    if (d.student_id) localStorage.setItem('edu_student_id', d.student_id);
   } catch(e) {
     removeTyping();
-    addBubble('Connection error — is EduNode running?', 'bot');
+    addBubble('Connection error — is EduNode running? 😅', 'bot');
   }
 }
 
 async function startRec() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({audio: true});
-    mediaRec = new MediaRecorder(stream); audioChunks = [];
+    mediaRec = new MediaRecorder(stream);
+    audioChunks = [];
     mediaRec.ondataavailable = e => audioChunks.push(e.data);
     mediaRec.start();
     document.getElementById('micBtn').classList.add('recording');
+    document.getElementById('micBtn').textContent = '⏹️';
   } catch(e) { alert('Microphone not available: ' + e.message); }
 }
 
 async function stopRec() {
   if (!mediaRec || mediaRec.state === 'inactive') return;
   mediaRec.stop();
-  document.getElementById('micBtn').classList.remove('recording');
+  const btn = document.getElementById('micBtn');
+  btn.classList.remove('recording');
+  btn.textContent = '🎤';
   mediaRec.onstop = async () => {
     const blob = new Blob(audioChunks, {type: 'audio/webm'});
-    const fd = new FormData(); fd.append('audio', blob, 'voice.webm');
+    const fd = new FormData();
+    fd.append('audio', blob, 'voice.webm');
     addTyping();
     try {
       const r = await fetch('/api/voice/stt', {method: 'POST', body: fd});
       const d = await r.json();
       removeTyping();
       if (d.text) { input.value = d.text; sendMsg(); }
-      else addBubble('Could not transcribe audio.', 'bot');
+      else addBubble('Could not transcribe audio. Try again! 🎤', 'bot');
     } catch(e) { removeTyping(); }
     mediaRec.stream.getTracks().forEach(t => t.stop());
   };
 }
 
+// Auto-resize textarea
+input.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
 // Restore saved language
 (function() {
   const saved = localStorage.getItem('edu_lang');
-  if (saved) {
-    [...document.getElementById('langSel').options].forEach(o => o.selected = (o.value === saved));
-  }
+  if (saved) [...document.getElementById('langSel').options].forEach(o => o.selected = (o.value === saved));
 })();
 document.getElementById('langSel').addEventListener('change', e => localStorage.setItem('edu_lang', e.target.value));
 </script>

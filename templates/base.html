@@ -1,48 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#1a73e8">
+  <meta name="theme-color" content="#7C3AED">
   <link rel="manifest" href="/static/icons/manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="/static/css/style.css">
   <title>{% block title %}EduNode{% endblock %}</title>
-  <style>
-    .nav { background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: var(--shadow); position: sticky; top: 0; z-index: 20; }
-    .nav-inner { max-width: 900px; margin: 0 auto; padding: .6rem 1rem; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
-    .nav-brand { font-weight: 700; font-size: 1.05rem; color: var(--primary); text-decoration: none; margin-right: auto; }
-    .nav-brand span { font-weight: 400; color: #555; font-size: .85rem; margin-left: .3rem; }
-    .nav-links { display: flex; gap: .25rem; flex-wrap: wrap; }
-    .nav-link { padding: .35rem .7rem; border-radius: 8px; text-decoration: none; font-size: .85rem; font-weight: 500; color: #444; transition: background .15s; }
-    .nav-link:hover, .nav-link.active { background: #e8f0fe; color: var(--primary); }
-    .nav-kolibri { padding: .35rem .7rem; border-radius: 8px; text-decoration: none; font-size: .8rem; font-weight: 600; color: #fff; background: #e67e22; margin-left: .5rem; }
-    .nav-kolibri:hover { background: #ca6f1e; }
-
-    .offline-banner { display: none; background: #fff3cd; color: #856404; text-align: center; padding: .4rem 1rem; font-size: .82rem; border-bottom: 1px solid #ffc107; }
-    .offline-banner.visible { display: block; }
-
-    .page-wrap { max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
-    {% block extra_style %}{% endblock %}
-  </style>
+  <style>{% block extra_style %}{% endblock %}</style>
 </head>
 <body>
 
 <div id="offlineBanner" class="offline-banner">
-  You are offline — EduNode is running locally on this device.
+  📡 You are offline — EduNode is running locally on this device!
 </div>
 
 <nav class="nav">
   <div class="nav-inner">
-    <a href="/" class="nav-brand">EduNode <span>{{ region }}</span></a>
+    <a href="/" class="nav-brand">
+      🌟 EduNode
+      <span class="region-tag">{{ region }}</span>
+    </a>
     <div class="nav-links">
-      <a href="/chat"      class="nav-link {% if request.path == '/chat'      %}active{% endif %}">Chat</a>
-      <a href="/quiz"      class="nav-link {% if request.path == '/quiz'      %}active{% endif %}">Quiz</a>
-      <a href="/flashcard" class="nav-link {% if request.path == '/flashcard' %}active{% endif %}">Flashcards</a>
-      <a href="/podcast"   class="nav-link {% if request.path == '/podcast'   %}active{% endif %}">Podcast</a>
-      <a href="/progress"  class="nav-link {% if request.path == '/progress'  %}active{% endif %}">Progress</a>
+      <a href="/chat"      class="nav-link {% if request.path == '/chat'      %}active{% endif %}">💬 Chat</a>
+      <a href="/quiz"      class="nav-link {% if request.path == '/quiz'      %}active{% endif %}">🧠 Quiz</a>
+      <a href="/flashcard" class="nav-link {% if request.path == '/flashcard' %}active{% endif %}">🃏 Cards</a>
+      <a href="/podcast"   class="nav-link {% if request.path == '/podcast'   %}active{% endif %}">🎧 Podcast</a>
+      <a href="/progress"  class="nav-link {% if request.path == '/progress'  %}active{% endif %}">🏆 Progress</a>
     </div>
-    <a href="http://{{ request.host.split(':')[0] }}:8080" target="_blank" class="nav-kolibri" title="Open Khan Academy lessons in Kolibri">Kolibri ↗</a>
   </div>
 </nav>
 
@@ -50,8 +38,27 @@
   {% block content %}{% endblock %}
 </div>
 
+<!-- Floating theme toggle — must be in DOM before the script below -->
+<button class="theme-fab" id="themeToggle" aria-label="Toggle theme">
+  🌙<span class="toggle-label">Dark</span>
+</button>
+
 <script>
-  // Offline banner
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('edu_theme', t);
+    const btn = document.getElementById('themeToggle');
+    btn.innerHTML = t === 'dark'
+      ? '☀️<span class="toggle-label">Light</span>'
+      : '🌙<span class="toggle-label">Dark</span>';
+  }
+
+  setTheme(localStorage.getItem('edu_theme') || 'light');
+
+  document.getElementById('themeToggle').addEventListener('click', function() {
+    setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
   function updateOffline() {
     document.getElementById('offlineBanner').classList.toggle('visible', !navigator.onLine);
   }
@@ -59,11 +66,11 @@
   window.addEventListener('offline', updateOffline);
   updateOffline();
 
-  // PWA service worker registration
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/static/sw.js').catch(() => {});
   }
 </script>
+
 {% block extra_scripts %}{% endblock %}
 </body>
 </html>

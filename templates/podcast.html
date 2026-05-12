@@ -2,44 +2,132 @@
 {% block title %}Podcast — EduNode{% endblock %}
 
 {% block extra_style %}
-.podcast-header { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
-.podcast-header h2 { font-size: 1.1rem; color: var(--primary); margin: 0; flex: 1; }
-.sel { border: 1px solid var(--border); border-radius: 8px; padding: .35rem .65rem; font-size: .85rem; background: #fff; }
-.generate-row { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
-.generate-row input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: .5rem .8rem; font-size: .93rem; }
-.btn-primary { padding: .5rem 1.2rem; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; }
-.btn-primary:hover { background: var(--primary-dark); }
-.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-#podcastResult { display: none; }
-.audio-player { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; gap: .75rem; }
-.audio-player audio { flex: 1; }
-.script-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.25rem; }
-.script-card h3 { font-size: .95rem; color: #555; margin-bottom: 1rem; }
-.script-line { margin-bottom: .55rem; font-size: .93rem; line-height: 1.6; }
-.maya { color: #1a73e8; }
-.niko { color: #34a853; }
-.speaker { font-weight: 700; margin-right: .3rem; }
+.page-hero {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 6px 0 #047857;
+  animation: fade-in .3s ease;
+}
+.page-hero .hero-emoji { font-size: 3rem; animation: float 2.5s ease-in-out infinite; }
+.page-hero-text h2 { font-family: var(--font-display); font-size: 1.5rem; color: #fff; margin-bottom: .2rem; }
+.page-hero-text p  { font-size: .9rem; font-weight: 600; color: rgba(255,255,255,.8); }
+
+.controls-row {
+  display: flex;
+  gap: .65rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  background: var(--surface);
+  border: 2.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  box-shadow: var(--shadow-sm);
+}
+.sel {
+  border: 2.5px solid var(--border);
+  border-radius: 99px;
+  padding: .38rem .85rem;
+  font-size: .87rem;
+  font-weight: 700;
+  font-family: var(--font);
+  background: var(--surface2);
+  color: var(--text);
+  outline: none;
+}
+
+.generate-row { display: flex; gap: .65rem; margin-bottom: 1.75rem; }
+.topic-input {
+  flex: 1;
+  border: 2.5px solid var(--border);
+  border-radius: 99px;
+  padding: .6rem 1.1rem;
+  font-size: .95rem;
+  font-weight: 700;
+  font-family: var(--font);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s;
+}
+.topic-input:focus { border-color: #10B981; box-shadow: 0 0 0 3px rgba(16,185,129,.15); }
+.topic-input::placeholder { color: var(--text-muted); font-weight: 600; }
+
+.btn-green {
+  padding: .55rem 1.4rem;
+  background: #10B981;
+  color: #fff;
+  border: none;
+  border-radius: 99px;
+  font-size: .92rem;
+  font-weight: 800;
+  font-family: var(--font);
+  cursor: pointer;
+  box-shadow: 0 4px 0 #059669;
+  transition: background .15s, transform .1s;
+}
+.btn-green:hover { background: #059669; transform: translateY(-1px); }
+.btn-green:active { transform: translateY(2px); box-shadow: 0 2px 0 #047857; }
+.btn-green:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.speakers-info {
+  display: flex;
+  gap: .75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.speaker-badge {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .4rem .9rem;
+  border-radius: 99px;
+  font-size: .85rem;
+  font-weight: 800;
+  border: 2px solid;
+}
+.speaker-badge.maya { background: rgba(59,130,246,.1); color: var(--accent-blue); border-color: var(--accent-blue); }
+.speaker-badge.niko { background: rgba(16,185,129,.1); color: var(--accent-green); border-color: var(--accent-green); }
 {% endblock %}
 
 {% block content %}
-<div class="podcast-header">
-  <h2>EduNode Podcast</h2>
+<div class="page-hero">
+  <div class="hero-emoji">🎧</div>
+  <div class="page-hero-text">
+    <h2>EduNode Podcast!</h2>
+    <p>Maya &amp; Niko explain topics in a fun way 🎙️</p>
+  </div>
+</div>
+
+<div class="controls-row">
   <select id="langSel" class="sel">
     {% for l in languages %}<option value="{{ l }}">{{ l }}</option>{% endfor %}
   </select>
 </div>
 
 <div class="generate-row">
-  <input id="topicInput" type="text" placeholder="Enter a topic (e.g. photosynthesis, fractions…)">
-  <button class="btn-primary" id="generateBtn" onclick="generatePodcast()">Generate Episode</button>
+  <input id="topicInput" class="topic-input" type="text" placeholder="🎯 Enter a topic (e.g. photosynthesis, fractions…)">
+  <button class="btn-green" id="generateBtn" onclick="generatePodcast()">🎙️ Generate Episode</button>
 </div>
 
-<div id="podcastResult">
+<div id="podcastResult" style="display:none">
   <div class="audio-player" id="audioPlayer" style="display:none">
-    <audio id="audioEl" controls></audio>
+    <span style="font-size:1.5rem">🔊</span>
+    <audio id="audioEl" controls style="flex:1"></audio>
   </div>
+
+  <div class="speakers-info">
+    <span class="speaker-badge maya">🎤 Maya — Curious Student</span>
+    <span class="speaker-badge niko">🧑‍🏫 Niko — Friendly Teacher</span>
+  </div>
+
   <div class="script-card">
-    <h3>📜 Episode Script</h3>
+    <h3 style="font-family:var(--font-display);font-size:1rem;color:var(--text-muted);margin-bottom:1rem">📜 Episode Script</h3>
     <div id="scriptContainer"></div>
   </div>
 </div>
@@ -51,9 +139,9 @@ function getLang() { return document.getElementById('langSel').value; }
 
 async function generatePodcast() {
   const topic = document.getElementById('topicInput').value.trim();
-  if (!topic) { alert('Please enter a topic.'); return; }
+  if (!topic) { alert('Please enter a topic! 🎯'); return; }
   const btn = document.getElementById('generateBtn');
-  btn.disabled = true; btn.textContent = 'Generating…';
+  btn.disabled = true; btn.textContent = '⏳ Generating…';
   document.getElementById('podcastResult').style.display = 'none';
   try {
     const r = await fetch('/api/podcast/generate', {
@@ -71,8 +159,9 @@ async function generatePodcast() {
       document.getElementById('audioPlayer').style.display = 'none';
     }
     document.getElementById('podcastResult').style.display = 'block';
+    document.getElementById('podcastResult').scrollIntoView({behavior:'smooth'});
   } catch(e) { alert('Error: ' + e.message); }
-  finally { btn.disabled = false; btn.textContent = 'Generate Episode'; }
+  finally { btn.disabled = false; btn.textContent = '🎙️ Generate Episode'; }
 }
 
 function renderScript(script) {
@@ -83,10 +172,11 @@ function renderScript(script) {
     const isMaya = /^MAYA\s*:/i.test(line);
     const isNiko = /^NIKO\s*:/i.test(line);
     if (isMaya || isNiko) {
-      const who = isMaya ? 'MAYA' : 'NIKO';
-      const cls = isMaya ? 'maya' : 'niko';
+      const who  = isMaya ? 'MAYA' : 'NIKO';
+      const cls  = isMaya ? 'maya' : 'niko';
+      const icon = isMaya ? '🎤' : '🧑‍🏫';
       const text = line.replace(/^(MAYA|NIKO)\s*:\s*/i, '');
-      div.innerHTML = `<span class="speaker ${cls}">${who}:</span>${escHtml(text)}`;
+      div.innerHTML = `<span class="speaker ${cls}">${icon} ${who}:</span>${escHtml(text)}`;
     } else {
       div.textContent = line;
     }
