@@ -13,7 +13,7 @@
   box-shadow: 0 6px 0 #1E3A8A;
   animation: fade-in .3s ease;
 }
-.page-hero .hero-emoji { font-size: 3rem; animation: wiggle 2.5s ease-in-out infinite; }
+.page-hero .hero-emoji { display:flex; align-items:center; animation: wiggle 2.5s ease-in-out infinite; }
 .page-hero-text h2 { font-family: var(--font-display); font-size: 1.5rem; color: #fff; margin-bottom: .2rem; }
 .page-hero-text p  { font-size: .9rem; font-weight: 600; color: rgba(255,255,255,.8); }
 
@@ -86,10 +86,10 @@
 
 {% block content %}
 <div class="page-hero">
-  <div class="hero-emoji">🃏</div>
+  <div class="hero-emoji"><svg class="icon icon-2xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-layers"></use></svg></div>
   <div class="page-hero-text">
     <h2>Flashcard Deck!</h2>
-    <p>Tap a card to flip it and see the answer ✨</p>
+    <p>Tap a card to flip it and see the answer</p>
   </div>
 </div>
 
@@ -103,20 +103,22 @@
 </div>
 
 <div class="generate-row">
-  <input id="topicInput" class="topic-input" type="text" placeholder="🔍 Topic (e.g. plant cells, multiplication tables…)">
-  <button class="btn-blue" id="generateBtn" onclick="generateDeck()">🃏 Make Cards</button>
+  <input id="topicInput" class="topic-input" type="text" placeholder="Topic (e.g. plant cells, multiplication tables…)">
+  <button class="btn-blue" id="generateBtn" onclick="generateDeck()">
+    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-layers"></use></svg> Make Cards
+  </button>
 </div>
 
 <div id="deckArea" style="display:none">
   <div class="card-scene" onclick="flipCard()" title="Click to flip!">
     <div class="card-3d" id="card3d">
       <div class="card-face front">
-        <div class="card-label">💡 Concept</div>
+        <div class="card-label"><svg class="icon icon-xs" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-lightbulb"></use></svg> Concept</div>
         <div class="card-title" id="cardFront">—</div>
-        <div class="card-hint">👆 Tap to reveal!</div>
+        <div class="card-hint"><svg class="icon icon-xs" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-arrow-down"></use></svg> Tap to reveal!</div>
       </div>
       <div class="card-face back">
-        <div class="card-label">📖 Definition</div>
+        <div class="card-label"><svg class="icon icon-xs" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book-open"></use></svg> Definition</div>
         <div class="card-body" id="cardBack">—</div>
       </div>
     </div>
@@ -141,9 +143,11 @@ function getSubject() { return document.getElementById('subjectSel').value; }
 
 async function generateDeck() {
   const topic = document.getElementById('topicInput').value.trim();
-  if (!topic) { alert('Please enter a topic! 📚'); return; }
+  if (!topic) { alert('Please enter a topic!'); return; }
   const btn = document.getElementById('generateBtn');
-  btn.disabled = true; btn.textContent = '⏳ Generating…';
+  const S = '/static/icons/sprite.svg';
+  const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
+  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' Generating…';
   try {
     const r = await fetch('/api/flashcard/generate', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -158,7 +162,7 @@ async function generateDeck() {
     document.getElementById('deckArea').style.display = 'block';
     document.getElementById('deckArea').scrollIntoView({behavior:'smooth'});
   } catch(e) { alert('Error: ' + e.message); }
-  finally { btn.disabled = false; btn.textContent = '🃏 Make Cards'; }
+  finally { btn.disabled = false; btn.innerHTML = ico('layers') + ' Make Cards'; }
 }
 
 function buildDots() {

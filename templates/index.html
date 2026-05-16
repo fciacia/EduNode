@@ -10,7 +10,7 @@
 
   <header>
     <div class="header-inner">
-      <span class="logo">📚 EduNode</span>
+      <span class="logo"><svg style="width:1.2em;height:1.2em;vertical-align:-.2em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book"></use></svg> EduNode</span>
       <div class="header-controls">
         <select id="subject-select" aria-label="Subject filter">
           <option value="">All subjects</option>
@@ -23,24 +23,24 @@
           <option value="thai">Thai</option>
           <option value="vietnamese">Vietnamese</option>
         </select>
-        <button id="status-btn" class="icon-btn secondary" title="System status" aria-label="System status">⚙</button>
+        <button id="status-btn" class="icon-btn secondary" title="System status" aria-label="System status"><svg style="width:1.2em;height:1.2em;vertical-align:-.15em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-settings"></use></svg></button>
       </div>
     </div>
   </header>
 
   <main id="chat-log" role="log" aria-live="polite" aria-label="Chat history">
     <div class="bubble assistant">
-      <div class="avatar" aria-hidden="true">🤖</div>
+      <div class="avatar" aria-hidden="true"><svg style="width:1.6rem;height:1.6rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-bot"></use></svg></div>
       <div class="message">
         Hello! I'm <strong>EduNode</strong>, your offline AI tutor.<br>
-        Ask me anything — type your question or tap 🎤 to speak.
+        Ask me anything — type your question or tap the mic to speak.
       </div>
     </div>
   </main>
 
   <footer>
     <form id="chat-form" autocomplete="off" novalidate>
-      <button type="button" id="mic-btn" class="icon-btn" title="Tap to record voice" aria-label="Record voice">🎤</button>
+      <button type="button" id="mic-btn" class="icon-btn" title="Tap to record voice" aria-label="Record voice"><svg style="width:1.2em;height:1.2em;vertical-align:-.15em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-mic"></use></svg></button>
       <input
         id="question-input"
         type="text"
@@ -48,7 +48,7 @@
         maxlength="2000"
         aria-label="Your question"
       >
-      <button type="submit" id="send-btn" class="icon-btn" title="Send" aria-label="Send">➤</button>
+      <button type="submit" id="send-btn" class="icon-btn" title="Send" aria-label="Send"><svg style="width:1.2em;height:1.2em;vertical-align:-.15em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-send"></use></svg></button>
     </form>
   </footer>
 

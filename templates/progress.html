@@ -13,7 +13,7 @@
   box-shadow: 0 6px 0 #B45309;
   animation: fade-in .3s ease;
 }
-.page-hero .hero-emoji { font-size: 3rem; animation: float 2.8s ease-in-out infinite; }
+.page-hero .hero-emoji { display:flex; align-items:center; animation: float 2.8s ease-in-out infinite; }
 .page-hero-text h2 { font-family: var(--font-display); font-size: 1.5rem; color: #fff; margin-bottom: .2rem; }
 .page-hero-text p  { font-size: .9rem; font-weight: 600; color: rgba(255,255,255,.85); }
 
@@ -57,15 +57,15 @@
 
 {% block content %}
 <div class="page-hero">
-  <div class="hero-emoji">🏆</div>
+  <div class="hero-emoji"><svg class="icon icon-2xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-trophy"></use></svg></div>
   <div class="page-hero-text">
     <h2>My Progress!</h2>
-    <p>See your badges, quiz results and achievements 🌟</p>
+    <p>See your badges, quiz results and achievements</p>
   </div>
 </div>
 
 <div class="lookup-row">
-  <input id="studentNameInput" class="id-input" type="text" placeholder="🔍 Enter your name (e.g. Ali, Maria…)">
+  <input id="studentNameInput" class="id-input" type="text" placeholder="Enter your name (e.g. Ali, Maria…)">
   <button class="btn-amber" onclick="loadProgress()">View Progress</button>
 </div>
 
@@ -76,7 +76,7 @@
     <div class="badges-grid" id="badgesGrid"></div>
   </div>
 
-  <p class="section-title">📝 Quiz History</p>
+  <p class="section-title"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-clipboard"></use></svg> Quiz History</p>
   <div class="card" style="padding:0;overflow:hidden" id="quizHistoryWrap">
     <div class="empty-state">No quizzes yet.</div>
   </div>
@@ -87,10 +87,10 @@
 <script>
 async function loadProgress() {
   const name = document.getElementById('studentNameInput').value.trim();
-  if (!name) { alert('Please enter your name! ✏️'); return; }
+  if (!name) { alert('Please enter your name!'); return; }
   try {
     const r = await fetch(`/api/progress/by-name/${encodeURIComponent(name)}`);
-    if (!r.ok) { alert('No progress found for "' + name + '". Complete a quiz or chat session first! 😊'); return; }
+    if (!r.ok) { alert('No progress found for "' + name + '". Complete a quiz or chat session first!'); return; }
     const d = await r.json();
     renderProgress(d);
     document.getElementById('progressResult').style.display = 'block';
@@ -100,36 +100,38 @@ async function loadProgress() {
 
 function renderProgress(d) {
   const student = d.student || {};
-  document.getElementById('studentName').textContent = (student.name || 'Unknown') + ' 👋';
-  document.getElementById('studentMeta').textContent =
-    `🌏 ${student.language || '—'}  ·  💬 ${d.sessions || 0} sessions  ·  🕐 Last active: ${student.last_active || 'never'}`;
+  const S = '/static/icons/sprite.svg';
+  const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
+  document.getElementById('studentName').textContent = (student.name || 'Unknown');
+  document.getElementById('studentMeta').innerHTML =
+    `${ico('globe','icon-xs')} ${student.language || '—'} &nbsp;·&nbsp; ${ico('message-square','icon-xs')} ${d.sessions || 0} sessions &nbsp;·&nbsp; Last active: ${student.last_active || 'never'}`;
 
   const badgesGrid = document.getElementById('badgesGrid');
   badgesGrid.innerHTML = '';
-  const badgeIcons = {'First Step':'🌟','Quiz Ace':'🏆','Week Warrior':'📅','Dialect Pioneer':'🗣️'};
+  const badgeIcons = {'First Step':'sparkles','Quiz Ace':'trophy','Week Warrior':'zap','Dialect Pioneer':'globe'};
   (d.badges || []).forEach(b => {
     const el = document.createElement('div'); el.className = 'badge-card';
-    el.textContent = (badgeIcons[b] || '🎖️') + ' ' + b;
+    el.innerHTML = ico(badgeIcons[b] || 'award') + ' ' + b;
     badgesGrid.appendChild(el);
   });
   if (!d.badges?.length) {
-    badgesGrid.innerHTML = '<span style="color:var(--text-muted);font-size:.88rem;font-weight:700">No badges yet — keep learning! 💪</span>';
+    badgesGrid.innerHTML = '<span style="color:var(--text-muted);font-size:.88rem;font-weight:700">No badges yet — keep learning!</span>';
   }
 
   const wrap = document.getElementById('quizHistoryWrap');
   const quizzes = d.quiz_results || [];
   if (!quizzes.length) {
-    wrap.innerHTML = '<div class="empty-state">No quizzes yet — go try one! 🧠</div>';
+    wrap.innerHTML = `<div class="empty-state">${ico('brain')} No quizzes yet — go try one!</div>`;
     return;
   }
   let html = '<table class="quiz-table"><thead><tr><th>Topic</th><th>Score</th><th>Date</th></tr></thead><tbody>';
   quizzes.forEach(q => {
     const pct = Math.round((q.score / q.total) * 100);
     const cls = pct >= 70 ? 'pct-pass' : 'pct-fail';
-    const emoji = pct >= 70 ? '🎉' : '💪';
+    const resultIcon = ico(pct >= 70 ? 'award' : 'zap');
     html += `<tr>
       <td>${escHtml(q.topic)}</td>
-      <td>${emoji} ${q.score}/${q.total} <span class="pct-chip ${cls}">${pct}%</span></td>
+      <td>${resultIcon} ${q.score}/${q.total} <span class="pct-chip ${cls}">${pct}%</span></td>
       <td>${q.created_at ? q.created_at.split('T')[0] : '—'}</td>
     </tr>`;
   });

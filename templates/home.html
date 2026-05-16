@@ -261,9 +261,9 @@
 .activity-card:nth-child(4):hover { box-shadow: 0 10px 0 #064E3B; }
 
 .act-icon {
-  font-size: 2rem;
+  width: 2rem;
+  height: 2rem;
   flex-shrink: 0;
-  filter: drop-shadow(0 2px 5px rgba(0,0,0,.2));
 }
 
 .act-info { flex: 1; min-width: 0; }
@@ -290,16 +290,45 @@
 
 {% block content %}
 <div class="hero">
-  <div class="hero-blob">🤖</div>
+  <div class="hero-blob">
+    <svg class="icon icon-3xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-bot"></use></svg>
+  </div>
   <h1 class="hero-title">EduNode</h1>
-  <p class="hero-sub" data-i18n="home.subtitle">Your offline AI learning buddy! ✨</p>
+  <p class="hero-sub" data-i18n="home.subtitle">Your offline AI learning buddy</p>
   <div class="hero-meta">
-    <button class="hero-badge tour-btn" onclick="replayTour()">🗺️ How to use</button>
+    <button class="hero-badge tour-btn" onclick="replayTour()">
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-map"></use></svg> How to use
+    </button>
+  </div>
+
+  <div class="quick-ask">
+    <input type="text" id="quickAskInput" placeholder="Ask me anything…" autocomplete="off"
+           onkeydown="if(event.key==='Enter') quickAsk()">
+    <button onclick="quickAsk()">
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-send"></use></svg> Ask
+    </button>
   </div>
 </div>
 
-<div class="motivation-banner">
-  <div class="motivation-icon">👋</div>
+<div class="stats-strip">
+  <span class="stat-pill">
+    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book"></use></svg>
+    {{ subjects|length }} Subjects
+  </span>
+  <span class="stat-pill">
+    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-rocket"></use></svg>
+    4 Activities
+  </span>
+  <span class="stat-pill">
+    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-wifi-off"></use></svg>
+    100% Offline
+  </span>
+</div>
+
+<div class="motivation-banner reveal">
+  <div class="motivation-icon">
+    <svg class="icon icon-xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-hand"></use></svg>
+  </div>
   <div class="motivation-text">
     <h3 data-i18n="home.guide.title">Hey there, learner!</h3>
     <p data-i18n="home.guide.body">Pick a subject below to start chatting with your AI tutor. You can ask questions, take quizzes, study with flashcards, or even listen to a fun podcast!</p>
@@ -307,7 +336,9 @@
 </div>
 
 <div class="lang-row">
-  <label data-i18n="home.lang.label">🌏</label>
+  <label data-i18n="home.lang.label">
+    <svg class="icon icon-sm" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-globe"></use></svg>
+  </label>
   <div class="lang-chips" id="langChips">
     {% for lang in languages %}
     <button class="lang-chip" data-lang="{{ lang }}" onclick="saveLang('{{ lang }}')">{{ lang }}</button>
@@ -315,44 +346,50 @@
   </div>
 </div>
 
-<p id="subjects-label" class="grid-label" data-i18n="home.subjects.label">📚 Choose a subject to get started</p>
+<p id="subjects-label" class="grid-label" data-i18n="home.subjects.label">
+  <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book"></use></svg>
+  Choose a subject to get started
+</p>
 
 <div class="subject-grid" id="subject-grid">
-  {% set icons = {"Mathematics": "📐", "Science": "🔬", "English Language": "📖", "Environmental Studies": "🌿", "Digital Literacy": "💻"} %}
+  {% set icon_map = {"Mathematics": "calculator", "Science": "flask", "English Language": "book-open", "Environmental Studies": "leaf", "Digital Literacy": "monitor"} %}
   {% for subject in subjects %}
-  <a href="/chat?subject={{ subject | urlencode }}" class="subject-card" onclick="attachLang(this)">
-    <span class="icon">{{ icons.get(subject, "📚") }}</span>
+  <a href="/chat?subject={{ subject | urlencode }}" class="subject-card reveal" onclick="attachLang(this)">
+    <svg class="icon icon-2xl" aria-hidden="true" style="display:block;margin:0 auto;filter:drop-shadow(0 3px 6px rgba(0,0,0,.2))"><use href="/static/icons/sprite.svg#icon-{{ icon_map.get(subject, 'book') }}"></use></svg>
     <span class="name" data-i18n="subject.{{ subject }}">{{ subject }}</span>
   </a>
   {% endfor %}
 </div>
 
-<p id="activities-label" class="grid-label" data-i18n="home.activities.label">🚀 Other activities</p>
+<p id="activities-label" class="grid-label" data-i18n="home.activities.label">
+  <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-rocket"></use></svg>
+  Other activities
+</p>
 
 <div class="activities-grid" id="activities-grid">
-  <a href="/quiz" class="activity-card" id="act-quiz">
-    <span class="act-icon">🧠</span>
+  <a href="/quiz" class="activity-card reveal" id="act-quiz">
+    <svg class="icon act-icon" aria-hidden="true" style="filter:drop-shadow(0 2px 5px rgba(0,0,0,.2))"><use href="/static/icons/sprite.svg#icon-brain"></use></svg>
     <div class="act-info">
       <span class="act-name" data-i18n="home.quiz">Take a Quiz</span>
       <span class="act-desc">Test your knowledge!</span>
     </div>
   </a>
-  <a href="/flashcard" class="activity-card" id="act-flashcard">
-    <span class="act-icon">🃏</span>
+  <a href="/flashcard" class="activity-card reveal" id="act-flashcard">
+    <svg class="icon act-icon" aria-hidden="true" style="filter:drop-shadow(0 2px 5px rgba(0,0,0,.2))"><use href="/static/icons/sprite.svg#icon-layers"></use></svg>
     <div class="act-info">
       <span class="act-name" data-i18n="home.flashcard">Flashcards</span>
       <span class="act-desc">Study key words!</span>
     </div>
   </a>
-  <a href="/podcast" class="activity-card" id="act-podcast">
-    <span class="act-icon">🎧</span>
+  <a href="/podcast" class="activity-card reveal" id="act-podcast">
+    <svg class="icon act-icon" aria-hidden="true" style="filter:drop-shadow(0 2px 5px rgba(0,0,0,.2))"><use href="/static/icons/sprite.svg#icon-headphones"></use></svg>
     <div class="act-info">
       <span class="act-name" data-i18n="home.podcast">Podcast</span>
       <span class="act-desc">Listen &amp; learn!</span>
     </div>
   </a>
-  <a href="/progress" class="activity-card" id="act-progress">
-    <span class="act-icon">🏆</span>
+  <a href="/progress" class="activity-card reveal" id="act-progress">
+    <svg class="icon act-icon" aria-hidden="true" style="filter:drop-shadow(0 2px 5px rgba(0,0,0,.2))"><use href="/static/icons/sprite.svg#icon-trophy"></use></svg>
     <div class="act-info">
       <span class="act-name" data-i18n="home.progress">My Progress</span>
       <span class="act-desc">See your stars!</span>
@@ -377,5 +414,34 @@
     var lang = localStorage.getItem('edu_lang') || '{{ languages[0] }}';
     el.href = el.href.split('&lang=')[0] + '&lang=' + encodeURIComponent(lang);
   }
+
+  function quickAsk() {
+    var q = document.getElementById('quickAskInput').value.trim();
+    if (!q) { document.getElementById('quickAskInput').focus(); return; }
+    var lang = localStorage.getItem('edu_lang') || '{{ languages[0] }}';
+    window.location.href = '/chat?q=' + encodeURIComponent(q) + '&lang=' + encodeURIComponent(lang);
+  }
+
+  /* 3D tilt on subject cards */
+  document.querySelectorAll('.subject-card').forEach(function(card) {
+    card.addEventListener('mousemove', function(e) {
+      var r = card.getBoundingClientRect();
+      var x = (e.clientX - r.left) / r.width  - 0.5;
+      var y = (e.clientY - r.top)  / r.height - 0.5;
+      card.style.transform = 'translateY(-5px) scale(1.03) rotateX(' + (-y * 10) + 'deg) rotateY(' + (x * 10) + 'deg)';
+    });
+    card.addEventListener('mouseleave', function() { card.style.transform = ''; });
+  });
+
+  /* Scroll-reveal */
+  var revealObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); }
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(function(el, i) {
+    el.style.transitionDelay = (i * 0.05) + 's';
+    revealObs.observe(el);
+  });
 </script>
 {% endblock %}

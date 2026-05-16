@@ -13,7 +13,7 @@
   box-shadow: 0 6px 0 #047857;
   animation: fade-in .3s ease;
 }
-.page-hero .hero-emoji { font-size: 3rem; animation: float 2.5s ease-in-out infinite; }
+.page-hero .hero-emoji { display:flex; align-items:center; animation: float 2.5s ease-in-out infinite; }
 .page-hero-text h2 { font-family: var(--font-display); font-size: 1.5rem; color: #fff; margin-bottom: .2rem; }
 .page-hero-text p  { font-size: .9rem; font-weight: 600; color: rgba(255,255,255,.8); }
 
@@ -105,10 +105,10 @@
 
 {% block content %}
 <div class="page-hero">
-  <div class="hero-emoji">🎧</div>
+  <div class="hero-emoji"><svg class="icon icon-2xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-headphones"></use></svg></div>
   <div class="page-hero-text">
     <h2>EduNode Podcast!</h2>
-    <p>Maya &amp; Niko explain topics in a fun way 🎙️</p>
+    <p>Maya &amp; Niko explain topics in a fun way</p>
   </div>
 </div>
 
@@ -119,23 +119,25 @@
 </div>
 
 <div class="generate-row">
-  <input id="topicInput" class="topic-input" type="text" placeholder="🎯 Enter a topic (e.g. photosynthesis, fractions…)">
-  <button class="btn-green" id="generateBtn" onclick="generatePodcast()">🎙️ Generate Episode</button>
+  <input id="topicInput" class="topic-input" type="text" placeholder="Enter a topic (e.g. photosynthesis, fractions…)">
+  <button class="btn-green" id="generateBtn" onclick="generatePodcast()">
+    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-mic"></use></svg> Generate Episode
+  </button>
 </div>
 
 <div id="podcastResult" style="display:none">
   <div class="audio-player" id="audioPlayer" style="display:none">
-    <span style="font-size:1.5rem">🔊</span>
+    <svg class="icon icon-lg" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-volume"></use></svg>
     <audio id="audioEl" controls style="flex:1"></audio>
   </div>
 
   <div class="speakers-info">
-    <span class="speaker-badge maya">🎤 Maya — Curious Student</span>
-    <span class="speaker-badge niko">🧑‍🏫 Niko — Friendly Teacher</span>
+    <span class="speaker-badge maya"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-mic"></use></svg> Maya — Curious Student</span>
+    <span class="speaker-badge niko"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-graduation-cap"></use></svg> Niko — Friendly Teacher</span>
   </div>
 
   <div class="script-card">
-    <h3 style="font-family:var(--font-display);font-size:1rem;color:var(--text-muted);margin-bottom:1rem">📜 Episode Script</h3>
+    <h3 style="font-family:var(--font-display);font-size:1rem;color:var(--text-muted);margin-bottom:1rem;display:flex;align-items:center;gap:.4rem"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-scroll"></use></svg> Episode Script</h3>
     <div id="scriptContainer"></div>
   </div>
 </div>
@@ -147,9 +149,11 @@ function getLang() { return document.getElementById('langSel').value; }
 
 async function generatePodcast() {
   const topic = document.getElementById('topicInput').value.trim();
-  if (!topic) { alert('Please enter a topic! 🎯'); return; }
+  if (!topic) { alert('Please enter a topic!'); return; }
+  const S = '/static/icons/sprite.svg';
+  const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
   const btn = document.getElementById('generateBtn');
-  btn.disabled = true; btn.textContent = '⏳ Generating…';
+  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' Generating…';
   document.getElementById('podcastResult').style.display = 'none';
   try {
     const r = await fetch('/api/podcast/generate', {
@@ -169,7 +173,7 @@ async function generatePodcast() {
     document.getElementById('podcastResult').style.display = 'block';
     document.getElementById('podcastResult').scrollIntoView({behavior:'smooth'});
   } catch(e) { alert('Error: ' + e.message); }
-  finally { btn.disabled = false; btn.textContent = '🎙️ Generate Episode'; }
+  finally { btn.disabled = false; btn.innerHTML = ico('mic') + ' Generate Episode'; }
 }
 
 function renderScript(script) {
@@ -182,7 +186,7 @@ function renderScript(script) {
     if (isMaya || isNiko) {
       const who  = isMaya ? 'MAYA' : 'NIKO';
       const cls  = isMaya ? 'maya' : 'niko';
-      const icon = isMaya ? '🎤' : '🧑‍🏫';
+      const icon = isMaya ? ico('mic') : ico('graduation-cap');
       const text = line.replace(/^(MAYA|NIKO)\s*:\s*/i, '');
       div.innerHTML = `<span class="speaker ${cls}">${icon} ${who}:</span>${escHtml(text)}`;
     } else {

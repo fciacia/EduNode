@@ -13,7 +13,7 @@
   box-shadow: 0 6px 0 #3B1388;
   animation: fade-in .3s ease;
 }
-.page-hero .hero-emoji { font-size: 3rem; animation: wiggle 2s ease-in-out infinite; }
+.page-hero .hero-emoji { display:flex; align-items:center; animation: wiggle 2s ease-in-out infinite; }
 .page-hero-text h2 { font-family: var(--font-display); font-size: 1.5rem; color: #fff; margin-bottom: .2rem; }
 .page-hero-text p  { font-size: .9rem; font-weight: 600; color: rgba(255,255,255,.8); }
 
@@ -78,10 +78,10 @@
 
 {% block content %}
 <div class="page-hero">
-  <div class="hero-emoji">🧠</div>
+  <div class="hero-emoji"><svg class="icon icon-2xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-brain"></use></svg></div>
   <div class="page-hero-text">
     <h2>Quiz Challenge!</h2>
-    <p>Test your knowledge and earn certificates 🏆</p>
+    <p>Test your knowledge and earn certificates</p>
   </div>
 </div>
 
@@ -92,27 +92,33 @@
   <select id="langSel" class="sel">
     {% for l in languages %}<option value="{{ l }}">{{ l }}</option>{% endfor %}
   </select>
-  <input id="studentName" class="name-input" type="text" placeholder="Your name ✏️">
+  <input id="studentName" class="name-input" type="text" placeholder="Your name…">
 </div>
 
 <div class="generate-row">
-  <input id="topicInput" class="topic-input" type="text" placeholder="🔍 Enter a topic (e.g. the water cycle, fractions…)">
-  <button class="btn-primary" id="generateBtn" onclick="generateQuiz()">🎯 Generate Quiz</button>
+  <input id="topicInput" class="topic-input" type="text" placeholder="Enter a topic (e.g. the water cycle, fractions…)">
+  <button class="btn-primary" id="generateBtn" onclick="generateQuiz()">
+    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-target"></use></svg> Generate Quiz
+  </button>
 </div>
 
 <div id="quizArea" style="display:none">
   <div id="questionsContainer"></div>
   <div style="margin-top:.5rem">
-    <button class="btn-primary" onclick="submitQuiz()">✅ Submit Answers</button>
+    <button class="btn-primary" onclick="submitQuiz()">
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-check-circle"></use></svg> Submit Answers
+    </button>
   </div>
 </div>
 
 <div class="score-card" id="scoreCard">
-  <div style="font-size:3.5rem;margin-bottom:.5rem" id="scoreEmoji">🎉</div>
+  <div style="margin-bottom:.75rem;color:var(--primary)" id="scoreEmoji"><svg class="icon icon-2xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-award"></use></svg></div>
   <div class="score-heading" id="scoreHeading"></div>
   <p style="color:var(--text-muted);font-weight:700;margin-top:.35rem" id="scoreSub"></p>
   <div id="certLinks"></div>
-  <button class="btn-primary" style="margin-top:1.5rem" onclick="resetQuiz()">🔄 New Quiz</button>
+  <button class="btn-primary" style="margin-top:1.5rem" onclick="resetQuiz()">
+    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-refresh"></use></svg> New Quiz
+  </button>
 </div>
 {% endblock %}
 
@@ -120,6 +126,8 @@
 <script>
 let currentQuestions = [];
 const selectedAnswers = {};
+const S = '/static/icons/sprite.svg';
+const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
 
 function getLang()    { return document.getElementById('langSel').value; }
 function getSubject() { return document.getElementById('subjectSel').value; }
@@ -127,9 +135,9 @@ function getName()    { return document.getElementById('studentName').value.trim
 
 async function generateQuiz() {
   const topic = document.getElementById('topicInput').value.trim();
-  if (!topic) { alert('Please enter a topic! 📚'); return; }
+  if (!topic) { alert('Please enter a topic!'); return; }
   const btn = document.getElementById('generateBtn');
-  btn.disabled = true; btn.textContent = '⏳ Generating…';
+  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' Generating…';
   document.getElementById('quizArea').style.display = 'none';
   document.getElementById('scoreCard').style.display = 'none';
   Object.keys(selectedAnswers).forEach(k => delete selectedAnswers[k]);
@@ -144,7 +152,7 @@ async function generateQuiz() {
     renderQuestions(currentQuestions);
     document.getElementById('quizArea').style.display = 'block';
   } catch(e) { alert('Error: ' + e.message); }
-  finally { btn.disabled = false; btn.textContent = '🎯 Generate Quiz'; }
+  finally { btn.disabled = false; btn.innerHTML = ico('target') + ' Generate Quiz'; }
 }
 
 function renderQuestions(qs) {
@@ -158,7 +166,7 @@ function renderQuestions(qs) {
       <div class="options" id="opts-${i}"></div>`;
     c.appendChild(card);
     const optsDiv = card.querySelector(`#opts-${i}`);
-    const letters = ['🅰️','🅱️','🆎','🆒'];
+    const letters = ['A','B','C','D'];
     q.options.forEach((opt, oi) => {
       const letter = 'ABCD'[oi];
       const btn = document.createElement('button');
@@ -179,7 +187,7 @@ function selectAnswer(qi, letter, optsDiv) {
 
 async function submitQuiz() {
   if (Object.keys(selectedAnswers).length < currentQuestions.length) {
-    if (!confirm('You have unanswered questions. Submit anyway? 🤔')) return;
+    if (!confirm('You have unanswered questions. Submit anyway?')) return;
   }
   try {
     const r = await fetch('/api/quiz/submit', {
@@ -216,12 +224,14 @@ function markAnswers(result) {
 function showResults(result, certs) {
   const card = document.getElementById('scoreCard');
   const pct = result.pct;
-  document.getElementById('scoreEmoji').textContent = pct >= 90 ? '🏆' : pct >= 70 ? '🎉' : pct >= 50 ? '😊' : '💪';
+  const scoreIcon = pct >= 90 ? 'trophy' : pct >= 70 ? 'award' : pct >= 50 ? 'sparkles' : 'zap';
+  document.getElementById('scoreEmoji').innerHTML = ico(scoreIcon, 'icon-2xl');
+  document.getElementById('scoreEmoji').style.color = pct >= 70 ? 'var(--primary)' : 'var(--accent)';
   document.getElementById('scoreHeading').textContent = `${result.score} / ${result.total}  (${pct}%)`;
-  document.getElementById('scoreSub').textContent = pct >= 70 ? 'Amazing work! Keep it up! 🌟' : 'Good try! Keep practising! 💪';
+  document.getElementById('scoreSub').textContent = pct >= 70 ? 'Amazing work! Keep it up!' : 'Good try! Keep practising!';
   const certDiv = document.getElementById('certLinks'); certDiv.innerHTML = '';
   certs.forEach(c => {
-    certDiv.innerHTML += `<a class="cert-link" href="${c.cert_url}" target="_blank">📄 Download ${escHtml(c.topic)} Certificate</a> `;
+    certDiv.innerHTML += `<a class="cert-link" href="${c.cert_url}" target="_blank">${ico('file-text')} Download ${escHtml(c.topic)} Certificate</a> `;
   });
   card.style.display = 'block';
   card.scrollIntoView({behavior:'smooth'});

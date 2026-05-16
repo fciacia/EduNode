@@ -14,22 +14,27 @@
 </head>
 <body>
 
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <use href="/static/icons/sprite.svg"></use>
+</svg>
 <div id="offlineBanner" class="offline-banner">
-  📡 You are offline — EduNode is running locally on this device!
+  <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-wifi-off"></use></svg>
+  You are offline — EduNode is running locally on this device!
 </div>
 
 <nav class="nav">
   <div class="nav-inner">
     <a href="/" class="nav-brand">
-      🌟 EduNode
+      <svg class="icon icon-md" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-star"></use></svg>
+      EduNode
     </a>
     <span id="nav-level-badge" class="nav-level-badge"></span>
     <div class="nav-links">
-      <a href="/chat"      class="nav-link {% if request.path == '/chat'      %}active{% endif %}">💬 Chat</a>
-      <a href="/quiz"      class="nav-link {% if request.path == '/quiz'      %}active{% endif %}" data-i18n="nav.quiz">🧠 Quiz</a>
-      <a href="/flashcard" class="nav-link {% if request.path == '/flashcard' %}active{% endif %}" data-i18n="nav.cards">🃏 Cards</a>
-      <a href="/podcast"   class="nav-link {% if request.path == '/podcast'   %}active{% endif %}" data-i18n="nav.podcast">🎧 Podcast</a>
-      <a href="/progress"  class="nav-link {% if request.path == '/progress'  %}active{% endif %}" data-i18n="nav.progress">🏆 Progress</a>
+      <a href="/chat"      class="nav-link {% if request.path == '/chat'      %}active{% endif %}"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-message-square"></use></svg> Chat</a>
+      <a href="/quiz"      class="nav-link {% if request.path == '/quiz'      %}active{% endif %}" data-i18n="nav.quiz"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-brain"></use></svg> Quiz</a>
+      <a href="/flashcard" class="nav-link {% if request.path == '/flashcard' %}active{% endif %}" data-i18n="nav.cards"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-layers"></use></svg> Cards</a>
+      <a href="/podcast"   class="nav-link {% if request.path == '/podcast'   %}active{% endif %}" data-i18n="nav.podcast"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-headphones"></use></svg> Podcast</a>
+      <a href="/progress"  class="nav-link {% if request.path == '/progress'  %}active{% endif %}" data-i18n="nav.progress"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-trophy"></use></svg> Progress</a>
     </div>
   </div>
 </nav>
@@ -40,17 +45,19 @@
 
 <!-- Floating theme toggle — must be in DOM before the script below -->
 <button class="theme-fab" id="themeToggle" aria-label="Toggle theme">
-  🌙<span class="toggle-label">Dark</span>
+  <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-moon"></use></svg><span class="toggle-label">Dark</span>
 </button>
 
 <script>
+  const _sunSVG  = '<svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-sun"></use></svg>';
+  const _moonSVG = '<svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-moon"></use></svg>';
   function setTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
     localStorage.setItem('edu_theme', t);
     const btn = document.getElementById('themeToggle');
     btn.innerHTML = t === 'dark'
-      ? '☀️<span class="toggle-label">Light</span>'
-      : '🌙<span class="toggle-label">Dark</span>';
+      ? _sunSVG  + '<span class="toggle-label">Light</span>'
+      : _moonSVG + '<span class="toggle-label">Dark</span>';
   }
 
   setTheme(localStorage.getItem('edu_theme') || 'light');

@@ -59,7 +59,7 @@
 
 {% block content %}
 <div class="chat-header">
-  <h2 class="chat-title">🤖 Ask EduNode</h2>
+  <h2 class="chat-title"><svg class="icon icon-md" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-bot"></use></svg> Ask EduNode</h2>
   <select id="subjectSel" class="sel">
     {% for s in subjects %}
     <option value="{{ s }}" {% if s == default_subject %}selected{% endif %}>{{ s }}</option>
@@ -70,23 +70,27 @@
     <option value="{{ l }}" {% if l == default_language %}selected{% endif %}>{{ l }}</option>
     {% endfor %}
   </select>
-  <input id="studentName" class="name-input" type="text" placeholder="Your name ✏️"
+  <input id="studentName" class="name-input" type="text" placeholder="Your name…"
          value="{{ request.args.get('name', '') }}">
 </div>
 
 <div id="chatLog" class="chat-log">
   <div class="bubble bot">
-    <span class="bubble-avatar">🤖</span>
-    <div class="message">Hi there! I'm <strong>EduNode</strong>, your AI tutor! 🌟<br>Pick a subject up top and ask me anything — I'm here to help you learn! 📚</div>
+    <span class="bubble-avatar"><svg class="icon icon-lg" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-bot"></use></svg></span>
+    <div class="message">Hi there! I'm <strong>EduNode</strong>, your AI tutor!<br>Pick a subject up top and ask me anything — I'm here to help you learn!</div>
   </div>
 </div>
 
 <div class="input-row">
-  <textarea id="msgInput" rows="1" placeholder="Type your question here… 💬"
+  <textarea id="msgInput" rows="1" placeholder="Type your question here…"
     onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
   <button class="btn-icon btn-mic" id="micBtn" title="Hold to record voice"
-    onmousedown="startRec()" onmouseup="stopRec()" ontouchstart="startRec()" ontouchend="stopRec()">🎤</button>
-  <button class="btn-icon btn-send" onclick="sendMsg()" title="Send message">➤</button>
+    onmousedown="startRec()" onmouseup="stopRec()" ontouchstart="startRec()" ontouchend="stopRec()">
+    <svg class="icon icon-md" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-mic"></use></svg>
+  </button>
+  <button class="btn-icon btn-send" onclick="sendMsg()" title="Send message">
+    <svg class="icon icon-md" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-send"></use></svg>
+  </button>
 </div>
 {% endblock %}
 
@@ -95,6 +99,8 @@
 const log = document.getElementById('chatLog');
 const input = document.getElementById('msgInput');
 let mediaRec = null, audioChunks = [];
+const S = '/static/icons/sprite.svg';
+const ico = (n, c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
 
 function getLang()    { return document.getElementById('langSel').value; }
 function getSubject() { return document.getElementById('subjectSel').value; }
@@ -105,7 +111,7 @@ function addBubble(text, who) {
   wrap.className = 'bubble ' + who;
   const avatar = document.createElement('span');
   avatar.className = 'bubble-avatar';
-  avatar.textContent = who === 'user' ? '🧒' : '🤖';
+  avatar.innerHTML = who === 'user' ? ico('user', 'icon-lg') : ico('bot', 'icon-lg');
   const msg = document.createElement('div');
   msg.className = 'message';
   msg.textContent = text;
@@ -119,7 +125,7 @@ function addBubble(text, who) {
 function addTyping() {
   const wrap = document.createElement('div');
   wrap.className = 'bubble bot'; wrap.id = 'typing';
-  wrap.innerHTML = '<span class="bubble-avatar">🤖</span><div class="message bot"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>';
+  wrap.innerHTML = `<span class="bubble-avatar">${ico('bot','icon-lg')}</span><div class="message bot"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>`;
   log.appendChild(wrap);
   log.scrollTop = log.scrollHeight;
 }
@@ -129,7 +135,7 @@ function removeTyping() { document.getElementById('typing')?.remove(); }
 function addPlayBtn(msgEl, text) {
   const btn = document.createElement('button');
   btn.className = 'play-btn';
-  btn.innerHTML = '🔊 Listen';
+  btn.innerHTML = ico('volume') + ' Listen';
   btn.onclick = () => playTTS(text, btn);
   msgEl.appendChild(document.createElement('br'));
   msgEl.appendChild(btn);
@@ -137,7 +143,7 @@ function addPlayBtn(msgEl, text) {
 
 async function playTTS(text, btn) {
   try {
-    btn.textContent = '⏳ Loading…';
+    btn.innerHTML = ico('loader','icon-spin') + ' Loading…';
     const r = await fetch('/api/voice/tts', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({text})
@@ -145,11 +151,11 @@ async function playTTS(text, btn) {
     if (!r.ok) throw new Error();
     const blob = await r.blob();
     const audio = new Audio(URL.createObjectURL(blob));
-    btn.textContent = '⏸️ Playing';
-    audio.onended = () => { btn.innerHTML = '🔊 Listen'; };
+    btn.innerHTML = ico('pause') + ' Playing';
+    audio.onended = () => { btn.innerHTML = ico('volume') + ' Listen'; };
     audio.play();
   } catch(e) {
-    btn.innerHTML = '🔊 Listen';
+    btn.innerHTML = ico('volume') + ' Listen';
   }
 }
 
@@ -173,7 +179,7 @@ async function sendMsg() {
     localStorage.setItem('edu_student_name', getName());
   } catch(e) {
     removeTyping();
-    addBubble('Connection error — is EduNode running? 😅', 'bot');
+    addBubble('Connection error — is EduNode running?', 'bot');
   }
 }
 
@@ -185,7 +191,7 @@ async function startRec() {
     mediaRec.ondataavailable = e => audioChunks.push(e.data);
     mediaRec.start();
     document.getElementById('micBtn').classList.add('recording');
-    document.getElementById('micBtn').textContent = '⏹️';
+    document.getElementById('micBtn').innerHTML = ico('square','icon-md');
   } catch(e) { alert('Microphone not available: ' + e.message); }
 }
 
@@ -194,7 +200,7 @@ async function stopRec() {
   mediaRec.stop();
   const btn = document.getElementById('micBtn');
   btn.classList.remove('recording');
-  btn.textContent = '🎤';
+  btn.innerHTML = ico('mic','icon-md');
   mediaRec.onstop = async () => {
     const blob = new Blob(audioChunks, {type: 'audio/webm'});
     const fd = new FormData();
@@ -205,7 +211,7 @@ async function stopRec() {
       const d = await r.json();
       removeTyping();
       if (d.text) { input.value = d.text; sendMsg(); }
-      else addBubble('Could not transcribe audio. Try again! 🎤', 'bot');
+      else addBubble('Could not transcribe audio. Try again!', 'bot');
     } catch(e) { removeTyping(); }
     mediaRec.stream.getTracks().forEach(t => t.stop());
   };
@@ -227,5 +233,11 @@ input.addEventListener('input', function() {
   }
 })();
 document.getElementById('langSel').addEventListener('change', e => localStorage.setItem('edu_lang', e.target.value));
+
+// Pre-fill question from quick-ask on home page
+(function() {
+  const q = new URLSearchParams(location.search).get('q');
+  if (q) { input.value = q; setTimeout(sendMsg, 400); }
+})();
 </script>
 {% endblock %}
