@@ -87,6 +87,15 @@ with app.app_context():
     _startup()
 
 
+def _safe_retrieve_context(query: str, subject: str) -> str:
+    try:
+        from core.rag_engine import retrieve_context
+        return retrieve_context(query, n_results=3, subject=subject)
+    except Exception as exc:
+        log.warning("RAG retrieval failed for %s/%s: %s", subject, query, exc)
+        return ""
+
+
 # ---------------------------------------------------------------------------
 # Page routes
 # ---------------------------------------------------------------------------
@@ -264,11 +273,10 @@ def api_chat():
     if not message:
         return jsonify({"error": "message required"}), 400
 
-    from core.rag_engine    import retrieve_context
     from core.llm_engine    import query_tutor
     from core.progress_tracker import get_or_create_student, log_session, log_dialect
 
-    rag_ctx  = retrieve_context(message, n_results=3, subject=subject)
+    rag_ctx  = _safe_retrieve_context(message, subject)
     response = query_tutor(message, language, rag_ctx)
 
     # Log session + dialect
@@ -339,11 +347,10 @@ def api_quiz_generate():
     if not topic:
         return jsonify({"error": "topic required"}), 400
 
-    from core.rag_engine  import retrieve_context
     from core.llm_engine  import generate_quiz
     from core.quiz_engine import validate_questions
 
-    rag_ctx   = retrieve_context(topic, n_results=3, subject=subject)
+    rag_ctx   = _safe_retrieve_context(topic, subject)
     raw_qs    = generate_quiz(topic, language, rag_ctx)
     questions = validate_questions(raw_qs)
 
@@ -456,6 +463,15 @@ def api_progress(student_id: int):
     return jsonify(get_progress(student_id))
 
 
+@app.get("/api/progress/by-name/<name>")
+def api_progress_by_name(name: str):
+    from core.progress_tracker import find_student_by_name, get_progress
+    student_id = find_student_by_name(name)
+    if student_id is None:
+        return jsonify({"error": "Student not found"}), 404
+    return jsonify(get_progress(student_id))
+
+
 # ---------------------------------------------------------------------------
 # API: flashcards
 # ---------------------------------------------------------------------------
@@ -470,10 +486,9 @@ def api_flashcard_generate():
     if not topic:
         return jsonify({"error": "topic required"}), 400
 
-    from core.rag_engine       import retrieve_context
     from core.flashcard_engine import generate_flashcards
 
-    rag_ctx = retrieve_context(topic, n_results=3, subject=subject)
+    rag_ctx = _safe_retrieve_context(topic, subject)
     cards   = generate_flashcards(topic, language, rag_ctx)
     return jsonify({"flashcards": cards})
 

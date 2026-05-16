@@ -20,8 +20,8 @@
 # =============================================================================
 
 # ── 1. SINGAPORE HUB ─────────────────────────────────────────────────────
-HUB_ID        = "singapore"
-HUB_REGION    = "Singapore"
+HUB_ID        = "asean_hub"
+HUB_REGION    = "Rural ASEAN"
 HUB_LANGUAGES = [
     "English",
     "Bahasa Melayu",
@@ -39,7 +39,7 @@ TIER_1_LANGS  = ["English"]
 TIER_2_LANGS  = []
 SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 HUB_IP        = "192.168.1.1"
-WIFI_SSID     = "EduNode_Singapore"
+WIFI_SSID     = "EduNode_Hub"
 KOLIBRI_CHANNEL = "en"
 
 # ── 2. VIETNAM HUB ───────────────────────────────────────────────────────

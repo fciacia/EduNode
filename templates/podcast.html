@@ -32,14 +32,22 @@
 .sel {
   border: 2.5px solid var(--border);
   border-radius: 99px;
-  padding: .38rem .85rem;
+  padding: .38rem 2.2rem .38rem .9rem;
   font-size: .87rem;
   font-weight: 700;
   font-family: var(--font);
   background: var(--surface2);
   color: var(--text);
   outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237C3AED' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .75rem center;
+  cursor: pointer;
+  transition: border-color .15s;
 }
+.sel:focus { border-color: #10B981; box-shadow: 0 0 0 3px rgba(16,185,129,.15); }
 
 .generate-row { display: flex; gap: .65rem; margin-bottom: 1.75rem; }
 .topic-input {

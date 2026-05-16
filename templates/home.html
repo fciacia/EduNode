@@ -1,270 +1,381 @@
 {% extends "base.html" %}
-{% block title %}EduNode — {{ region }}{% endblock %}
+{% block title %}EduNode{% endblock %}
 
 {% block extra_style %}
 /* ── Hero ── */
 .hero {
   text-align: center;
-  padding: 2.5rem 1rem 1.75rem;
+  padding: 2rem 1rem 1.25rem;
   animation: fade-in .4s ease;
 }
 
-.hero-mascot {
-  font-size: 4rem;
-  display: block;
-  animation: float 3s ease-in-out infinite;
-  margin-bottom: .75rem;
-  filter: drop-shadow(0 6px 16px rgba(124,58,237,.25));
+.hero-blob {
+  width: 110px;
+  height: 110px;
+  background: linear-gradient(135deg, #A78BFA, #7C3AED);
+  border-radius: 60% 40% 55% 45% / 50% 55% 45% 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto .85rem;
+  font-size: 3.2rem;
+  box-shadow: 0 8px 0 #5B21B6, 0 16px 32px rgba(124,58,237,.3);
+  animation: blob-float 4s ease-in-out infinite;
+  cursor: default;
+}
+
+@keyframes blob-float {
+  0%,100% { transform: translateY(0) rotate(0deg);   border-radius: 60% 40% 55% 45% / 50% 55% 45% 50%; }
+  33%      { transform: translateY(-9px) rotate(1deg); border-radius: 50% 50% 45% 55% / 55% 45% 55% 45%; }
+  66%      { transform: translateY(-4px) rotate(-1deg); border-radius: 45% 55% 60% 40% / 45% 55% 45% 55%; }
 }
 
 .hero-title {
   font-family: var(--font-display);
-  font-size: 2.8rem;
+  font-size: 2.9rem;
   color: var(--primary);
-  margin-bottom: .35rem;
+  margin-bottom: .2rem;
+  text-shadow: 0 4px 0 rgba(124,58,237,.18);
   line-height: 1.1;
 }
 
 .hero-sub {
-  font-size: 1.05rem;
+  font-size: .98rem;
   font-weight: 700;
   color: var(--text-muted);
+  margin-bottom: .9rem;
+}
+
+.hero-meta {
+  display: flex;
+  gap: .5rem;
+  justify-content: center;
+  flex-wrap: wrap;
   margin-bottom: 1.5rem;
 }
 
 .hero-badge {
   display: inline-flex;
   align-items: center;
-  gap: .4rem;
-  background: var(--surface2);
-  border: 2px solid var(--border);
+  gap: .3rem;
+  background: var(--surface);
+  border: 2.5px solid var(--border);
   border-radius: 99px;
-  padding: .35rem .9rem;
-  font-size: .82rem;
+  padding: .28rem .8rem;
+  font-size: .78rem;
   font-weight: 800;
   color: var(--primary);
+  box-shadow: 0 3px 0 var(--border);
+}
+
+.tour-btn {
+  cursor: pointer;
+  font-family: var(--font);
+  background: var(--primary);
+  border: 2.5px solid var(--primary-dark);
+  color: #fff;
+  box-shadow: 0 3px 0 var(--primary-dark);
+  transition: transform .15s, box-shadow .15s;
+}
+.tour-btn:hover  { transform: translateY(-2px); box-shadow: 0 5px 0 var(--primary-dark); }
+.tour-btn:active { transform: translateY(1px);  box-shadow: 0 2px 0 var(--primary-dark); }
+
+/* ── Motivation banner ── */
+.motivation-banner {
+  background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+  border-radius: 20px;
+  padding: 1.1rem 1.25rem;
   margin-bottom: 1.5rem;
-  letter-spacing: .03em;
+  display: flex;
+  gap: .85rem;
+  align-items: center;
+  box-shadow: 0 7px 0 #3B1388, 0 14px 30px rgba(124,58,237,.28);
+  animation: fade-in .45s ease .1s both;
+}
+
+.motivation-icon { font-size: 2.2rem; flex-shrink: 0; }
+
+.motivation-text h3 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: #fff;
+  margin-bottom: .25rem;
+}
+
+.motivation-text p {
+  font-size: .84rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.85);
+  line-height: 1.55;
 }
 
 /* ── Language row ── */
 .lang-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: .75rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
+  gap: .6rem;
+  margin-bottom: 1.6rem;
+  overflow: hidden;
 }
 
 .lang-row label {
-  font-size: .92rem;
+  font-size: .9rem;
   font-weight: 800;
   color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.lang-select {
+/* ── Language chip pills ── */
+.lang-chips {
+  display: flex;
+  gap: .4rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.lang-chips::-webkit-scrollbar { display: none; }
+
+.lang-chip {
+  white-space: nowrap;
   border: 2.5px solid var(--border);
   border-radius: 99px;
-  padding: .4rem 1rem;
-  font-size: .9rem;
+  padding: .32rem .8rem;
+  font-size: .8rem;
   font-weight: 700;
   background: var(--surface);
-  color: var(--text);
-  max-width: 200px;
+  color: var(--text-muted);
+  cursor: pointer;
+  box-shadow: 0 3px 0 var(--border);
+  transition: background .14s, color .14s, border-color .14s, box-shadow .14s, transform .12s;
+  flex-shrink: 0;
+  font-family: var(--font);
 }
-
-/* ── Guide banner ── */
-.guide-banner {
-  background: linear-gradient(135deg, var(--primary) 0%, #5B21B6 100%);
-  border-radius: var(--radius);
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 2rem;
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  box-shadow: 0 6px 0 #3B1388;
-  animation: fade-in .5s ease .1s both;
-}
-
-.guide-banner .guide-icon { font-size: 2.5rem; flex-shrink: 0; }
-
-.guide-banner .guide-text h3 {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
+.lang-chip:hover { border-color: var(--primary); color: var(--primary); }
+.lang-chip:active { transform: scale(.94); }
+.lang-chip.active {
+  background: var(--primary);
   color: #fff;
-  margin-bottom: .3rem;
+  border-color: var(--primary);
+  box-shadow: 0 3px 0 var(--primary-dark);
 }
 
-.guide-banner .guide-text p {
-  font-size: .88rem;
-  font-weight: 600;
-  color: rgba(255,255,255,.82);
-  line-height: 1.5;
-}
-
-/* ── Subject grid ── */
+/* ── Section labels ── */
 .grid-label {
-  font-size: .82rem;
+  font-size: .75rem;
   font-weight: 800;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: .08em;
-  margin-bottom: .85rem;
+  letter-spacing: .09em;
+  margin-bottom: .9rem;
   text-align: center;
 }
 
+/* ── CLAY subject cards ── */
 .subject-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .85rem;
+  margin-bottom: 1.75rem;
+}
+
+@media (min-width: 520px) {
+  .subject-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 .subject-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  border: 2.5px solid var(--border);
-  box-shadow: 0 4px 0 var(--border);
-  padding: 1.5rem 1rem 1.25rem;
+  border-radius: 22px;
+  padding: 1.35rem 1rem 1.15rem;
   text-align: center;
   text-decoration: none;
-  color: inherit;
-  transition: transform .15s, box-shadow .15s, border-color .15s;
-  animation: pop-in .3s ease both;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .6rem;
+  gap: .5rem;
+  border: 3px solid rgba(255,255,255,.45);
+  transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
+  animation: pop-in .3s ease both;
 }
 
-.subject-card:nth-child(1) { animation-delay: .05s; border-top: 4px solid #7C3AED; }
-.subject-card:nth-child(2) { animation-delay: .10s; border-top: 4px solid #3B82F6; }
-.subject-card:nth-child(3) { animation-delay: .15s; border-top: 4px solid #10B981; }
-.subject-card:nth-child(4) { animation-delay: .20s; border-top: 4px solid #F59E0B; }
-.subject-card:nth-child(5) { animation-delay: .25s; border-top: 4px solid #EC4899; }
+.subject-card:nth-child(1) { background: linear-gradient(145deg,#8B5CF6,#6D28D9); box-shadow: 0 7px 0 #4C1D95, 0 14px 28px rgba(109,40,217,.3); animation-delay:.05s }
+.subject-card:nth-child(2) { background: linear-gradient(145deg,#3B82F6,#1D4ED8); box-shadow: 0 7px 0 #1E3A8A, 0 14px 28px rgba(29,78,216,.3);  animation-delay:.10s }
+.subject-card:nth-child(3) { background: linear-gradient(145deg,#10B981,#059669); box-shadow: 0 7px 0 #064E3B, 0 14px 28px rgba(5,150,105,.3);   animation-delay:.15s }
+.subject-card:nth-child(4) { background: linear-gradient(145deg,#F59E0B,#D97706); box-shadow: 0 7px 0 #92400E, 0 14px 28px rgba(217,119,6,.3);   animation-delay:.20s }
+.subject-card:nth-child(5) { background: linear-gradient(145deg,#EC4899,#DB2777); box-shadow: 0 7px 0 #831843, 0 14px 28px rgba(219,39,119,.3);  animation-delay:.25s }
 
-.subject-card:hover {
-  transform: translateY(-4px) rotate(-1deg);
-  box-shadow: 0 8px 0 var(--border);
-  border-color: var(--primary);
-}
+.subject-card:hover  { transform: translateY(-5px) scale(1.03); }
+.subject-card:active { transform: translateY(2px) scale(.97); }
+
+.subject-card:nth-child(1):hover { box-shadow: 0 12px 0 #4C1D95, 0 20px 36px rgba(109,40,217,.4); }
+.subject-card:nth-child(2):hover { box-shadow: 0 12px 0 #1E3A8A, 0 20px 36px rgba(29,78,216,.4);  }
+.subject-card:nth-child(3):hover { box-shadow: 0 12px 0 #064E3B, 0 20px 36px rgba(5,150,105,.4);  }
+.subject-card:nth-child(4):hover { box-shadow: 0 12px 0 #92400E, 0 20px 36px rgba(217,119,6,.4);  }
+.subject-card:nth-child(5):hover { box-shadow: 0 12px 0 #831843, 0 20px 36px rgba(219,39,119,.4); }
 
 .subject-card .icon {
-  font-size: 2.4rem;
+  font-size: 2.7rem;
   display: block;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,.12));
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,.2));
 }
 
 .subject-card .name {
-  font-size: .9rem;
-  font-weight: 800;
-  color: var(--text);
+  font-family: var(--font-display);
+  font-size: .92rem;
+  color: #fff;
   line-height: 1.3;
+  text-shadow: 0 1px 4px rgba(0,0,0,.25);
 }
 
-/* ── Quick links ── */
-.quick-links-label {
-  font-size: .82rem;
-  font-weight: 800;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  margin-bottom: .85rem;
-  text-align: center;
+/* ── Activity 2×2 clay grid ── */
+.activities-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .85rem;
+  margin-bottom: 1.5rem;
 }
 
-.quick-links {
-  display: flex;
-  gap: .75rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.quick-link {
-  padding: .6rem 1.25rem;
-  border-radius: 99px;
+.activity-card {
+  border-radius: 20px;
+  padding: 1.1rem .9rem;
   text-decoration: none;
-  font-size: .9rem;
-  font-weight: 800;
-  border: 2.5px solid var(--primary);
-  color: var(--primary);
-  background: transparent;
-  transition: background .15s, color .15s, transform .1s;
   display: flex;
   align-items: center;
-  gap: .35rem;
+  gap: .7rem;
+  border: 3px solid rgba(255,255,255,.4);
+  transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
+  animation: pop-in .35s ease both;
 }
 
-.quick-link:hover {
-  background: var(--primary);
+.activity-card:nth-child(1) { background: linear-gradient(145deg,#EF4444,#DC2626); box-shadow: 0 6px 0 #991B1B; animation-delay:.05s }
+.activity-card:nth-child(2) { background: linear-gradient(145deg,#3B82F6,#2563EB); box-shadow: 0 6px 0 #1E3A8A; animation-delay:.10s }
+.activity-card:nth-child(3) { background: linear-gradient(145deg,#F59E0B,#D97706); box-shadow: 0 6px 0 #92400E; animation-delay:.15s }
+.activity-card:nth-child(4) { background: linear-gradient(145deg,#10B981,#059669); box-shadow: 0 6px 0 #064E3B; animation-delay:.20s }
+
+.activity-card:hover  { transform: translateY(-3px) scale(1.02); }
+.activity-card:active { transform: translateY(2px); }
+
+.activity-card:nth-child(1):hover { box-shadow: 0 10px 0 #991B1B; }
+.activity-card:nth-child(2):hover { box-shadow: 0 10px 0 #1E3A8A; }
+.activity-card:nth-child(3):hover { box-shadow: 0 10px 0 #92400E; }
+.activity-card:nth-child(4):hover { box-shadow: 0 10px 0 #064E3B; }
+
+.act-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,.2));
+}
+
+.act-info { flex: 1; min-width: 0; }
+
+.act-name {
+  font-family: var(--font-display);
+  font-size: .95rem;
   color: #fff;
-  transform: translateY(-2px);
+  display: block;
+  text-shadow: 0 1px 3px rgba(0,0,0,.2);
+  line-height: 1.2;
+}
+
+.act-desc {
+  font-size: .72rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.78);
+  margin-top: .15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 {% endblock %}
 
 {% block content %}
 <div class="hero">
-  <span class="hero-mascot">🤖</span>
+  <div class="hero-blob">🤖</div>
   <h1 class="hero-title">EduNode</h1>
-  <p class="hero-sub">Your offline AI learning buddy! ✨</p>
-  <span class="hero-badge">📍 {{ region }}</span>
+  <p class="hero-sub" data-i18n="home.subtitle">Your offline AI learning buddy! ✨</p>
+  <div class="hero-meta">
+    <button class="hero-badge tour-btn" onclick="replayTour()">🗺️ How to use</button>
+  </div>
 </div>
 
-<div class="guide-banner">
-  <div class="guide-icon">👋</div>
-  <div class="guide-text">
-    <h3>Hey there, learner!</h3>
-    <p>Pick a subject below to start chatting with your AI tutor. You can ask questions, take quizzes, study with flashcards, or even listen to a fun podcast!</p>
+<div class="motivation-banner">
+  <div class="motivation-icon">👋</div>
+  <div class="motivation-text">
+    <h3 data-i18n="home.guide.title">Hey there, learner!</h3>
+    <p data-i18n="home.guide.body">Pick a subject below to start chatting with your AI tutor. You can ask questions, take quizzes, study with flashcards, or even listen to a fun podcast!</p>
   </div>
 </div>
 
 <div class="lang-row">
-  <label for="globalLang">🌏 Language:</label>
-  <select id="globalLang" class="lang-select" onchange="saveLang(this.value)">
+  <label data-i18n="home.lang.label">🌏</label>
+  <div class="lang-chips" id="langChips">
     {% for lang in languages %}
-    <option value="{{ lang }}" {% if loop.first %}selected{% endif %}>{{ lang }}</option>
+    <button class="lang-chip" data-lang="{{ lang }}" onclick="saveLang('{{ lang }}')">{{ lang }}</button>
     {% endfor %}
-  </select>
+  </div>
 </div>
 
-<p class="grid-label">📚 Choose a subject to get started</p>
+<p id="subjects-label" class="grid-label" data-i18n="home.subjects.label">📚 Choose a subject to get started</p>
 
-<div class="subject-grid">
+<div class="subject-grid" id="subject-grid">
   {% set icons = {"Mathematics": "📐", "Science": "🔬", "English Language": "📖", "Environmental Studies": "🌿", "Digital Literacy": "💻"} %}
   {% for subject in subjects %}
   <a href="/chat?subject={{ subject | urlencode }}" class="subject-card" onclick="attachLang(this)">
     <span class="icon">{{ icons.get(subject, "📚") }}</span>
-    <span class="name">{{ subject }}</span>
+    <span class="name" data-i18n="subject.{{ subject }}">{{ subject }}</span>
   </a>
   {% endfor %}
 </div>
 
-<p class="quick-links-label">🚀 Other activities</p>
+<p id="activities-label" class="grid-label" data-i18n="home.activities.label">🚀 Other activities</p>
 
-<div class="quick-links">
-  <a href="/quiz"      class="quick-link">🧠 Take a Quiz</a>
-  <a href="/flashcard" class="quick-link">🃏 Flashcards</a>
-  <a href="/podcast"   class="quick-link">🎧 Podcast</a>
-  <a href="/progress"  class="quick-link">🏆 My Progress</a>
+<div class="activities-grid" id="activities-grid">
+  <a href="/quiz" class="activity-card" id="act-quiz">
+    <span class="act-icon">🧠</span>
+    <div class="act-info">
+      <span class="act-name" data-i18n="home.quiz">Take a Quiz</span>
+      <span class="act-desc">Test your knowledge!</span>
+    </div>
+  </a>
+  <a href="/flashcard" class="activity-card" id="act-flashcard">
+    <span class="act-icon">🃏</span>
+    <div class="act-info">
+      <span class="act-name" data-i18n="home.flashcard">Flashcards</span>
+      <span class="act-desc">Study key words!</span>
+    </div>
+  </a>
+  <a href="/podcast" class="activity-card" id="act-podcast">
+    <span class="act-icon">🎧</span>
+    <div class="act-info">
+      <span class="act-name" data-i18n="home.podcast">Podcast</span>
+      <span class="act-desc">Listen &amp; learn!</span>
+    </div>
+  </a>
+  <a href="/progress" class="activity-card" id="act-progress">
+    <span class="act-icon">🏆</span>
+    <div class="act-info">
+      <span class="act-name" data-i18n="home.progress">My Progress</span>
+      <span class="act-desc">See your stars!</span>
+    </div>
+  </a>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-  function saveLang(val) { localStorage.setItem('edu_lang', val); }
-
-  function attachLang(el) {
-    const lang = localStorage.getItem('edu_lang') || '{{ languages[0] }}';
-    el.href = el.href + '&lang=' + encodeURIComponent(lang);
+  function replayTour() {
+    sessionStorage.removeItem('edu_tour_done');
+    if (window.EduOnboarding) window.EduOnboarding.startTour();
   }
 
-  (function() {
-    const saved = localStorage.getItem('edu_lang');
-    if (saved) {
-      const sel = document.getElementById('globalLang');
-      [...sel.options].forEach(o => o.selected = (o.value === saved));
-    }
-  })();
+  function saveLang(val) {
+    if (window.EduI18n) window.EduI18n.setLang(val);
+    else localStorage.setItem('edu_lang', val);
+  }
+
+  function attachLang(el) {
+    var lang = localStorage.getItem('edu_lang') || '{{ languages[0] }}';
+    el.href = el.href.split('&lang=')[0] + '&lang=' + encodeURIComponent(lang);
+  }
 </script>
 {% endblock %}

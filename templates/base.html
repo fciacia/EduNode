@@ -22,14 +22,14 @@
   <div class="nav-inner">
     <a href="/" class="nav-brand">
       🌟 EduNode
-      <span class="region-tag">{{ region }}</span>
     </a>
+    <span id="nav-level-badge" class="nav-level-badge"></span>
     <div class="nav-links">
       <a href="/chat"      class="nav-link {% if request.path == '/chat'      %}active{% endif %}">💬 Chat</a>
-      <a href="/quiz"      class="nav-link {% if request.path == '/quiz'      %}active{% endif %}">🧠 Quiz</a>
-      <a href="/flashcard" class="nav-link {% if request.path == '/flashcard' %}active{% endif %}">🃏 Cards</a>
-      <a href="/podcast"   class="nav-link {% if request.path == '/podcast'   %}active{% endif %}">🎧 Podcast</a>
-      <a href="/progress"  class="nav-link {% if request.path == '/progress'  %}active{% endif %}">🏆 Progress</a>
+      <a href="/quiz"      class="nav-link {% if request.path == '/quiz'      %}active{% endif %}" data-i18n="nav.quiz">🧠 Quiz</a>
+      <a href="/flashcard" class="nav-link {% if request.path == '/flashcard' %}active{% endif %}" data-i18n="nav.cards">🃏 Cards</a>
+      <a href="/podcast"   class="nav-link {% if request.path == '/podcast'   %}active{% endif %}" data-i18n="nav.podcast">🎧 Podcast</a>
+      <a href="/progress"  class="nav-link {% if request.path == '/progress'  %}active{% endif %}" data-i18n="nav.progress">🏆 Progress</a>
     </div>
   </div>
 </nav>
@@ -68,9 +68,15 @@
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/static/sw.js').catch(() => {});
+    // When a new SW takes control (after update), reload so fresh HTML is served
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      window.location.reload();
+    });
   }
 </script>
 
+<script src="/static/js/i18n.js" defer></script>
+<script src="/static/js/onboarding.js" defer></script>
 {% block extra_scripts %}{% endblock %}
 </body>
 </html>

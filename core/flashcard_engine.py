@@ -78,8 +78,11 @@ def _parse_flashcard_json(raw: str) -> list[dict]:
         log.warning("No JSON array found in flashcard response.")
         return []
 
+    # Remove trailing commas before ] or } (LLMs often emit these)
+    cleaned = re.sub(r",\s*([}\]])", r"\1", match.group())
+
     try:
-        cards = json.loads(match.group())
+        cards = json.loads(cleaned)
     except json.JSONDecodeError as exc:
         log.warning("Flashcard JSON parse error: %s", exc)
         return []

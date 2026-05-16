@@ -132,6 +132,16 @@ def init_db() -> None:
 # Students
 # ---------------------------------------------------------------------------
 
+def find_student_by_name(name: str) -> int | None:
+    """Return student_id for *name* (case-insensitive), or None if not found."""
+    with _db() as conn:
+        row = conn.execute(
+            "SELECT id FROM students WHERE lower(name) = lower(?) LIMIT 1",
+            (name.strip(),),
+        ).fetchone()
+        return row["id"] if row else None
+
+
 def get_or_create_student(name: str, language: str = "English", grade: int = 0) -> int:
     """
     Return the student_id for *name*, creating the record if it does not exist.

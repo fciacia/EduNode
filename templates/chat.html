@@ -170,6 +170,7 @@ async function sendMsg() {
     const msgEl = addBubble(d.response || d.error || 'No response', 'bot');
     if (d.response) addPlayBtn(msgEl, d.response);
     if (d.student_id) localStorage.setItem('edu_student_id', d.student_id);
+    localStorage.setItem('edu_student_name', getName());
   } catch(e) {
     removeTyping();
     addBubble('Connection error — is EduNode running? 😅', 'bot');
@@ -216,10 +217,14 @@ input.addEventListener('input', function() {
   this.style.height = Math.min(this.scrollHeight, 120) + 'px';
 });
 
-// Restore saved language
+// Restore saved language on load
 (function() {
   const saved = localStorage.getItem('edu_lang');
-  if (saved) [...document.getElementById('langSel').options].forEach(o => o.selected = (o.value === saved));
+  const sel = document.getElementById('langSel');
+  if (saved) {
+    const match = [...sel.options].find(o => o.value === saved);
+    if (match) sel.value = match.value;
+  }
 })();
 document.getElementById('langSel').addEventListener('change', e => localStorage.setItem('edu_lang', e.target.value));
 </script>

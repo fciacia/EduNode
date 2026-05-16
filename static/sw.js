@@ -1,16 +1,9 @@
 /* EduNode Service Worker — offline shell caching */
-const CACHE = 'edunode-v1';
+const CACHE = 'edunode-v10';
 const SHELL = [
-  '/',
-  '/chat',
-  '/quiz',
-  '/flashcard',
-  '/podcast',
-  '/progress',
-  '/static/css/style.css',
-  '/static/icons/manifest.json',
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',
+  '/static/icons/manifest.json',
 ];
 
 self.addEventListener('install', e => {
@@ -28,7 +21,6 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Only cache GET requests for same origin
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
@@ -38,23 +30,37 @@ self.addEventListener('fetch', e => {
     e.respondWith(
       fetch(e.request).catch(() =>
         caches.match(e.request).then(r => r || new Response('{"error":"offline"}', {
-          headers: {'Content-Type': 'application/json'}
+          headers: { 'Content-Type': 'application/json' }
         }))
       )
     );
     return;
   }
 
-  // Cache-first for shell + static assets
+  // Network-first for HTML pages and all JS/CSS — always fresh when online
+  const isStatic = /\.(png|jpg|jpeg|gif|ico|woff2?|svg)$/i.test(url.pathname);
+  if (!isStatic) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        if (res && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
+        return res;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Cache-first only for images / icons
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      const fresh = fetch(e.request).then(res => {
+    caches.match(e.request).then(cached => cached ||
+      fetch(e.request).then(res => {
         if (res && res.status === 200) {
           caches.open(CACHE).then(c => c.put(e.request, res.clone()));
         }
         return res;
-      });
-      return cached || fresh;
-    })
+      })
+    )
   );
 });

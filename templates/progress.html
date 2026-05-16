@@ -65,7 +65,7 @@
 </div>
 
 <div class="lookup-row">
-  <input id="studentIdInput" class="id-input" type="number" min="1" placeholder="🔍 Enter your Student ID…">
+  <input id="studentNameInput" class="id-input" type="text" placeholder="🔍 Enter your name (e.g. Ali, Maria…)">
   <button class="btn-amber" onclick="loadProgress()">View Progress</button>
 </div>
 
@@ -86,11 +86,11 @@
 {% block extra_scripts %}
 <script>
 async function loadProgress() {
-  const id = parseInt(document.getElementById('studentIdInput').value);
-  if (!id || id < 1) { alert('Please enter a valid Student ID! 🔢'); return; }
+  const name = document.getElementById('studentNameInput').value.trim();
+  if (!name) { alert('Please enter your name! ✏️'); return; }
   try {
-    const r = await fetch(`/api/progress/${id}`);
-    if (!r.ok) { alert('Student not found. Check your ID! 😅'); return; }
+    const r = await fetch(`/api/progress/by-name/${encodeURIComponent(name)}`);
+    if (!r.ok) { alert('No progress found for "' + name + '". Complete a quiz or chat session first! 😊'); return; }
     const d = await r.json();
     renderProgress(d);
     document.getElementById('progressResult').style.display = 'block';
@@ -142,9 +142,9 @@ function escHtml(s) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('edu_student_id');
-  if (saved) {
-    document.getElementById('studentIdInput').value = saved;
+  const savedName = localStorage.getItem('edu_student_name');
+  if (savedName) {
+    document.getElementById('studentNameInput').value = savedName;
     loadProgress();
   }
 });

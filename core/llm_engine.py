@@ -49,6 +49,28 @@ GLOSSARY_DIR = Path("data/glossaries")
 # Private: core Ollama helper
 # ---------------------------------------------------------------------------
 
+def _resolve_ollama_model() -> str:
+    try:
+        import requests  # type: ignore
+    except ImportError:
+        return OLLAMA_MODEL
+
+    try:
+        resp = requests.get(f"{OLLAMA_BASE}/api/tags", timeout=5)
+        resp.raise_for_status()
+        models = resp.json().get("models") or []
+    except Exception:
+        return OLLAMA_MODEL
+
+    available = [m.get("name") for m in models if m.get("name")]
+    if OLLAMA_MODEL in available or not available:
+        return OLLAMA_MODEL
+
+    fallback_model = available[0]
+    log.warning("Configured Ollama model '%s' not found; using '%s' instead.", OLLAMA_MODEL, fallback_model)
+    return fallback_model
+
+
 def _ollama_generate(
     prompt: str,
     temperature: float = 0.7,
@@ -66,7 +88,7 @@ def _ollama_generate(
         return ""
 
     payload: dict[str, Any] = {
-        "model":  OLLAMA_MODEL,
+        "model":  _resolve_ollama_model(),
         "prompt": prompt,
         "stream": False,
         "options": {
@@ -207,9 +229,9 @@ def query_tutor(user_message: str, language: str, rag_context: str) -> str:
             return _offline_fallback(user_message)
         return _bridge_translate(english_answer, language)
 
-    # Unknown / unconfigured language — fall back to English
-    log.warning("Language '%s' not in TIER_1 or TIER_2 — falling back to English.", language)
-    system = _build_tutor_system("English")
+    # Language not in tier config — attempt direct generation in that language
+    log.info("Language '%s' not in TIER_1 or TIER_2 — attempting direct generation.", language)
+    system = _build_tutor_system(language)
     answer = _ollama_generate(prompt, temperature=0.7, system=system)
     return answer or _offline_fallback(user_message)
 
@@ -268,8 +290,11 @@ def _parse_quiz_json(raw: str) -> list[dict]:
         log.warning("No JSON array found in quiz response.")
         return []
 
+    # Remove trailing commas before ] or } (LLMs often emit these)
+    cleaned = re.sub(r",\s*([}\]])", r"\1", match.group())
+
     try:
-        questions = json.loads(match.group())
+        questions = json.loads(cleaned)
     except json.JSONDecodeError as exc:
         log.warning("Quiz JSON parse error: %s", exc)
         return []

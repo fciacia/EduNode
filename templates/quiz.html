@@ -193,6 +193,8 @@ async function submitQuiz() {
       })
     });
     const d = await r.json();
+    if (d.student_id) localStorage.setItem('edu_student_id', d.student_id);
+    localStorage.setItem('edu_student_name', getName());
     showResults(d.result, d.microcredentials_earned || []);
     markAnswers(d.result);
   } catch(e) { alert('Submit error: ' + e.message); }
