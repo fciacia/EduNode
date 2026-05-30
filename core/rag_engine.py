@@ -42,7 +42,7 @@ CURRICULUM_DIR  = Path(os.getenv("CURRICULUM_DIR", "data/curriculum"))
 COLLECTION_NAME = "edunode"
 CHUNK_SIZE      = int(os.getenv("CHUNK_SIZE", "300"))   # words per chunk
 CHUNK_OVERLAP   = int(os.getenv("CHUNK_OVERLAP", "30"))  # word overlap
-EMBED_MODEL     = os.getenv("EMBED_MODEL", "all-MiniLM-L6-v2")
+EMBED_MODEL     = os.getenv("EMBED_MODEL", "paraphrase-multilingual-MiniLM-L12-v2")
 
 
 # ---------------------------------------------------------------------------
@@ -57,7 +57,6 @@ def get_collection():
 
     try:
         import chromadb
-        from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
     except ImportError as exc:
         raise RuntimeError(
             "chromadb and sentence-transformers are required. "
@@ -67,11 +66,9 @@ def get_collection():
     CHROMA_DIR.mkdir(parents=True, exist_ok=True)
     _chroma_client = chromadb.PersistentClient(path=str(CHROMA_DIR))
 
-    embed_fn = SentenceTransformerEmbeddingFunction(model_name=EMBED_MODEL)
-
     _collection = _chroma_client.get_or_create_collection(
         name=COLLECTION_NAME,
-        embedding_function=embed_fn,
+        embedding_function=_SharedEmbeddingFunction(),
         metadata={"hnsw:space": "cosine"},
     )
     log.info("ChromaDB collection '%s' ready (%d docs).", COLLECTION_NAME, _collection.count())
@@ -340,6 +337,27 @@ def get_embedder():
         from sentence_transformers import SentenceTransformer
         _embedder = SentenceTransformer(EMBED_MODEL)
     return _embedder
+
+
+try:
+    from chromadb import EmbeddingFunction as _ChromaEmbeddingFunction
+except Exception:  # pragma: no cover - chromadb is always installed in practice
+    _ChromaEmbeddingFunction = object
+
+
+class _SharedEmbeddingFunction(_ChromaEmbeddingFunction):
+    """ChromaDB embedding function backed by the single shared SentenceTransformer.
+
+    Using this (instead of Chroma's own SentenceTransformerEmbeddingFunction) keeps
+    the embedding model in memory exactly once — reused by both retrieval and the
+    verification agent — instead of loading it twice.
+    """
+
+    def __call__(self, input):
+        return get_embedder().encode(list(input)).tolist()
+
+    def name(self) -> str:
+        return "edunode_shared_embedder"
 
 
 # ---------------------------------------------------------------------------

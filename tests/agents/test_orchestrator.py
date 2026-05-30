@@ -37,6 +37,26 @@ def test_happy_path_returns_full_payload(monkeypatch):
     assert result["language"] == "English"
 
 
+def test_verification_gate_threads_needs_review(monkeypatch):
+    # Pipeline runs to completion but confidence is below 0.85 -> amber badge.
+    reason_called = []
+    chunks = [Chunk(text="grounded text", source="a.pdf", page=2, distance=0.2)]
+    _patch_all(monkeypatch, chunks=chunks, reason_called=reason_called)
+    # Override verification to return a low-confidence, needs_review result.
+    monkeypatch.setattr(
+        "core.agents.verification.score",
+        lambda ans, ch: Verification(confidence=0.70, citations=[{"source": "a.pdf", "page": 2}], needs_review=True),
+    )
+
+    result = orch.run_pipeline("How do plants grow?", "English", student_id=1, subject="Science")
+
+    assert reason_called == [True]                 # generation DID run
+    assert result["answer"] == "An answer grounded in curriculum."
+    assert result["confidence"] == 0.70
+    assert result["needs_review"] is True
+    assert result["citations"] == [{"source": "a.pdf", "page": 2}]
+
+
 def test_retrieval_gate_blocks_generation(monkeypatch):
     reason_called = []
     # Best distance 0.9 > 0.65 -> controlled non-response, reason() never called

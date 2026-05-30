@@ -18,6 +18,9 @@ def test_retrieve_with_citations_returns_chunk_objects(tmp_path, monkeypatch):
     monkeypatch.setattr(rag, "CHROMA_DIR", tmp_path / "chroma")
     monkeypatch.setattr(rag, "_collection", None)
     monkeypatch.setattr(rag, "_chroma_client", None)
+    # Pin to the small, locally-cached embedder so tests stay fast and offline.
+    monkeypatch.setattr(rag, "EMBED_MODEL", "all-MiniLM-L6-v2")
+    monkeypatch.setattr(rag, "_embedder", None)
     cdir = tmp_path / "curriculum"
     cdir.mkdir()
     (cdir / "science.txt").write_text(

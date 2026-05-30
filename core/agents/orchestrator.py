@@ -68,15 +68,25 @@ def run_pipeline(query: str, language: str, student_id, subject: str = "General"
         }
 
     # 5. Verify + VERIFICATION GATE
-    result = verification.score(answer_en, chunks)
+    #    If the embedder is unavailable (e.g. first-run download fails on an
+    #    offline node), still return the answer but flag it for review rather
+    #    than letting the exception surface as a 500 to the student.
+    try:
+        result = verification.score(answer_en, chunks)
+        confidence, citations, needs_review = (
+            result.confidence, result.citations, result.needs_review,
+        )
+    except Exception as exc:  # noqa: BLE001
+        log.warning("Verification failed: %s — returning answer unverified.", exc)
+        confidence, citations, needs_review = 0.0, [], True
 
     # 6. Translate answer back to the student's language
     answer_native = _translate_out(answer_en, language)
 
     return {
         "answer": answer_native,
-        "confidence": result.confidence,
-        "citations": result.citations,
-        "needs_review": result.needs_review,
+        "confidence": confidence,
+        "citations": citations,
+        "needs_review": needs_review,
         "language": language,
     }

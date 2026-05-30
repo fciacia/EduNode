@@ -11,10 +11,9 @@ Handles:
 
 Public API
 ----------
-query_tutor(user_message, language, rag_context) -> str
-    Returns a tutoring answer in the requested language.
-    Tier-1 languages: generated directly in that language.
-    Tier-2 languages: generated in English, then bridge-translated.
+query_tutor(user_message, language, student_id=None, subject="General") -> dict
+    Thin wrapper over core.agents.orchestrator.run_pipeline. Returns
+    {answer, confidence, citations, needs_review, language}.
 
 generate_quiz(topic, language, rag_context) -> list[dict]
     Returns up to 3 MCQ dicts:
@@ -117,33 +116,6 @@ def _ollama_generate(
 
 
 # ---------------------------------------------------------------------------
-# Private: tutor prompt builder
-# ---------------------------------------------------------------------------
-
-def _build_tutor_prompt(user_message: str, language: str, rag_context: str) -> str:
-    context_block = (
-        f"Relevant curriculum context:\n{rag_context}\n\n"
-        if rag_context.strip()
-        else ""
-    )
-    return (
-        f"{context_block}"
-        f"Student question: {user_message}"
-    )
-
-
-def _build_tutor_system(language: str) -> str:
-    return (
-        f"You are EduNode, a friendly offline AI tutor for school students "
-        f"in rural ASEAN communities. "
-        f"You MUST respond in {language}. "
-        f"Keep your answer under 150 words. "
-        f"Use simple language appropriate for primary or secondary school students. "
-        f"If you are unsure, say so honestly rather than guessing."
-    )
-
-
-# ---------------------------------------------------------------------------
 # Private: glossary + bridge translation (Tier-2)
 # ---------------------------------------------------------------------------
 
@@ -214,13 +186,6 @@ def query_tutor(user_message: str, language: str, student_id=None, subject: str 
     """
     from core.agents.orchestrator import run_pipeline
     return run_pipeline(user_message, language, student_id=student_id, subject=subject)
-
-
-def _offline_fallback(user_message: str) -> str:
-    return (
-        "Sorry, I could not reach the AI model right now. "
-        "Please make sure Ollama is running (`ollama serve`) and try again."
-    )
 
 
 # ---------------------------------------------------------------------------
