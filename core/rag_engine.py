@@ -42,7 +42,7 @@ CURRICULUM_DIR  = Path(os.getenv("CURRICULUM_DIR", "data/curriculum"))
 COLLECTION_NAME = "edunode"
 CHUNK_SIZE      = int(os.getenv("CHUNK_SIZE", "300"))   # words per chunk
 CHUNK_OVERLAP   = int(os.getenv("CHUNK_OVERLAP", "30"))  # word overlap
-EMBED_MODEL     = os.getenv("EMBED_MODEL", "all-MiniLM-L6-v2")
+EMBED_MODEL     = os.getenv("EMBED_MODEL", "paraphrase-multilingual-MiniLM-L12-v2")
 
 
 # ---------------------------------------------------------------------------
@@ -57,7 +57,6 @@ def get_collection():
 
     try:
         import chromadb
-        from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
     except ImportError as exc:
         raise RuntimeError(
             "chromadb and sentence-transformers are required. "
@@ -67,11 +66,9 @@ def get_collection():
     CHROMA_DIR.mkdir(parents=True, exist_ok=True)
     _chroma_client = chromadb.PersistentClient(path=str(CHROMA_DIR))
 
-    embed_fn = SentenceTransformerEmbeddingFunction(model_name=EMBED_MODEL)
-
     _collection = _chroma_client.get_or_create_collection(
         name=COLLECTION_NAME,
-        embedding_function=embed_fn,
+        embedding_function=_SharedEmbeddingFunction(),
         metadata={"hnsw:space": "cosine"},
     )
     log.info("ChromaDB collection '%s' ready (%d docs).", COLLECTION_NAME, _collection.count())
@@ -112,6 +109,25 @@ def _extract_text(path: Path) -> str:
     return ""
 
 
+def _extract_pages(path: Path) -> list[str]:
+    """
+    Return a list of page texts. PDFs use real page boundaries; txt/md files
+    are treated as a single page.
+    """
+    suffix = path.suffix.lower()
+    if suffix == ".pdf":
+        try:
+            from pypdf import PdfReader
+        except ImportError as exc:
+            raise RuntimeError("pypdf is required: pip install pypdf") from exc
+        reader = PdfReader(str(path))
+        return [(page.extract_text() or "") for page in reader.pages]
+    if suffix in (".txt", ".md"):
+        return [path.read_text(encoding="utf-8", errors="replace")]
+    log.debug("Unsupported file type '%s' — skipping.", path.name)
+    return []
+
+
 # ---------------------------------------------------------------------------
 # Chunking
 # ---------------------------------------------------------------------------
@@ -140,6 +156,18 @@ def _chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OV
         start += chunk_size - overlap
 
     return [c for c in chunks if c]
+
+
+def _chunk_pages(pages: list[str]) -> list[dict]:
+    """
+    Chunk a list of page texts, preserving the 1-based page number on each chunk.
+    Returns [{"text": str, "page": int}, ...].
+    """
+    out: list[dict] = []
+    for page_no, page_text in enumerate(pages, start=1):
+        for chunk in _chunk_text(page_text):
+            out.append({"text": chunk, "page": page_no})
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -206,25 +234,27 @@ def ingest_pdfs(curriculum_dir: Optional[Path | str] = None) -> int:
     for file_path in files:
         log.info("Ingesting '%s'…", file_path.name)
         try:
-            raw_text = _extract_text(file_path)
+            pages = _extract_pages(file_path)
         except Exception as exc:
             log.warning("Could not read '%s': %s", file_path.name, exc)
             continue
 
-        if not raw_text.strip():
+        if not any(p.strip() for p in pages):
             log.debug("'%s' yielded no text — skipping.", file_path.name)
             continue
 
-        chunks = _chunk_text(raw_text)
-        if not chunks:
+        page_chunks = _chunk_pages(pages)
+        if not page_chunks:
             continue
 
         subject = _detect_subject(file_path.name)
 
-        ids        = [_chunk_id(file_path.name, i, chunk) for i, chunk in enumerate(chunks)]
-        metadatas  = [
-            {"source": file_path.name, "subject": subject, "grade": "general", "chunk_index": i}
-            for i, _ in enumerate(chunks)
+        chunks    = [pc["text"] for pc in page_chunks]
+        ids       = [_chunk_id(file_path.name, i, pc["text"]) for i, pc in enumerate(page_chunks)]
+        metadatas = [
+            {"source": file_path.name, "subject": subject, "grade": "general",
+             "page": pc["page"], "chunk_index": i}
+            for i, pc in enumerate(page_chunks)
         ]
 
         # Upsert in batches of 100 to keep memory usage low on the Pi
@@ -292,3 +322,83 @@ def retrieve_context(
         return ""
 
     return "\n---\n".join(docs)
+
+
+# ---------------------------------------------------------------------------
+# Embedder accessor (shared with the verification agent)
+# ---------------------------------------------------------------------------
+_embedder = None
+
+
+def get_embedder():
+    """Return a cached SentenceTransformer for the configured EMBED_MODEL."""
+    global _embedder
+    if _embedder is None:
+        from sentence_transformers import SentenceTransformer
+        _embedder = SentenceTransformer(EMBED_MODEL)
+    return _embedder
+
+
+try:
+    from chromadb import EmbeddingFunction as _ChromaEmbeddingFunction
+except Exception:  # pragma: no cover - chromadb is always installed in practice
+    _ChromaEmbeddingFunction = object
+
+
+class _SharedEmbeddingFunction(_ChromaEmbeddingFunction):
+    """ChromaDB embedding function backed by the single shared SentenceTransformer.
+
+    Using this (instead of Chroma's own SentenceTransformerEmbeddingFunction) keeps
+    the embedding model in memory exactly once — reused by both retrieval and the
+    verification agent — instead of loading it twice.
+    """
+
+    def __call__(self, input):
+        return get_embedder().encode(list(input)).tolist()
+
+    def name(self) -> str:
+        return "edunode_shared_embedder"
+
+
+# ---------------------------------------------------------------------------
+# Citation-aware retrieval
+# ---------------------------------------------------------------------------
+def retrieve_with_citations(query: str, n_results: int = 3, subject=None) -> list:
+    """
+    Like retrieve_context but returns structured Chunk objects carrying
+    source/page/distance for citation and verification.
+    """
+    from core.agents import Chunk
+
+    collection = get_collection()
+    if collection.count() == 0:
+        return []
+
+    params: dict = {
+        "query_texts": [query],
+        "n_results": min(n_results, collection.count()),
+        "include": ["documents", "metadatas", "distances"],
+    }
+    if subject and subject != "General":
+        params["where"] = {"subject": subject}
+
+    try:
+        res = collection.query(**params)
+    except Exception as exc:
+        log.warning("ChromaDB citation query failed: %s", exc)
+        return []
+
+    docs  = res.get("documents",  [[]])[0]
+    metas = res.get("metadatas",  [[]])[0]
+    dists = res.get("distances",  [[]])[0]
+
+    chunks = []
+    for doc, meta, dist in zip(docs, metas, dists):
+        meta = meta or {}
+        chunks.append(Chunk(
+            text=doc,
+            source=meta.get("source", "unknown"),
+            page=int(meta.get("page", 1)),
+            distance=float(dist),
+        ))
+    return chunks

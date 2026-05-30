@@ -11,10 +11,9 @@ Handles:
 
 Public API
 ----------
-query_tutor(user_message, language, rag_context) -> str
-    Returns a tutoring answer in the requested language.
-    Tier-1 languages: generated directly in that language.
-    Tier-2 languages: generated in English, then bridge-translated.
+query_tutor(user_message, language, student_id=None, subject="General") -> dict
+    Thin wrapper over core.agents.orchestrator.run_pipeline. Returns
+    {answer, confidence, citations, needs_review, language}.
 
 generate_quiz(topic, language, rag_context) -> list[dict]
     Returns up to 3 MCQ dicts:
@@ -117,33 +116,6 @@ def _ollama_generate(
 
 
 # ---------------------------------------------------------------------------
-# Private: tutor prompt builder
-# ---------------------------------------------------------------------------
-
-def _build_tutor_prompt(user_message: str, language: str, rag_context: str) -> str:
-    context_block = (
-        f"Relevant curriculum context:\n{rag_context}\n\n"
-        if rag_context.strip()
-        else ""
-    )
-    return (
-        f"{context_block}"
-        f"Student question: {user_message}"
-    )
-
-
-def _build_tutor_system(language: str) -> str:
-    return (
-        f"You are EduNode, a friendly offline AI tutor for school students "
-        f"in rural ASEAN communities. "
-        f"You MUST respond in {language}. "
-        f"Keep your answer under 150 words. "
-        f"Use simple language appropriate for primary or secondary school students. "
-        f"If you are unsure, say so honestly rather than guessing."
-    )
-
-
-# ---------------------------------------------------------------------------
 # Private: glossary + bridge translation (Tier-2)
 # ---------------------------------------------------------------------------
 
@@ -204,43 +176,16 @@ def _bridge_translate(english_text: str, language: str) -> str:
 # Public: tutoring answer
 # ---------------------------------------------------------------------------
 
-def query_tutor(user_message: str, language: str, rag_context: str) -> str:
+def query_tutor(user_message: str, language: str, student_id=None, subject: str = "General") -> dict:
     """
-    Generate a tutoring answer for the student's question.
+    Run the agentic pipeline and return a structured result:
+        {answer, confidence, citations, needs_review, language}
 
-    Dispatches based on hub's two-tier language config:
-      - Tier-1 language → direct generation in that language
-      - Tier-2 language → English generation + bridge translation
-      - Unknown language → English fallback
+    Thin wrapper over core.agents.orchestrator. Kept here so existing imports
+    (`from core.llm_engine import query_tutor`) continue to work.
     """
-    from config import TIER_1_LANGS, TIER_2_LANGS  # imported here to stay testable
-
-    prompt = _build_tutor_prompt(user_message, language, rag_context)
-
-    if language in TIER_1_LANGS:
-        system = _build_tutor_system(language)
-        answer = _ollama_generate(prompt, temperature=0.7, system=system)
-        return answer or _offline_fallback(user_message)
-
-    if language in TIER_2_LANGS:
-        system = _build_tutor_system("English")
-        english_answer = _ollama_generate(prompt, temperature=0.7, system=system)
-        if not english_answer:
-            return _offline_fallback(user_message)
-        return _bridge_translate(english_answer, language)
-
-    # Language not in tier config — attempt direct generation in that language
-    log.info("Language '%s' not in TIER_1 or TIER_2 — attempting direct generation.", language)
-    system = _build_tutor_system(language)
-    answer = _ollama_generate(prompt, temperature=0.7, system=system)
-    return answer or _offline_fallback(user_message)
-
-
-def _offline_fallback(user_message: str) -> str:
-    return (
-        "Sorry, I could not reach the AI model right now. "
-        "Please make sure Ollama is running (`ollama serve`) and try again."
-    )
+    from core.agents.orchestrator import run_pipeline
+    return run_pipeline(user_message, language, student_id=student_id, subject=subject)
 
 
 # ---------------------------------------------------------------------------
