@@ -37,7 +37,8 @@ HUB_LANGUAGES = [
 ]
 TIER_1_LANGS  = ["English"]
 TIER_2_LANGS  = []
-SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
+SLM_MODEL     = "phi3:mini"
+EMBED_MODEL   = "paraphrase-multilingual-MiniLM-L12-v2"
 HUB_IP        = "192.168.1.1"
 WIFI_SSID     = "EduNode_Hub"
 KOLIBRI_CHANNEL = "en"
