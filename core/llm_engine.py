@@ -204,36 +204,16 @@ def _bridge_translate(english_text: str, language: str) -> str:
 # Public: tutoring answer
 # ---------------------------------------------------------------------------
 
-def query_tutor(user_message: str, language: str, rag_context: str) -> str:
+def query_tutor(user_message: str, language: str, student_id=None, subject: str = "General") -> dict:
     """
-    Generate a tutoring answer for the student's question.
+    Run the agentic pipeline and return a structured result:
+        {answer, confidence, citations, needs_review, language}
 
-    Dispatches based on hub's two-tier language config:
-      - Tier-1 language → direct generation in that language
-      - Tier-2 language → English generation + bridge translation
-      - Unknown language → English fallback
+    Thin wrapper over core.agents.orchestrator. Kept here so existing imports
+    (`from core.llm_engine import query_tutor`) continue to work.
     """
-    from config import TIER_1_LANGS, TIER_2_LANGS  # imported here to stay testable
-
-    prompt = _build_tutor_prompt(user_message, language, rag_context)
-
-    if language in TIER_1_LANGS:
-        system = _build_tutor_system(language)
-        answer = _ollama_generate(prompt, temperature=0.7, system=system)
-        return answer or _offline_fallback(user_message)
-
-    if language in TIER_2_LANGS:
-        system = _build_tutor_system("English")
-        english_answer = _ollama_generate(prompt, temperature=0.7, system=system)
-        if not english_answer:
-            return _offline_fallback(user_message)
-        return _bridge_translate(english_answer, language)
-
-    # Language not in tier config — attempt direct generation in that language
-    log.info("Language '%s' not in TIER_1 or TIER_2 — attempting direct generation.", language)
-    system = _build_tutor_system(language)
-    answer = _ollama_generate(prompt, temperature=0.7, system=system)
-    return answer or _offline_fallback(user_message)
+    from core.agents.orchestrator import run_pipeline
+    return run_pipeline(user_message, language, student_id=student_id, subject=subject)
 
 
 def _offline_fallback(user_message: str) -> str:

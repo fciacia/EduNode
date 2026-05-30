@@ -273,23 +273,34 @@ def api_chat():
     if not message:
         return jsonify({"error": "message required"}), 400
 
-    from core.llm_engine    import query_tutor
-    from core.progress_tracker import get_or_create_student, log_session, log_dialect
+    from core.llm_engine        import query_tutor
+    from core.progress_tracker  import get_or_create_student, log_session, log_dialect
 
-    rag_ctx  = _safe_retrieve_context(message, subject)
-    response = query_tutor(message, language, rag_ctx)
-
-    # Log session + dialect
+    # Resolve student first so the context agent can personalise.
     sid: int | None = None
     try:
         sid = get_or_create_student(student_name, language)
-        log_session(sid, subject=subject, message_count=1)
+    except Exception as exc:
+        log.warning("Student resolution failed: %s", exc)
+
+    result = query_tutor(message, language, student_id=sid, subject=subject)
+
+    try:
+        if sid is not None:
+            log_session(sid, subject=subject, message_count=1)
         if language.lower() != "english":
             log_dialect(language, message)
     except Exception as exc:
         log.warning("Progress logging failed: %s", exc)
 
-    return jsonify({"response": response, "student_id": sid})
+    return jsonify({
+        "response":     result["answer"],
+        "confidence":   result["confidence"],
+        "needs_review": result["needs_review"],
+        "citations":    result["citations"],
+        "language":     result["language"],
+        "student_id":   sid,
+    })
 
 
 # ---------------------------------------------------------------------------
