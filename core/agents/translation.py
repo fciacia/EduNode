@@ -14,16 +14,32 @@ log = logging.getLogger(__name__)
 
 NLLB_MODEL = "facebook/nllb-200-distilled-600M"
 
-# Hub language name -> FLORES-200 code. Extend as new hubs are added.
+# Hub language name -> FLORES-200 code (verified against the NLLB-200 tokenizer).
+# Languages NOT in NLLB-200 (Iban, Kedayan, Dayak, Hmong, Isan, Tetum) are left
+# out on purpose — they automatically use the glossary bridge in llm_engine.
 _FLORES: dict[str, str] = {
     "English":          "eng_Latn",
+    # National languages
     "Bahasa Melayu":    "zsm_Latn",
     "Bahasa Indonesia": "ind_Latn",
-    "Filipino":         "fil_Latn",
+    "Filipino":         "tgl_Latn",   # Filipino is standardised Tagalog
+    "Tagalog":          "tgl_Latn",
     "Vietnamese":       "vie_Latn",
-    "Iban":             "iba_Latn",
+    "Thai":             "tha_Thai",
+    "Khmer":            "khm_Khmr",
+    "Lao":              "lao_Laoo",
+    "Burmese":          "mya_Mymr",
+    # Regional / minority languages supported by NLLB-200
     "Cebuano":          "ceb_Latn",
+    "Ilocano":          "ilo_Latn",
+    "Waray":            "war_Latn",
+    "Pangasinan":       "pag_Latn",
     "Sundanese":        "sun_Latn",
+    "Javanese":         "jav_Latn",
+    "Acehnese":         "ace_Latn",
+    "Banjar":           "bjn_Latn",
+    "Minangkabau":      "min_Latn",
+    "Shan":             "shn_Mymr",
 }
 
 _model = None
@@ -86,9 +102,14 @@ def _nllb_translate(text: str, src_code: str, tgt_code: str) -> str:
     sentence (NLLB's trained granularity), then rejoin.
     """
     model, tokenizer = _load()
-    tokenizer.src_lang = src_code
-    bos = tokenizer.convert_tokens_to_ids(tgt_code)
 
+    # Validate both codes against the tokenizer; an unknown code would otherwise
+    # silently produce garbage. Raising lets the caller fall back to the glossary.
+    bos = tokenizer.convert_tokens_to_ids(tgt_code)
+    if bos == tokenizer.unk_token_id or tokenizer.convert_tokens_to_ids(src_code) == tokenizer.unk_token_id:
+        raise ValueError(f"NLLB-200 does not support {src_code!r}->{tgt_code!r}")
+
+    tokenizer.src_lang = src_code
     text = _normalize_formulas(text)
     out: list[str] = []
     for sentence in _split_sentences(text) or [text.strip()]:

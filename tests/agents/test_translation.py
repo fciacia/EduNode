@@ -1,3 +1,5 @@
+import pytest
+
 import core.agents.translation as tr
 
 
@@ -8,9 +10,24 @@ def test_english_is_passthrough():
 
 def test_flores_code_lookup():
     assert tr.flores_code("Bahasa Melayu") == "zsm_Latn"
-    assert tr.flores_code("Iban") == "iba_Latn"
+    assert tr.flores_code("Filipino") == "tgl_Latn"   # Filipino -> Tagalog
+    assert tr.flores_code("Thai") == "tha_Thai"
+    assert tr.flores_code("Khmer") == "khm_Khmr"
     assert tr.flores_code("English") == "eng_Latn"
-    assert tr.flores_code("Klingon") is None   # unsupported
+    # Not in NLLB-200 -> unmapped, so it uses the glossary bridge
+    assert tr.flores_code("Iban") is None
+    assert tr.flores_code("Klingon") is None
+
+
+def test_nllb_translate_raises_on_unknown_code(monkeypatch):
+    class FakeTok:
+        unk_token_id = 0
+        src_lang = None
+        def convert_tokens_to_ids(self, t):
+            return 0  # everything resolves to unk
+    monkeypatch.setattr(tr, "_load", lambda: (object(), FakeTok()))
+    with pytest.raises(ValueError):
+        tr._nllb_translate("hi", "eng_Latn", "xxx_Xxxx")
 
 
 def test_to_english_uses_nllb_for_supported_language(monkeypatch):
