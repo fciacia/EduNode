@@ -8,6 +8,7 @@ to the existing glossary bridge in llm_engine.
 from __future__ import annotations
 
 import logging
+import re
 
 log = logging.getLogger(__name__)
 
@@ -44,14 +45,57 @@ def _load():
     return _model, _tokenizer
 
 
+_FORMULA_SUBS = [
+    (r"\bCO2\b", "carbon dioxide"),
+    (r"\bH2O\b", "water"),
+    (r"\bO2\b",  "oxygen"),
+    (r"\bCH4\b", "methane"),
+    (r"\bN2\b",  "nitrogen"),
+]
+
+
+def _normalize_formulas(text: str) -> str:
+    """
+    Replace chemical formulas/symbols with plain words before translation.
+
+    NLLB-200 mangles tokens like ``CO2`` / ``H2O`` into garbage (e.g. "dioks02").
+    The pedagogy prompt asks the model to avoid them, but small models don't always
+    comply — so we guarantee clean input here. Unicode subscripts are normalised too.
+    """
+    text = text.translate(str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789"))
+    # Drop redundant "(CO2)"-style annotations that usually follow the word.
+    text = re.sub(r"\s*\((?:CO2|H2O|O2|CH4|N2)\)", "", text)
+    for pattern, word in _FORMULA_SUBS:
+        text = re.sub(pattern, word, text)
+    return re.sub(r"\s{2,}", " ", text).strip()
+
+
+def _split_sentences(text: str) -> list[str]:
+    """
+    Split *text* into sentences. NLLB-200 is a sentence-level model — translating
+    one sentence at a time avoids the artifacts and degradation it produces on
+    long multi-sentence passages.
+    """
+    parts = re.split(r"(?<=[.!?])\s+", text.strip())
+    return [p.strip() for p in parts if p.strip()]
+
+
 def _nllb_translate(text: str, src_code: str, tgt_code: str) -> str:
-    """Translate text from src FLORES code to tgt FLORES code via NLLB-200."""
+    """
+    Translate *text* from src to tgt FLORES code via NLLB-200, sentence by
+    sentence (NLLB's trained granularity), then rejoin.
+    """
     model, tokenizer = _load()
     tokenizer.src_lang = src_code
-    inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
     bos = tokenizer.convert_tokens_to_ids(tgt_code)
-    generated = model.generate(**inputs, forced_bos_token_id=bos, max_length=512)
-    return tokenizer.batch_decode(generated, skip_special_tokens=True)[0].strip()
+
+    text = _normalize_formulas(text)
+    out: list[str] = []
+    for sentence in _split_sentences(text) or [text.strip()]:
+        inputs = tokenizer(sentence, return_tensors="pt", truncation=True, max_length=256)
+        generated = model.generate(**inputs, forced_bos_token_id=bos, max_length=256)
+        out.append(tokenizer.batch_decode(generated, skip_special_tokens=True)[0].strip())
+    return " ".join(p for p in out if p).strip()
 
 
 def to_english(text: str, language: str) -> str:

@@ -34,3 +34,17 @@ def test_unsupported_language_falls_back_to_glossary(monkeypatch):
     )
     out = tr.to_native("Water is essential.", "Kedayan")
     assert "glossary" in out
+
+
+def test_split_sentences():
+    # Splits on sentence boundaries; drops empties; single sentence stays whole.
+    assert tr._split_sentences("One. Two! Three?") == ["One.", "Two!", "Three?"]
+    assert tr._split_sentences("Just one sentence") == ["Just one sentence"]
+    assert tr._split_sentences("   ") == []
+
+
+def test_normalize_formulas():
+    # Bare formulas -> words; redundant "(CO2)" annotations dropped; subscripts handled.
+    assert tr._normalize_formulas("Plants use CO2 and H2O.") == "Plants use carbon dioxide and water."
+    assert tr._normalize_formulas("carbon dioxide (CO2) and water (H2O)") == "carbon dioxide and water"
+    assert tr._normalize_formulas("releases O₂ gas") == "releases oxygen gas"

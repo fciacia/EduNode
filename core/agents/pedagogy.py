@@ -32,6 +32,10 @@ def _build_system(context: StudentContext) -> str:
         "information yet rather than guessing. "
         f"Explain at a {context.difficulty} level for a grade {context.grade} student. "
         f"{guide} "
+        "Use plain, simple words. Do NOT use chemical formulas, symbols, equations "
+        "or abbreviations — write them out in words (for example, write "
+        "'carbon dioxide', not 'CO2'). This keeps answers clear for young learners "
+        "and accurate when translated into local languages. "
         "Keep your answer under 150 words. Respond in English."
     )
 
