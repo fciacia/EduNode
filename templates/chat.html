@@ -55,6 +55,171 @@
   transition: border-color .15s;
 }
 .name-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+
+/* New chat button */
+.btn-new-chat {
+  width: 34px; height: 34px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface2);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, color .15s, border-color .15s;
+  flex-shrink: 0;
+}
+.btn-new-chat:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+
+/* Char counter */
+.char-counter {
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+  align-self: flex-end;
+  padding-bottom: .2rem;
+  flex-shrink: 0;
+}
+.char-counter.warn { color: #F59E0B; }
+.char-counter.danger { color: #EF4444; }
+
+/* Copy button on bot messages */
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  margin-top: .4rem;
+  font-size: .75rem;
+  font-weight: 700;
+  font-family: var(--font);
+  background: none;
+  border: 2px solid var(--border);
+  border-radius: 99px;
+  padding: .18rem .55rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: background .15s, border-color .15s, color .15s;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.bubble:hover .copy-btn, .bubble:focus-within .copy-btn { opacity: 1; }
+.copy-btn:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+.copy-btn.copied { color: var(--accent-green); border-color: var(--accent-green); }
+
+/* Retry button on error bubbles */
+.retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  margin-top: .4rem;
+  font-size: .75rem;
+  font-weight: 700;
+  font-family: var(--font);
+  background: none;
+  border: 2px solid #EF4444;
+  border-radius: 99px;
+  padding: .18rem .55rem;
+  cursor: pointer;
+  color: #EF4444;
+  transition: background .15s;
+}
+.retry-btn:hover { background: #FEE2E2; }
+
+/* Mic recording timer */
+.mic-timer {
+  font-size: .72rem;
+  font-weight: 800;
+  color: #EF4444;
+  display: none;
+  align-items: center;
+  gap: .25rem;
+  flex-shrink: 0;
+}
+.mic-timer.active { display: flex; }
+.mic-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #EF4444;
+  animation: pulse-red .9s infinite;
+}
+
+/* ── Confidence + citations (agentic backend) ─────────────────────────────── */
+.answer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .45rem;
+  margin-top: .65rem;
+}
+
+.conf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .32rem;
+  font-size: .74rem;
+  font-weight: 800;
+  font-family: var(--font);
+  padding: .22rem .6rem .22rem .5rem;
+  border-radius: 99px;
+  border: 2px solid var(--border);
+  line-height: 1;
+  color: var(--text);
+  background: var(--surface2);
+  animation: pop-in .25s cubic-bezier(.34,1.56,.64,1);
+}
+.conf-badge .icon { width: 14px; height: 14px; flex-shrink: 0; }
+.conf-badge.verified {
+  background: color-mix(in srgb, var(--accent-green) 14%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent-green) 48%, transparent);
+}
+.conf-badge.verified .icon { color: var(--accent-green); }
+.conf-badge.review {
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 52%, transparent);
+}
+.conf-badge.review .icon { color: var(--accent); }
+.conf-badge.none .icon { color: var(--text-muted); }
+.conf-badge .conf-pct {
+  font-weight: 800;
+  opacity: .62;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Citation chips */
+.cite-row {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: .35rem;
+  margin-top: .5rem;
+}
+.cite-label {
+  font-size: .66rem; font-weight: 800; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--text-muted);
+  margin-right: .05rem;
+}
+.cite-chip {
+  display: inline-flex; align-items: center; gap: .32rem;
+  font-size: .73rem; font-weight: 700;
+  font-family: var(--font);
+  padding: .2rem .55rem;
+  border-radius: 99px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  color: var(--text);
+  max-width: 210px;
+  transition: border-color .15s, transform .15s;
+  animation: pop-in .25s cubic-bezier(.34,1.56,.64,1) backwards;
+}
+.cite-chip:hover { border-color: var(--primary); transform: translateY(-1px); }
+.cite-chip .icon { width: 13px; height: 13px; color: var(--primary); flex-shrink: 0; }
+.cite-chip .cite-src { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cite-chip .cite-page { color: var(--text-muted); font-weight: 800; flex-shrink: 0; }
+
+/* Confidence accent on the answer bubble */
+.bubble.bot.is-verified .message { border-left: 4px solid var(--accent-green); }
+.bubble.bot.is-review   .message { border-left: 4px solid var(--accent); }
+.bubble.bot.is-none     .message { border-left: 4px solid var(--text-muted); }
 {% endblock %}
 
 {% block content %}
@@ -72,6 +237,9 @@
   </select>
   <input id="studentName" class="name-input" type="text" placeholder="Your name…"
          value="{{ request.args.get('name', '') }}">
+  <button class="btn-new-chat" onclick="newChat()" title="Start a new conversation">
+    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-refresh"></use></svg>
+  </button>
 </div>
 
 <div id="chatLog" class="chat-log">
@@ -82,8 +250,10 @@
 </div>
 
 <div class="input-row">
-  <textarea id="msgInput" rows="1" placeholder="Type your question here…"
+  <textarea id="msgInput" rows="1" placeholder="Type your question here…" maxlength="2000"
     onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+  <span id="charCounter" class="char-counter" style="display:none"></span>
+  <span id="micTimer" class="mic-timer"><span class="mic-dot"></span><span id="micTimerLabel">0:00</span></span>
   <button class="btn-icon btn-mic" id="micBtn" title="Hold to record voice"
     onmousedown="startRec()" onmouseup="stopRec()" ontouchstart="startRec()" ontouchend="stopRec()">
     <svg class="icon icon-md" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-mic"></use></svg>
@@ -98,15 +268,17 @@
 <script>
 const log = document.getElementById('chatLog');
 const input = document.getElementById('msgInput');
-let mediaRec = null, audioChunks = [];
+let mediaRec = null, audioChunks = [], recTimerInterval = null, recSeconds = 0;
 const S = '/static/icons/sprite.svg';
 const ico = (n, c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
+const MAX_CHARS = 2000;
+const HISTORY_KEY = () => 'edu_chat_' + (document.getElementById('studentName').value.trim() || '_guest');
 
 function getLang()    { return document.getElementById('langSel').value; }
 function getSubject() { return document.getElementById('subjectSel').value; }
 function getName()    { return document.getElementById('studentName').value.trim() || 'Student'; }
 
-function addBubble(text, who) {
+function addBubble(text, who, skipSave) {
   const wrap = document.createElement('div');
   wrap.className = 'bubble ' + who;
   const avatar = document.createElement('span');
@@ -118,8 +290,36 @@ function addBubble(text, who) {
   wrap.appendChild(avatar);
   wrap.appendChild(msg);
   log.appendChild(wrap);
-  log.scrollTop = log.scrollHeight;
+  requestAnimationFrame(() => { log.scrollTop = log.scrollHeight; });
+  if (!skipSave) saveHistory();
   return msg;
+}
+
+function saveHistory() {
+  const bubbles = [...log.querySelectorAll('.bubble')].map(b => ({
+    who:  b.classList.contains('user') ? 'user' : 'bot',
+    text: b.querySelector('.message')?.textContent || ''
+  }));
+  try { localStorage.setItem(HISTORY_KEY(), JSON.stringify(bubbles.slice(-40))); } catch(e) {}
+}
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY());
+    if (!raw) return;
+    const items = JSON.parse(raw);
+    if (!items?.length) return;
+    items.forEach(item => addBubble(item.text, item.who, true));
+  } catch(e) {}
+}
+
+function newChat() {
+  if (!confirm('Start a new conversation? This will clear the current chat.')) return;
+  try { localStorage.removeItem(HISTORY_KEY()); } catch(e) {}
+  log.innerHTML = `<div class="bubble bot">
+    <span class="bubble-avatar">${ico('bot','icon-lg')}</span>
+    <div class="message">Hi there! I'm <strong>EduNode</strong>, your AI tutor!<br>Pick a subject up top and ask me anything — I'm here to help you learn!</div>
+  </div>`;
 }
 
 function addTyping() {
@@ -133,12 +333,86 @@ function addTyping() {
 function removeTyping() { document.getElementById('typing')?.remove(); }
 
 function addPlayBtn(msgEl, text) {
-  const btn = document.createElement('button');
-  btn.className = 'play-btn';
-  btn.innerHTML = ico('volume') + ' Listen';
-  btn.onclick = () => playTTS(text, btn);
-  msgEl.appendChild(document.createElement('br'));
-  msgEl.appendChild(btn);
+  const br = document.createElement('br');
+  msgEl.appendChild(br);
+
+  const playBtn = document.createElement('button');
+  playBtn.className = 'play-btn';
+  playBtn.innerHTML = ico('volume') + ' Listen';
+  playBtn.onclick = () => playTTS(text, playBtn);
+  msgEl.appendChild(playBtn);
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'copy-btn';
+  copyBtn.innerHTML = ico('file-text') + ' Copy';
+  copyBtn.onclick = () => {
+    navigator.clipboard?.writeText(text).then(() => {
+      copyBtn.innerHTML = ico('check-circle') + ' Copied';
+      copyBtn.classList.add('copied');
+      setTimeout(() => { copyBtn.innerHTML = ico('file-text') + ' Copy'; copyBtn.classList.remove('copied'); }, 1800);
+    }).catch(() => {});
+  };
+  msgEl.appendChild(document.createTextNode(' '));
+  msgEl.appendChild(copyBtn);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function prettySource(src) {
+  return String(src).split(/[\\/]/).pop().replace(/\.(pdf|txt|md)$/i, '').replace(/_/g, ' ');
+}
+
+// Render the confidence badge, meter and page-level citations under a bot answer.
+function decorateAnswer(msgEl, d) {
+  const conf = typeof d.confidence === 'number' ? d.confidence : null;
+  if (conf === null) return;
+
+  const wrap = msgEl.closest('.bubble');
+  const cites = Array.isArray(d.citations) ? d.citations : [];
+  const verified = !d.needs_review;
+  const noCurriculum = conf === 0 && cites.length === 0;
+
+  // Bubble accent + badge kind
+  let kind, icon, label, showPct;
+  if (verified)          { kind = 'verified'; icon = 'check-circle'; label = 'Verified';            showPct = true; }
+  else if (noCurriculum) { kind = 'none';     icon = 'book-open';    label = 'Not in my books yet';  showPct = false; }
+  else                   { kind = 'review';   icon = 'lightbulb';    label = 'Check with teacher';   showPct = true; }
+  wrap.classList.add('is-' + kind);
+
+  const meta = document.createElement('div');
+  meta.className = 'answer-meta';
+
+  const pct = Math.round(conf * 100);
+  const badge = document.createElement('span');
+  badge.className = 'conf-badge ' + kind;
+  badge.title = showPct ? 'Confidence: ' + pct + '%' : 'No matching curriculum found';
+  badge.innerHTML = ico(icon) + ' ' + label +
+    (showPct ? ' <span class="conf-pct">' + pct + '%</span>' : '');
+  meta.appendChild(badge);
+  msgEl.appendChild(meta);
+
+  if (cites.length) {
+    const row = document.createElement('div');
+    row.className = 'cite-row';
+    const lbl = document.createElement('span');
+    lbl.className = 'cite-label';
+    lbl.textContent = 'Sources';
+    row.appendChild(lbl);
+    cites.forEach((c, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'cite-chip';
+      chip.style.animationDelay = (i * 60) + 'ms';
+      chip.title = c.source + (c.page ? ' — page ' + c.page : '');
+      chip.innerHTML = ico('file-text') +
+        '<span class="cite-src">' + escapeHtml(prettySource(c.source)) + '</span>' +
+        (c.page ? '<span class="cite-page">p.' + c.page + '</span>' : '');
+      row.appendChild(chip);
+    });
+    msgEl.appendChild(row);
+  }
 }
 
 async function playTTS(text, btn) {
@@ -159,12 +433,15 @@ async function playTTS(text, btn) {
   }
 }
 
-async function sendMsg() {
-  const msg = input.value.trim();
+async function sendMsg(retryMsg) {
+  const msg = retryMsg || input.value.trim();
   if (!msg) return;
-  addBubble(msg, 'user');
-  input.value = '';
-  input.style.height = 'auto';
+  if (!retryMsg) {
+    addBubble(msg, 'user');
+    input.value = '';
+    input.style.height = 'auto';
+    updateCharCounter();
+  }
   addTyping();
   try {
     const r = await fetch('/api/chat', {
@@ -174,12 +451,22 @@ async function sendMsg() {
     const d = await r.json();
     removeTyping();
     const msgEl = addBubble(d.response || d.error || 'No response', 'bot');
-    if (d.response) addPlayBtn(msgEl, d.response);
+    if (d.response) {
+      decorateAnswer(msgEl, d);
+      addPlayBtn(msgEl, d.response);
+    }
     if (d.student_id) localStorage.setItem('edu_student_id', d.student_id);
     localStorage.setItem('edu_student_name', getName());
   } catch(e) {
     removeTyping();
-    addBubble('Connection error — is EduNode running?', 'bot');
+    const errWrap = document.createElement('div');
+    errWrap.className = 'bubble bot';
+    errWrap.innerHTML = `<span class="bubble-avatar">${ico('bot','icon-lg')}</span>
+      <div class="message">Connection error — is EduNode running?
+        <br><button class="retry-btn" onclick="this.closest('.bubble').remove();sendMsg(${JSON.stringify(msg)})">${ico('refresh')} Retry</button>
+      </div>`;
+    log.appendChild(errWrap);
+    log.scrollTop = log.scrollHeight;
   }
 }
 
@@ -192,6 +479,16 @@ async function startRec() {
     mediaRec.start();
     document.getElementById('micBtn').classList.add('recording');
     document.getElementById('micBtn').innerHTML = ico('square','icon-md');
+    recSeconds = 0;
+    const timerEl = document.getElementById('micTimer');
+    const timerLabel = document.getElementById('micTimerLabel');
+    timerEl.classList.add('active');
+    recTimerInterval = setInterval(() => {
+      recSeconds++;
+      const m = Math.floor(recSeconds / 60);
+      const s = (recSeconds % 60).toString().padStart(2, '0');
+      timerLabel.textContent = m + ':' + s;
+    }, 1000);
   } catch(e) { alert('Microphone not available: ' + e.message); }
 }
 
@@ -201,6 +498,8 @@ async function stopRec() {
   const btn = document.getElementById('micBtn');
   btn.classList.remove('recording');
   btn.innerHTML = ico('mic','icon-md');
+  clearInterval(recTimerInterval);
+  document.getElementById('micTimer').classList.remove('active');
   mediaRec.onstop = async () => {
     const blob = new Blob(audioChunks, {type: 'audio/webm'});
     const fd = new FormData();
@@ -217,10 +516,23 @@ async function stopRec() {
   };
 }
 
-// Auto-resize textarea
+// Auto-resize textarea + char counter
+function updateCharCounter() {
+  const len = input.value.length;
+  const counter = document.getElementById('charCounter');
+  if (len > MAX_CHARS * 0.8) {
+    counter.style.display = 'inline';
+    counter.textContent = len + ' / ' + MAX_CHARS;
+    counter.className = 'char-counter' + (len > MAX_CHARS * 0.95 ? ' danger' : len > MAX_CHARS * 0.85 ? ' warn' : '');
+  } else {
+    counter.style.display = 'none';
+  }
+}
+
 input.addEventListener('input', function() {
   this.style.height = 'auto';
   this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  updateCharCounter();
 });
 
 // Restore saved language on load
@@ -234,10 +546,17 @@ input.addEventListener('input', function() {
 })();
 document.getElementById('langSel').addEventListener('change', e => localStorage.setItem('edu_lang', e.target.value));
 
+// Restore chat history on load
+(function() {
+  const savedName = localStorage.getItem('edu_student_name');
+  if (savedName) document.getElementById('studentName').value = savedName;
+  loadHistory();
+})();
+
 // Pre-fill question from quick-ask on home page
 (function() {
   const q = new URLSearchParams(location.search).get('q');
-  if (q) { input.value = q; setTimeout(sendMsg, 400); }
+  if (q) { input.value = q; updateCharCounter(); setTimeout(sendMsg, 400); }
 })();
 </script>
 {% endblock %}
