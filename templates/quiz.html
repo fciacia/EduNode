@@ -74,6 +74,57 @@
 }
 .topic-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
 .topic-input::placeholder { color: var(--text-muted); font-weight: 600; }
+
+/* Quiz progress bar */
+.quiz-progress-wrap {
+  position: relative;
+  background: var(--border);
+  border-radius: 99px;
+  height: 10px;
+  margin-bottom: 1.25rem;
+  overflow: visible;
+}
+.quiz-progress-bar {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 99px;
+  transition: width .3s cubic-bezier(.34,1.56,.64,1);
+}
+.quiz-progress-label {
+  position: absolute;
+  right: 0;
+  top: -1.4rem;
+  font-size: .72rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+/* Score ring */
+.score-ring-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto .75rem;
+}
+.score-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+.score-ring-bg   { fill: none; stroke: var(--border); stroke-width: 10; }
+.score-ring-fill {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset .7s cubic-bezier(.34,1.56,.64,1);
+}
+.score-ring-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--primary);
+}
 {% endblock %}
 
 {% block content %}
@@ -102,7 +153,21 @@
   </button>
 </div>
 
+<div id="genError" class="gen-error" style="display:none"></div>
+
 <div id="quizArea" style="display:none">
+  <!-- Curriculum grounding (shown when questions come from the textbook) -->
+  <div class="grounding-row" id="groundingRow" style="display:none">
+    <span class="grounding-badge"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book-open"></use></svg> From your textbook</span>
+    <span class="src-chips" id="srcChips"></span>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="quiz-progress-wrap">
+    <div class="quiz-progress-bar" id="quizProgressBar" style="width:0%"></div>
+    <span class="quiz-progress-label" id="quizProgressLabel">0 / 0 answered</span>
+  </div>
+
   <div id="questionsContainer"></div>
   <div style="margin-top:.5rem">
     <button class="btn-primary" onclick="submitQuiz()">
@@ -112,6 +177,15 @@
 </div>
 
 <div class="score-card" id="scoreCard">
+  <!-- SVG arc score ring -->
+  <div class="score-ring-wrap">
+    <svg class="score-ring" viewBox="0 0 120 120" aria-hidden="true">
+      <circle class="score-ring-bg" cx="60" cy="60" r="52"/>
+      <circle class="score-ring-fill" id="scoreRingFill" cx="60" cy="60" r="52"
+              stroke-dasharray="327" stroke-dashoffset="327"/>
+    </svg>
+    <div class="score-ring-inner" id="scoreRingLabel">—</div>
+  </div>
   <div style="margin-bottom:.75rem;color:var(--primary)" id="scoreEmoji"><svg class="icon icon-2xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-award"></use></svg></div>
   <div class="score-heading" id="scoreHeading"></div>
   <p style="color:var(--text-muted);font-weight:700;margin-top:.35rem" id="scoreSub"></p>
@@ -138,21 +212,40 @@ async function generateQuiz() {
   if (!topic) { alert('Please enter a topic!'); return; }
   const btn = document.getElementById('generateBtn');
   btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' Generating…';
+  hideGenError();
   document.getElementById('quizArea').style.display = 'none';
   document.getElementById('scoreCard').style.display = 'none';
   Object.keys(selectedAnswers).forEach(k => delete selectedAnswers[k]);
+  document.getElementById('quizProgressBar').style.width = '0%';
+  document.getElementById('quizProgressLabel').textContent = '0 / 0 answered';
   try {
     const r = await fetch('/api/quiz/generate', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({topic, language: getLang(), subject: getSubject()})
     });
-    const d = await r.json();
+    const d = await r.json().catch(() => ({}));
+    if (r.status === 503 || d.error === 'offline') { showGenError('offline'); return; }
     currentQuestions = d.questions || [];
-    if (!currentQuestions.length) { alert('Could not generate quiz. Is Ollama running?'); return; }
+    if (!currentQuestions.length || d.error === 'generation') { showGenError('generation'); return; }
     renderQuestions(currentQuestions);
+    showGrounding(d);
+    document.getElementById('quizProgressLabel').textContent = '0 / ' + currentQuestions.length + ' answered';
     document.getElementById('quizArea').style.display = 'block';
-  } catch(e) { alert('Error: ' + e.message); }
+  } catch(e) { showGenError('offline'); }
   finally { btn.disabled = false; btn.innerHTML = ico('target') + ' Generate Quiz'; }
+}
+
+function hideGenError() { const b = document.getElementById('genError'); if (b) b.style.display = 'none'; }
+function showGenError(kind) {
+  const box = document.getElementById('genError');
+  const offline = kind === 'offline';
+  box.innerHTML = ico(offline ? 'wifi-off' : 'refresh') +
+    '<span>' + (offline
+      ? 'The AI tutor is starting up. Please wait a few seconds and try again.'
+      : 'Could not make a quiz for that just now. Try again or pick a simpler topic.') +
+    '</span><button class="btn-retry-gen">' + (offline ? 'Try again' : 'Retry') + '</button>';
+  box.style.display = 'flex';
+  box.querySelector('.btn-retry-gen').onclick = () => { hideGenError(); generateQuiz(); };
 }
 
 function renderQuestions(qs) {
@@ -166,7 +259,6 @@ function renderQuestions(qs) {
       <div class="options" id="opts-${i}"></div>`;
     c.appendChild(card);
     const optsDiv = card.querySelector(`#opts-${i}`);
-    const letters = ['A','B','C','D'];
     q.options.forEach((opt, oi) => {
       const letter = 'ABCD'[oi];
       const btn = document.createElement('button');
@@ -183,7 +275,36 @@ function selectAnswer(qi, letter, optsDiv) {
   [...optsDiv.querySelectorAll('.opt-btn')].forEach((b, oi) => {
     b.classList.toggle('selected', 'ABCD'[oi] === letter);
   });
+  updateProgress();
 }
+
+function updateProgress() {
+  const total = currentQuestions.length;
+  const answered = Object.keys(selectedAnswers).length;
+  const pct = total ? (answered / total) * 100 : 0;
+  document.getElementById('quizProgressBar').style.width = pct + '%';
+  document.getElementById('quizProgressLabel').textContent = answered + ' / ' + total + ' answered';
+}
+
+/* Keyboard shortcuts: A–D or 1–4 selects option, Enter submits if all answered */
+document.addEventListener('keydown', function(e) {
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if (document.getElementById('quizArea').style.display === 'none') return;
+
+  const keyMap = {'a':'A','b':'B','c':'C','d':'D','1':'A','2':'B','3':'C','4':'D'};
+  const letter = keyMap[e.key.toLowerCase()];
+  if (letter) {
+    /* Find first unanswered question */
+    const firstUnanswered = currentQuestions.findIndex((_, i) => !selectedAnswers[i]);
+    const qi = firstUnanswered >= 0 ? firstUnanswered : currentQuestions.length - 1;
+    const optsDiv = document.querySelector('#opts-' + qi);
+    if (optsDiv) selectAnswer(qi, letter, optsDiv);
+  }
+  if (e.key === 'Enter') {
+    if (Object.keys(selectedAnswers).length === currentQuestions.length) submitQuiz();
+  }
+});
 
 async function submitQuiz() {
   if (Object.keys(selectedAnswers).length < currentQuestions.length) {
@@ -229,6 +350,15 @@ function showResults(result, certs) {
   document.getElementById('scoreEmoji').style.color = pct >= 70 ? 'var(--primary)' : 'var(--accent)';
   document.getElementById('scoreHeading').textContent = `${result.score} / ${result.total}  (${pct}%)`;
   document.getElementById('scoreSub').textContent = pct >= 70 ? 'Amazing work! Keep it up!' : 'Good try! Keep practising!';
+  /* Animate score ring */
+  const circumference = 327;
+  const offset = circumference - (pct / 100) * circumference;
+  const fill = document.getElementById('scoreRingFill');
+  if (fill) {
+    fill.style.stroke = pct >= 70 ? 'var(--accent-green)' : pct >= 50 ? 'var(--accent)' : '#EF4444';
+    setTimeout(() => { fill.style.strokeDashoffset = offset; }, 50);
+  }
+  document.getElementById('scoreRingLabel').textContent = pct + '%';
   const certDiv = document.getElementById('certLinks'); certDiv.innerHTML = '';
   certs.forEach(c => {
     certDiv.innerHTML += `<a class="cert-link" href="${c.cert_url}" target="_blank">${ico('file-text')} Download ${escHtml(c.topic)} Certificate</a> `;
@@ -241,11 +371,33 @@ function resetQuiz() {
   document.getElementById('quizArea').style.display = 'none';
   document.getElementById('scoreCard').style.display = 'none';
   document.getElementById('topicInput').value = '';
+  document.getElementById('quizProgressBar').style.width = '0%';
+  document.getElementById('quizProgressLabel').textContent = '0 / 0 answered';
+  const fill = document.getElementById('scoreRingFill');
+  if (fill) fill.style.strokeDashoffset = '327';
   currentQuestions = [];
+  Object.keys(selectedAnswers).forEach(k => delete selectedAnswers[k]);
 }
 
 function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function prettySrc(src) {
+  return String(src).split(/[\\/]/).pop().replace(/\.(pdf|txt|md)$/i, '').replace(/_/g, ' ');
+}
+
+// Show "From your textbook" + source chips when the quiz was curriculum-grounded.
+function showGrounding(d) {
+  const row = document.getElementById('groundingRow');
+  const sources = Array.isArray(d.sources) ? d.sources : [];
+  if (!d.grounded || !sources.length) { row.style.display = 'none'; return; }
+  document.getElementById('srcChips').innerHTML = sources.map(s =>
+    '<span class="src-chip" title="' + escHtml(s.source + (s.page ? ' — page ' + s.page : '')) + '">' +
+      ico('file-text') +
+      '<span class="src-name">' + escHtml(prettySrc(s.source)) + '</span>' +
+      (s.page ? '<span class="src-page">p.' + s.page + '</span>' : '') +
+    '</span>').join('');
+  row.style.display = 'flex';
 }
 
 (function() {

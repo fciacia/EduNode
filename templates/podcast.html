@@ -41,7 +41,7 @@
   outline: none;
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237C3AED' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: var(--select-arrow);
   background-repeat: no-repeat;
   background-position: right .75rem center;
   cursor: pointer;
@@ -145,13 +145,14 @@
 
 {% block extra_scripts %}
 <script>
+const S = '/static/icons/sprite.svg';
+const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
+
 function getLang() { return document.getElementById('langSel').value; }
 
 async function generatePodcast() {
   const topic = document.getElementById('topicInput').value.trim();
   if (!topic) { alert('Please enter a topic!'); return; }
-  const S = '/static/icons/sprite.svg';
-  const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
   const btn = document.getElementById('generateBtn');
   btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' Generating…';
   document.getElementById('podcastResult').style.display = 'none';

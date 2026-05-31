@@ -41,7 +41,7 @@
   outline: none;
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237C3AED' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: var(--select-arrow);
   background-repeat: no-repeat;
   background-position: right .75rem center;
   cursor: pointer;
@@ -82,6 +82,81 @@
 .btn-blue:hover { background: #2563EB; transform: translateY(-1px); }
 .btn-blue:active { transform: translateY(2px); box-shadow: 0 2px 0 #1D4ED8; }
 .btn-blue:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Responsive card height */
+.card-scene { height: min(260px, 44vw); min-height: 180px; }
+
+/* Deck toolbar */
+.deck-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .85rem;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+.deck-shuffle-btn {
+  font-size: .82rem;
+  padding: .32rem .85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+}
+.mastery-counters {
+  display: flex;
+  gap: .5rem;
+  font-size: .78rem;
+  font-weight: 800;
+}
+.mastery-known  { color: var(--accent-green); }
+.mastery-review { color: var(--accent); }
+
+/* Mastery action buttons */
+.mastery-btns {
+  display: flex;
+  gap: .65rem;
+  justify-content: center;
+  margin-top: .85rem;
+}
+.btn-mastery {
+  padding: .5rem 1.2rem;
+  border-radius: 99px;
+  border: none;
+  font-size: .88rem;
+  font-weight: 800;
+  font-family: var(--font);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  transition: transform .12s, opacity .12s;
+}
+.btn-mastery:hover { transform: translateY(-2px); opacity: .9; }
+.btn-known  { background: var(--accent-green); color: #fff; box-shadow: 0 3px 0 #059669; }
+.btn-review { background: var(--accent);       color: #fff; box-shadow: 0 3px 0 #D97706; }
+
+/* Mastery summary card */
+.mastery-summary-card {
+  background: var(--surface);
+  border: 2.5px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  animation: pop-in .35s cubic-bezier(.34,1.56,.64,1);
+  margin-top: .5rem;
+}
+.mastery-summary-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--primary);
+  margin: .6rem 0 .3rem;
+}
+.mastery-summary-card p {
+  font-size: .92rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
 {% endblock %}
 
 {% block content %}
@@ -109,8 +184,27 @@
   </button>
 </div>
 
+<div id="genError" class="gen-error" style="display:none"></div>
+
 <div id="deckArea" style="display:none">
-  <div class="card-scene" onclick="flipCard()" title="Click to flip!">
+  <!-- Curriculum grounding (shown when cards come from the textbook) -->
+  <div class="grounding-row" id="groundingRow" style="display:none">
+    <span class="grounding-badge"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book-open"></use></svg> From your textbook</span>
+    <span class="src-chips" id="srcChips"></span>
+  </div>
+
+  <!-- Deck toolbar: shuffle + mastery counters -->
+  <div class="deck-toolbar">
+    <button class="btn-outline deck-shuffle-btn" onclick="shuffleDeck()" title="Shuffle cards">
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-refresh"></use></svg> Shuffle
+    </button>
+    <div class="mastery-counters">
+      <span class="mastery-known"  id="knownCount">0 known</span>
+      <span class="mastery-review" id="reviewCount">0 review</span>
+    </div>
+  </div>
+
+  <div class="card-scene" id="cardScene" onclick="flipCard()" title="Click to flip!">
     <div class="card-3d" id="card3d">
       <div class="card-face front">
         <div class="card-label"><svg class="icon icon-xs" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-lightbulb"></use></svg> Concept</div>
@@ -131,37 +225,104 @@
     <span class="deck-counter" id="deckCounter">1 / 1</span>
     <button class="btn-outline" onclick="nextCard()">Next ›</button>
   </div>
+
+  <!-- Mastery buttons (shown only when card is flipped) -->
+  <div class="mastery-btns" id="masteryBtns" style="display:none">
+    <button class="btn-mastery btn-review" onclick="markCard('review')">
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-refresh"></use></svg> Review again
+    </button>
+    <button class="btn-mastery btn-known" onclick="markCard('known')">
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-check-circle"></use></svg> Got it!
+    </button>
+  </div>
+</div>
+
+<!-- Mastery summary (shown when all cards rated) -->
+<div id="masterySummary" style="display:none" class="mastery-summary-card">
+  <svg class="icon icon-2xl" aria-hidden="true" style="color:var(--primary)"><use href="/static/icons/sprite.svg#icon-award"></use></svg>
+  <h3 id="summaryTitle">Deck complete!</h3>
+  <p id="summaryBody"></p>
+  <div style="display:flex;gap:.65rem;justify-content:center;margin-top:1.25rem">
+    <button class="btn-outline" onclick="restartDeck()">
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-refresh"></use></svg> Restart
+    </button>
+    <button class="btn-primary" onclick="reviewOnly()" id="reviewOnlyBtn">
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-brain"></use></svg> Review marked
+    </button>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
 let cards = [], idx = 0;
+const knownSet = new Set(), reviewSet = new Set();
+const S = '/static/icons/sprite.svg';
+const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
 
 function getLang()    { return document.getElementById('langSel').value; }
 function getSubject() { return document.getElementById('subjectSel').value; }
+
+function escHtml(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function prettySrc(src) {
+  return String(src).split(/[\\/]/).pop().replace(/\.(pdf|txt|md)$/i, '').replace(/_/g, ' ');
+}
+
+function hideGenError() { const b = document.getElementById('genError'); if (b) b.style.display = 'none'; }
+function showGenError(kind) {
+  const box = document.getElementById('genError');
+  const offline = kind === 'offline';
+  box.innerHTML = ico(offline ? 'wifi-off' : 'refresh') +
+    '<span>' + (offline
+      ? 'The AI tutor is starting up. Please wait a few seconds and try again.'
+      : 'Could not make cards for that just now. Try again or pick a simpler topic.') +
+    '</span><button class="btn-retry-gen">' + (offline ? 'Try again' : 'Retry') + '</button>';
+  box.style.display = 'flex';
+  box.querySelector('.btn-retry-gen').onclick = () => { hideGenError(); generateDeck(); };
+}
+
+// Show "From your textbook" + source chips when generation was curriculum-grounded.
+function showGrounding(d) {
+  const row = document.getElementById('groundingRow');
+  const sources = Array.isArray(d.sources) ? d.sources : [];
+  if (!d.grounded || !sources.length) { row.style.display = 'none'; return; }
+  document.getElementById('srcChips').innerHTML = sources.map(s =>
+    '<span class="src-chip" title="' + escHtml(s.source + (s.page ? ' — page ' + s.page : '')) + '">' +
+      ico('file-text') +
+      '<span class="src-name">' + escHtml(prettySrc(s.source)) + '</span>' +
+      (s.page ? '<span class="src-page">p.' + s.page + '</span>' : '') +
+    '</span>').join('');
+  row.style.display = 'flex';
+}
 
 async function generateDeck() {
   const topic = document.getElementById('topicInput').value.trim();
   if (!topic) { alert('Please enter a topic!'); return; }
   const btn = document.getElementById('generateBtn');
-  const S = '/static/icons/sprite.svg';
-  const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
   btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' Generating…';
+  hideGenError();
   try {
     const r = await fetch('/api/flashcard/generate', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({topic, language: getLang(), subject: getSubject()})
     });
-    const d = await r.json();
+    const d = await r.json().catch(() => ({}));
+    if (r.status === 503 || d.error === 'offline') { showGenError('offline'); return; }
     cards = d.flashcards || [];
-    if (!cards.length) { alert('No flashcards generated. Is Ollama running?'); return; }
+    if (!cards.length || d.error === 'generation') { showGenError('generation'); return; }
     idx = 0;
+    knownSet.clear(); reviewSet.clear();
     buildDots();
     showCard();
+    showGrounding(d);
     document.getElementById('deckArea').style.display = 'block';
+    document.getElementById('masterySummary').style.display = 'none';
     document.getElementById('deckArea').scrollIntoView({behavior:'smooth'});
-  } catch(e) { alert('Error: ' + e.message); }
+    updateMasteryCounters();
+  } catch(e) { showGenError('offline'); }
   finally { btn.disabled = false; btn.innerHTML = ico('layers') + ' Make Cards'; }
 }
 
@@ -174,25 +335,111 @@ function buildDots() {
 }
 
 function showCard() {
-  document.getElementById('card3d').classList.remove('flipped');
+  const card3d = document.getElementById('card3d');
+  card3d.classList.remove('flipped');
   document.getElementById('cardFront').textContent = cards[idx].title || '—';
   document.getElementById('cardBack').textContent  = cards[idx].body  || '—';
   document.getElementById('deckCounter').textContent = `${idx + 1} / ${cards.length}`;
   document.querySelectorAll('.deck-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+  document.getElementById('masteryBtns').style.display = 'none';
 }
 
-function flipCard() { document.getElementById('card3d').classList.toggle('flipped'); }
+function flipCard() {
+  const card3d = document.getElementById('card3d');
+  card3d.classList.toggle('flipped');
+  document.getElementById('masteryBtns').style.display =
+    card3d.classList.contains('flipped') ? 'flex' : 'none';
+}
 
 function prevCard() { if (idx > 0)              { idx--; showCard(); } }
 function nextCard() { if (idx < cards.length-1) { idx++; showCard(); } }
 
+function shuffleDeck() {
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  idx = 0; knownSet.clear(); reviewSet.clear();
+  buildDots(); showCard(); updateMasteryCounters();
+}
+
+function markCard(verdict) {
+  if (verdict === 'known') { knownSet.add(idx); reviewSet.delete(idx); }
+  else                     { reviewSet.add(idx); knownSet.delete(idx); }
+  updateMasteryCounters();
+  if (knownSet.size + reviewSet.size === cards.length) {
+    showMasterySummary();
+  } else {
+    nextCard();
+  }
+}
+
+function updateMasteryCounters() {
+  document.getElementById('knownCount').textContent  = knownSet.size + ' known';
+  document.getElementById('reviewCount').textContent = reviewSet.size + ' review';
+}
+
+function showMasterySummary() {
+  document.getElementById('deckArea').style.display = 'none';
+  const summary = document.getElementById('masterySummary');
+  summary.style.display = 'block';
+  const total = cards.length;
+  const k = knownSet.size;
+  document.getElementById('summaryTitle').textContent =
+    k === total ? 'Perfect! You know them all!' : k > total / 2 ? 'Great work!' : 'Keep practising!';
+  document.getElementById('summaryBody').textContent =
+    `${k} / ${total} cards mastered. ${reviewSet.size > 0 ? reviewSet.size + ' marked for review.' : ''}`;
+  document.getElementById('reviewOnlyBtn').style.display = reviewSet.size > 0 ? '' : 'none';
+  summary.scrollIntoView({behavior:'smooth'});
+}
+
+function restartDeck() {
+  idx = 0; knownSet.clear(); reviewSet.clear();
+  buildDots(); showCard(); updateMasteryCounters();
+  document.getElementById('deckArea').style.display = 'block';
+  document.getElementById('masterySummary').style.display = 'none';
+}
+
+function reviewOnly() {
+  cards = cards.filter((_, i) => reviewSet.has(i));
+  idx = 0; knownSet.clear(); reviewSet.clear();
+  buildDots(); showCard(); updateMasteryCounters();
+  document.getElementById('deckArea').style.display = 'block';
+  document.getElementById('masterySummary').style.display = 'none';
+}
+
+/* Keyboard navigation */
 document.addEventListener('keydown', e => {
   const tag = document.activeElement?.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
   if (e.key === 'ArrowLeft')  prevCard();
   if (e.key === 'ArrowRight') nextCard();
   if (e.key === ' ')          { e.preventDefault(); flipCard(); }
+  if (e.key === 'g' || e.key === 'G') { if (document.getElementById('card3d').classList.contains('flipped')) markCard('known'); }
+  if (e.key === 'r' || e.key === 'R') { if (document.getElementById('card3d').classList.contains('flipped')) markCard('review'); }
 });
+
+/* Touch swipe — left = prev, right = next, tap = flip */
+(function() {
+  const scene = document.getElementById('cardScene');
+  if (!scene) return;
+  let startX = 0, startY = 0;
+  scene.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, {passive: true});
+  scene.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return; // tap handled by onclick
+    if (Math.abs(dx) > Math.abs(dy) * 1.5) {
+      e.preventDefault();
+      if (dx < -40) nextCard();
+      else if (dx > 40) prevCard();
+    }
+  }, {passive: false});
+  /* Remove onclick flip from scene when swiping — card handles tap via its own onclick */
+})();
 
 (function() {
   const saved = localStorage.getItem('edu_lang');

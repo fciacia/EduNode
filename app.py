@@ -87,13 +87,37 @@ with app.app_context():
     _startup()
 
 
-def _safe_retrieve_context(query: str, subject: str) -> str:
+def _grounded_context(query: str, subject: str):
+    """
+    Citation-aware retrieval shared by quiz and flashcard generation.
+
+    Returns (context_str, grounded, sources):
+      context_str : passages joined for the LLM prompt ("" if none)
+      grounded    : True when the best chunk is within the retrieval gate (0.65),
+                    i.e. the curriculum actually covers this topic
+      sources     : list of {"source", "page"} when grounded, else []
+    """
     try:
-        from core.rag_engine import retrieve_context
-        return retrieve_context(query, n_results=3, subject=subject)
+        from core.rag_engine import retrieve_with_citations
+        chunks = retrieve_with_citations(query, n_results=3, subject=subject)
     except Exception as exc:
         log.warning("RAG retrieval failed for %s/%s: %s", subject, query, exc)
-        return ""
+        return "", False, []
+
+    if not chunks:
+        return "", False, []
+
+    context  = "\n---\n".join(c.text for c in chunks)
+    grounded = min(c.distance for c in chunks) <= 0.65
+
+    sources: list[dict] = []
+    if grounded:
+        for c in chunks:
+            entry = {"source": c.source, "page": c.page}
+            if entry not in sources:
+                sources.append(entry)
+
+    return context, grounded, sources
 
 
 # ---------------------------------------------------------------------------
@@ -358,14 +382,20 @@ def api_quiz_generate():
     if not topic:
         return jsonify({"error": "topic required"}), 400
 
-    from core.llm_engine  import generate_quiz
+    from core.llm_engine  import generate_quiz, ollama_available
     from core.quiz_engine import validate_questions
 
-    rag_ctx   = _safe_retrieve_context(topic, subject)
+    if not ollama_available():
+        return jsonify({"questions": [], "error": "offline"}), 503
+
+    rag_ctx, grounded, sources = _grounded_context(topic, subject)
     raw_qs    = generate_quiz(topic, language, rag_ctx)
     questions = validate_questions(raw_qs)
 
-    return jsonify({"questions": questions})
+    payload = {"questions": questions, "grounded": grounded, "sources": sources}
+    if not questions:
+        payload["error"] = "generation"
+    return jsonify(payload)
 
 
 # ---------------------------------------------------------------------------
@@ -498,10 +528,18 @@ def api_flashcard_generate():
         return jsonify({"error": "topic required"}), 400
 
     from core.flashcard_engine import generate_flashcards
+    from core.llm_engine import ollama_available
 
-    rag_ctx = _safe_retrieve_context(topic, subject)
+    if not ollama_available():
+        return jsonify({"flashcards": [], "error": "offline"}), 503
+
+    rag_ctx, grounded, sources = _grounded_context(topic, subject)
     cards   = generate_flashcards(topic, language, rag_ctx)
-    return jsonify({"flashcards": cards})
+
+    payload = {"flashcards": cards, "grounded": grounded, "sources": sources}
+    if not cards:
+        payload["error"] = "generation"
+    return jsonify(payload)
 
 
 # ---------------------------------------------------------------------------

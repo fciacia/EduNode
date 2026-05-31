@@ -70,15 +70,30 @@ def _resolve_ollama_model() -> str:
     return fallback_model
 
 
+def ollama_available() -> bool:
+    """Quick health check — True if the Ollama daemon answers at OLLAMA_BASE."""
+    try:
+        import requests  # type: ignore
+        resp = requests.get(f"{OLLAMA_BASE}/api/tags", timeout=3)
+        return resp.status_code == 200
+    except Exception:
+        return False
+
+
 def _ollama_generate(
     prompt: str,
     temperature: float = 0.7,
     max_tokens: int = MAX_TOKENS,
     system: str = "",
+    schema: dict | None = None,
 ) -> str:
     """
     POST to Ollama /api/generate.
     Returns the response text, or "" on any error.
+
+    When *schema* is given it is passed as Ollama's ``format`` (structured
+    outputs / constrained decoding), forcing the model to emit JSON that
+    conforms to the schema — far more reliable than free-form JSON prompting.
     """
     try:
         import requests  # type: ignore
@@ -97,6 +112,8 @@ def _ollama_generate(
     }
     if system:
         payload["system"] = system
+    if schema:
+        payload["format"] = schema
 
     try:
         resp = requests.post(
@@ -192,6 +209,32 @@ def query_tutor(user_message: str, language: str, student_id=None, subject: str 
 # Public: quiz generation
 # ---------------------------------------------------------------------------
 
+# Structured-output schema — constrains the model to emit valid MCQ JSON.
+QUIZ_SCHEMA: dict = {
+    "type": "object",
+    "properties": {
+        "questions": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "question": {"type": "string"},
+                    "options": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 4,
+                        "maxItems": 4,
+                    },
+                    "answer": {"type": "string", "enum": ["A", "B", "C", "D"]},
+                },
+                "required": ["question", "options", "answer"],
+            },
+        },
+    },
+    "required": ["questions"],
+}
+
+
 def generate_quiz(topic: str, language: str, rag_context: str) -> list[dict]:
     """
     Generate 3 multiple-choice questions about *topic*.
@@ -217,7 +260,7 @@ def generate_quiz(topic: str, language: str, rag_context: str) -> list[dict]:
         f"Respond in {language}."
     )
 
-    raw = _ollama_generate(prompt, temperature=0.3, max_tokens=600, system=system)
+    raw = _ollama_generate(prompt, temperature=0.2, max_tokens=700, system=system, schema=QUIZ_SCHEMA)
     if not raw:
         return []
 

@@ -21,6 +21,26 @@ log = logging.getLogger(__name__)
 
 MAX_FLASHCARDS = 5
 
+# Structured-output schema — constrains the model to emit valid flashcard JSON.
+FLASHCARD_SCHEMA: dict = {
+    "type": "object",
+    "properties": {
+        "flashcards": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "body":  {"type": "string"},
+                    "image": {"type": ["string", "null"]},
+                },
+                "required": ["title", "body"],
+            },
+        },
+    },
+    "required": ["flashcards"],
+}
+
 
 def generate_flashcards(
     topic: str,
@@ -60,7 +80,7 @@ def generate_flashcards(
         f"Respond in {language}."
     )
 
-    raw = _ollama_generate(prompt, temperature=0.5, max_tokens=700, system=system)
+    raw = _ollama_generate(prompt, temperature=0.4, max_tokens=800, system=system, schema=FLASHCARD_SCHEMA)
     if not raw:
         return []
 

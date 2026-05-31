@@ -2,19 +2,23 @@
 (function () {
   'use strict';
 
+  /* ── SVG icon helper ──────────────────────────────────────────────────── */
+  const S = '/static/icons/sprite.svg';
+  const ico = (n, c) => '<svg class="icon' + (c ? ' ' + c : '') + '" aria-hidden="true"><use href="' + S + '#icon-' + n + '"></use></svg>';
+
   /* ── Chat link labels by language + level ────────────────────────────── */
   const CHAT_LABELS = {
-    'English':          { primary: '💬 Talk to Tutor', secondary: '💬 Chat' },
-    'Filipino':         { primary: '💬 Kausapin ang Tutor', secondary: '💬 Chat' },
-    'Bahasa Melayu':    { primary: '💬 Bercakap Tutor', secondary: '💬 Chat' },
-    'Bahasa Indonesia': { primary: '💬 Bicara Tutor', secondary: '💬 Chat' },
-    'Thai':             { primary: '💬 คุยกับครู', secondary: '💬 แชท' },
-    'Vietnamese':       { primary: '💬 Nói chuyện với Gia sư', secondary: '💬 Trò chuyện' },
-    'Khmer':            { primary: '💬 និយាយជាមួយគ្រូ', secondary: '💬 ជជែក' },
-    'Lao':              { primary: '💬 ລົມກັບຄູ', secondary: '💬 ສົນທະນາ' },
-    'Burmese':          { primary: '💬 ဆရာနှင့်ပြောဆို', secondary: '💬 ချတ်' },
-    'Cebuano':          { primary: '💬 Pag-usap ang Tutor', secondary: '💬 Chat' },
-    'Iban':             { primary: '💬 Cakap Tutor', secondary: '💬 Chat' },
+    'English':          { primary: ico('message-square') + ' Talk to Tutor', secondary: ico('message-square') + ' Chat' },
+    'Filipino':         { primary: ico('message-square') + ' Kausapin ang Tutor', secondary: ico('message-square') + ' Chat' },
+    'Bahasa Melayu':    { primary: ico('message-square') + ' Bercakap Tutor', secondary: ico('message-square') + ' Chat' },
+    'Bahasa Indonesia': { primary: ico('message-square') + ' Bicara Tutor', secondary: ico('message-square') + ' Chat' },
+    'Thai':             { primary: ico('message-square') + ' คุยกับครู', secondary: ico('message-square') + ' แชท' },
+    'Vietnamese':       { primary: ico('message-square') + ' Nói chuyện với Gia sư', secondary: ico('message-square') + ' Trò chuyện' },
+    'Khmer':            { primary: ico('message-square') + ' និយាយជាមួយគ្រូ', secondary: ico('message-square') + ' ជជែក' },
+    'Lao':              { primary: ico('message-square') + ' ລົມກັບຄູ', secondary: ico('message-square') + ' ສົນທະນາ' },
+    'Burmese':          { primary: ico('message-square') + ' ဆရာနှင့်ပြောဆို', secondary: ico('message-square') + ' ချတ်' },
+    'Cebuano':          { primary: ico('message-square') + ' Pag-usap ang Tutor', secondary: ico('message-square') + ' Chat' },
+    'Iban':             { primary: ico('message-square') + ' Cakap Tutor', secondary: ico('message-square') + ' Chat' },
   };
 
   /* ── Country → default language ───────────────────────────────────────── */
@@ -63,47 +67,47 @@
   const TOUR_STEPS = [
     {
       selector: '#subject-grid',
-      mascot:   '🤖',
-      text:     'Tap any subject to start chatting with your AI tutor and begin learning! 📚',
+      mascot:   ico('bot', 'icon-xl'),
+      text:     'Tap any subject to start chatting with your AI tutor and begin learning!',
       position: 'below',
     },
     {
       selector: '#act-quiz',
       fallback: '.activity-card[href="/quiz"], .quick-link[href="/quiz"]',
-      mascot:   '🧠',
-      text:     'Take a Quiz! Test what you know and earn stars! 🌟',
+      mascot:   ico('brain', 'icon-xl'),
+      text:     'Take a Quiz! Test what you know and earn badges!',
       position: 'above',
     },
     {
       selector: '#act-flashcard',
       fallback: '.activity-card[href="/flashcard"], .quick-link[href="/flashcard"]',
-      mascot:   '🃏',
-      text:     'Study with Flashcards! Tap the card to flip and see the answer! ✨',
+      mascot:   ico('layers', 'icon-xl'),
+      text:     'Study with Flashcards! Tap the card to flip and see the answer!',
       position: 'above',
     },
     {
       selector: '#act-podcast',
       fallback: '.activity-card[href="/podcast"], .quick-link[href="/podcast"]',
-      mascot:   '🎧',
-      text:     'Listen to a fun Podcast while you relax! Learning made easy! 🎶',
+      mascot:   ico('headphones', 'icon-xl'),
+      text:     'Listen to a fun Podcast while you relax! Learning made easy!',
       position: 'above',
     },
     {
       selector: '#act-progress',
       fallback: '.activity-card[href="/progress"], .quick-link[href="/progress"]',
-      mascot:   '🏆',
-      text:     "See all your stars and badges in Progress! You're doing amazing! 🌈",
+      mascot:   ico('trophy', 'icon-xl'),
+      text:     "See all your badges and achievements in Progress!",
       position: 'above',
     },
   ];
 
   /* ── Per-page first-visit hints ───────────────────────────────────────── */
   const PAGE_HINTS = {
-    '/chat':      { mascot: '💬', text: 'Ask me anything! Type your question or tap the mic to speak! 🎤' },
-    '/quiz':      { mascot: '🧠', text: 'Pick a topic and I will make questions just for you! 🌟' },
-    '/flashcard': { mascot: '🃏', text: 'Type a topic and tap the card to flip it! Ready to study? ✨' },
-    '/podcast':   { mascot: '🎧', text: 'Type a topic and listen to a fun mini-podcast! 🎶' },
-    '/progress':  { mascot: '🏆', text: 'Enter your name to see all your progress and badges! 🌈' },
+    '/chat':      { mascot: ico('message-square','icon-xl'), text: 'Ask me anything! Type your question or tap the mic to speak!' },
+    '/quiz':      { mascot: ico('brain','icon-xl'),          text: 'Pick a topic and I will make questions just for you!' },
+    '/flashcard': { mascot: ico('layers','icon-xl'),         text: 'Type a topic and tap the card to flip it! Ready to study?' },
+    '/podcast':   { mascot: ico('headphones','icon-xl'),     text: 'Type a topic and listen to a fun mini-podcast!' },
+    '/progress':  { mascot: ico('trophy','icon-xl'),         text: 'Enter your name to see all your progress and badges!' },
   };
 
   /* ── Helpers ──────────────────────────────────────────────────────────── */
@@ -124,7 +128,9 @@
     // Show level badge in nav
     const badge = document.getElementById('nav-level-badge');
     if (badge) {
-      badge.textContent = level === 'primary' ? '📗 Primary' : '📘 Secondary';
+      badge.innerHTML = level === 'primary'
+        ? ico('book','icon-xs') + ' Primary'
+        : ico('book-open','icon-xs') + ' Secondary';
       badge.style.display = 'inline-block';
     }
 
@@ -145,7 +151,7 @@
       <div class="onb-card">
         <!-- Step 1: country -->
         <div class="onb-step active" data-step="country">
-          <h2 class="onb-heading">👋 Welcome to EduNode!</h2>
+          <h2 class="onb-heading">${ico('hand')} Welcome to EduNode!</h2>
           <p class="onb-sub">Where are you from? Pick your country to get started!</p>
           <div class="onb-country-grid">
             ${COUNTRIES.map(c => `
@@ -160,18 +166,18 @@
         <!-- Step 2: level -->
         <div class="onb-step" data-step="level">
           <div class="onb-mascot-wrap">
-            <span class="onb-mascot">🤖</span>
+            <span class="onb-mascot">${ico('bot','icon-3xl')}</span>
           </div>
-          <p class="onb-flavor" id="onb-flavor">Hello! I am EduNode, your AI tutor! 🌟</p>
+          <p class="onb-flavor" id="onb-flavor">Hello! I am EduNode, your AI tutor!</p>
           <h2 class="onb-heading" style="font-size:1.3rem;margin-bottom:.35rem">What school level are you?</h2>
           <p class="onb-sub" style="margin-bottom:1rem">This helps me explain things just right for you!</p>
           <div class="onb-level-grid">
             <button class="onb-level-btn" data-level="primary">
-              <span class="level-icon">📗</span>
+              <span class="level-icon">${ico('book','icon-xl')}</span>
               <span>Primary<br><small style="font-weight:600;font-size:.78rem">Grade 1 – 6</small></span>
             </button>
             <button class="onb-level-btn" data-level="secondary">
-              <span class="level-icon">📘</span>
+              <span class="level-icon">${ico('book-open','icon-xl')}</span>
               <span>Secondary<br><small style="font-weight:600;font-size:.78rem">Grade 7 – 12</small></span>
             </button>
           </div>
@@ -240,7 +246,7 @@
     // Fill flavor text
     const flavorEl = document.getElementById('onb-flavor');
     if (flavorEl && country) {
-      flavorEl.textContent = COUNTRY_FLAVOR[country] || "Hello! I am EduNode, your AI tutor! 🌟";
+      flavorEl.textContent = COUNTRY_FLAVOR[country] || "Hello! I am EduNode, your AI tutor!";
     }
 
     // Translate the level-picker overlay to the selected language
@@ -340,7 +346,7 @@
         <div class="tour-btns">
           <div class="tour-step-dots">${dots}</div>
           <button class="btn-outline tour-skip-btn" style="font-size:.82rem;padding:.38rem .9rem">Skip</button>
-          <button class="btn-primary tour-next-btn" style="font-size:.9rem">${isLast ? '🎉 Got it!' : 'Next →'}</button>
+          <button class="btn-primary tour-next-btn" style="font-size:.9rem">${isLast ? ico('sparkles') + ' Got it!' : 'Next →'}</button>
         </div>`;
 
       bubble.querySelector('.tour-next-btn').addEventListener('click', advanceStep);
