@@ -430,17 +430,23 @@
   }
 
   /* ── Boot sequence ────────────────────────────────────────────────────── */
+  /* Clear the saved flag and replay onboarding (manual re-trigger for demos) */
+  function restartOnboarding() {
+    try { localStorage.removeItem('edu_onboarded'); } catch (e) {}
+    showOnboarding();
+  }
+
   function boot() {
     applyLevel();
 
     // Expose globally so home page and i18n.js can call in
-    window.EduOnboarding = { applyLevel: applyLevel, startTour: showTour };
+    window.EduOnboarding = { applyLevel: applyLevel, startTour: showTour, restart: restartOnboarding };
 
-    // Show onboarding on first visit OR every time page is reloaded (F5 / Ctrl+Shift+R)
-    var navType = (performance.getEntriesByType('navigation')[0] || {}).type || 'navigate';
-    var isReload = navType === 'reload';
+    // Show onboarding on first visit only. Demos can replay it on demand via
+    // the ?onboarding=1 URL or window.EduOnboarding.restart().
+    var forceOnboarding = new URLSearchParams(window.location.search).get('onboarding') === '1';
 
-    if (!ls('edu_onboarded') || isReload) {
+    if (!ls('edu_onboarded') || forceOnboarding) {
       showOnboarding();
       return;
     }
