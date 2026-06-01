@@ -268,7 +268,7 @@
 <script>
 const log = document.getElementById('chatLog');
 const input = document.getElementById('msgInput');
-let mediaRec = null, audioChunks = [], recTimerInterval = null, recSeconds = 0;
+let mediaRec = null, audioChunks = [], recTimerInterval = null, recSeconds = 0, recStartMs = 0;
 const S = '/static/icons/sprite.svg';
 const ico = (n, c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
 const MAX_CHARS = 2000;
@@ -477,6 +477,7 @@ async function startRec() {
     audioChunks = [];
     mediaRec.ondataavailable = e => audioChunks.push(e.data);
     mediaRec.start();
+    recStartMs = Date.now();
     document.getElementById('micBtn').classList.add('recording');
     document.getElementById('micBtn').innerHTML = ico('square','icon-md');
     recSeconds = 0;
@@ -502,6 +503,15 @@ async function stopRec() {
   document.getElementById('micTimer').classList.remove('active');
   mediaRec.onstop = async () => {
     const blob = new Blob(audioChunks, {type: 'audio/webm'});
+    const durMs = Date.now() - recStartMs;
+    mediaRec.stream.getTracks().forEach(t => t.stop());
+
+    // Guard against taps / near-empty clips that can't be transcribed.
+    if (durMs < 600 || blob.size < 2500) {
+      addBubble('Hold the mic button and speak clearly for a moment, then release.', 'bot');
+      return;
+    }
+
     const fd = new FormData();
     fd.append('audio', blob, 'voice.webm');
     fd.append('language', getLang());
@@ -511,9 +521,11 @@ async function stopRec() {
       const d = await r.json();
       removeTyping();
       if (d.text) { input.value = d.text; sendMsg(); }
-      else addBubble('Could not transcribe audio. Try again!', 'bot');
-    } catch(e) { removeTyping(); }
-    mediaRec.stream.getTracks().forEach(t => t.stop());
+      else addBubble("I didn't catch that — please hold the mic and speak a little louder.", 'bot');
+    } catch(e) {
+      removeTyping();
+      addBubble("I couldn't reach the voice service. Please try again.", 'bot');
+    }
   };
 }
 

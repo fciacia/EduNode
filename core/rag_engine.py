@@ -40,8 +40,8 @@ _collection = None
 CHROMA_DIR      = Path(os.getenv("CHROMA_DIR", "data/chroma"))
 CURRICULUM_DIR  = Path(os.getenv("CURRICULUM_DIR", "data/curriculum"))
 COLLECTION_NAME = "edunode"
-CHUNK_SIZE      = int(os.getenv("CHUNK_SIZE", "300"))   # words per chunk
-CHUNK_OVERLAP   = int(os.getenv("CHUNK_OVERLAP", "30"))  # word overlap
+CHUNK_SIZE      = int(os.getenv("CHUNK_SIZE", "120"))   # words per chunk (smaller = more precise retrieval)
+CHUNK_OVERLAP   = int(os.getenv("CHUNK_OVERLAP", "25"))  # word overlap
 EMBED_MODEL     = os.getenv("EMBED_MODEL", "paraphrase-multilingual-MiniLM-L12-v2")
 
 
