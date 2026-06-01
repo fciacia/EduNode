@@ -52,6 +52,15 @@ _SAY_VOICE: dict[str, str] = {
     "Vietnamese": "Linh",
 }
 
+# Hub language name -> Meta MMS-TTS code (ISO 639-3). Neural voices for the
+# languages neither Piper nor macOS `say` cover. Models download on first use
+# (~140 MB each) and are cached in memory thereafter. Portable across OSes.
+_MMS_LANG: dict[str, str] = {
+    "Filipino": "tgl", "Tagalog": "tgl",
+    "Khmer": "khm", "Lao": "lao", "Burmese": "mya",
+}
+_mms_cache: dict[str, tuple] = {}
+
 # ---------------------------------------------------------------------------
 # Binary / model paths (can be overridden via env)
 # ---------------------------------------------------------------------------
@@ -187,9 +196,10 @@ def text_to_speech(text: str, language: str = "English") -> bytes:
     """
     Synthesise *text* to WAV audio bytes, choosing a TTS engine by language:
 
-      - English            → Piper (offline neural voice)
-      - ms / id / th / vi  → macOS `say` (high-quality system voices, macOS only)
-      - anything else      → b"" (no voice available; the UI just shows text)
+      - English              → Piper (offline neural voice)
+      - ms / id / th / vi    → macOS `say` (high-quality system voices, macOS only)
+      - fil / km / lo / my   → Meta MMS-TTS (neural, portable)
+      - anything else        → b"" (no voice available; the UI just shows text)
 
     Returns b"" if no engine/voice is available or synthesis fails.
     """
@@ -203,8 +213,49 @@ def text_to_speech(text: str, language: str = "English") -> bytes:
     if voice and sys.platform == "darwin" and shutil.which("say"):
         return _say_tts(text, voice)
 
+    mms_code = _MMS_LANG.get(language)
+    if mms_code:
+        return _mms_tts(text, mms_code)
+
     log.info("No TTS voice available for '%s' — returning silence.", language)
     return b""
+
+
+def _mms_tts(text: str, code: str) -> bytes:
+    """Synthesise text to WAV bytes with Meta's MMS-TTS (VITS) for *code*."""
+    try:
+        import io
+        import wave
+        import numpy as np
+        import torch
+        from transformers import AutoTokenizer, VitsModel
+    except ImportError as exc:
+        log.warning("MMS-TTS dependencies missing: %s", exc)
+        return b""
+
+    try:
+        if code not in _mms_cache:
+            name = f"facebook/mms-tts-{code}"
+            _mms_cache[code] = (VitsModel.from_pretrained(name), AutoTokenizer.from_pretrained(name))
+        model, tokenizer = _mms_cache[code]
+
+        inputs = tokenizer(text, return_tensors="pt")
+        with torch.no_grad():
+            waveform = model(**inputs).waveform.squeeze().cpu().numpy()
+
+        pcm = (np.clip(waveform, -1.0, 1.0) * 32767).astype("<i2")
+        buf = io.BytesIO()
+        with wave.open(buf, "wb") as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(int(model.config.sampling_rate))
+            wf.writeframes(pcm.tobytes())
+        data = buf.getvalue()
+        log.info("TTS (mms/%s) produced %d bytes for %d chars.", code, len(data), len(text))
+        return data
+    except Exception as exc:  # noqa: BLE001
+        log.warning("MMS-TTS error for '%s': %s", code, exc)
+        return b""
 
 
 def _piper_tts(text: str) -> bytes:

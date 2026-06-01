@@ -26,9 +26,21 @@ def test_tts_malay_uses_say(monkeypatch):
     assert captured["voice"] == "Amira"
 
 
+def test_tts_filipino_uses_mms(monkeypatch):
+    captured = {}
+    def fake_mms(text, code):
+        captured["code"] = code
+        return b"MMS"
+    monkeypatch.setattr(ve, "_mms_tts", fake_mms)
+    out = ve.text_to_speech("Kumusta", "Filipino")
+    assert out == b"MMS"
+    assert captured["code"] == "tgl"
+
+
 def test_tts_unsupported_language_returns_empty(monkeypatch):
     monkeypatch.setattr(ve, "_piper_tts", lambda t: b"PIPER")
-    # A language with no Piper and no `say` voice -> silence, never Piper.
+    monkeypatch.setattr(ve, "_mms_tts", lambda t, c: b"MMS")
+    # A language with no Piper, no `say`, and no MMS voice -> silence.
     assert ve.text_to_speech("xyz", "Klingon") == b""
 
 
