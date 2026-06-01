@@ -46,7 +46,7 @@ def generate_podcast(topic: str, language: str) -> dict:
 
     script = generate_podcast_script(topic, language)
 
-    wav_bytes = generate_podcast_audio(script)
+    wav_bytes = generate_podcast_audio(script, language)
 
     audio_path = ""
     audio_url  = ""

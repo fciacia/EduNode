@@ -340,8 +340,10 @@ def api_voice_stt():
     if not audio_bytes:
         return jsonify({"error": "empty audio"}), 400
 
+    language = (request.form.get("language") or "auto").strip()
+
     from core.voice_engine import speech_to_text
-    transcript = speech_to_text(audio_bytes)
+    transcript = speech_to_text(audio_bytes, language)
     return jsonify({"text": transcript})
 
 
@@ -353,11 +355,12 @@ def api_voice_stt():
 def api_voice_tts():
     data = request.get_json(silent=True) or {}
     text = (data.get("text") or "").strip()
+    language = (data.get("language") or "English").strip()
     if not text:
         return jsonify({"error": "text required"}), 400
 
     from core.voice_engine import text_to_speech
-    wav = text_to_speech(text)
+    wav = text_to_speech(text, language)
     if not wav:
         return jsonify({"error": "TTS unavailable"}), 503
 

@@ -420,7 +420,7 @@ async function playTTS(text, btn) {
     btn.innerHTML = ico('loader','icon-spin') + ' Loading…';
     const r = await fetch('/api/voice/tts', {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({text})
+      body: JSON.stringify({text, language: getLang()})
     });
     if (!r.ok) throw new Error();
     const blob = await r.blob();
@@ -504,6 +504,7 @@ async function stopRec() {
     const blob = new Blob(audioChunks, {type: 'audio/webm'});
     const fd = new FormData();
     fd.append('audio', blob, 'voice.webm');
+    fd.append('language', getLang());
     addTyping();
     try {
       const r = await fetch('/api/voice/stt', {method: 'POST', body: fd});

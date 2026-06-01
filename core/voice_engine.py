@@ -23,12 +23,34 @@ from __future__ import annotations
 import logging
 import os
 import re
+import shutil
 import subprocess
+import sys
 import tempfile
 import uuid
 from pathlib import Path
 
 log = logging.getLogger(__name__)
+
+# Hub language name -> Whisper language code (for the -l flag). Whisper's
+# multilingual model auto-detects when given "auto". Languages it cannot do
+# (Iban, Cebuano, Shan, Kedayan…) simply fall back to auto-detect.
+_WHISPER_LANG: dict[str, str] = {
+    "English": "en", "Bahasa Melayu": "ms", "Bahasa Indonesia": "id",
+    "Filipino": "tl", "Tagalog": "tl", "Vietnamese": "vi", "Thai": "th",
+    "Khmer": "km", "Lao": "lo", "Burmese": "my", "Javanese": "jw",
+    "Sundanese": "su",
+}
+
+# Hub language name -> macOS `say` voice. These ship with macOS and cover the
+# ASEAN languages Piper has no voice for. Used only on macOS; elsewhere these
+# languages produce no audio (text still shows).
+_SAY_VOICE: dict[str, str] = {
+    "Bahasa Melayu": "Amira",
+    "Bahasa Indonesia": "Damayanti",
+    "Thai": "Kanya",
+    "Vietnamese": "Linh",
+}
 
 # ---------------------------------------------------------------------------
 # Binary / model paths (can be overridden via env)
@@ -48,9 +70,12 @@ FFMPEG_TIMEOUT = int(os.getenv("FFMPEG_TIMEOUT", "30"))
 # Speech-to-text
 # ---------------------------------------------------------------------------
 
-def speech_to_text(audio_bytes: bytes) -> str:
+def speech_to_text(audio_bytes: bytes, language: str = "auto") -> str:
     """
     Convert raw audio bytes (WebM from browser MediaRecorder, or WAV) to text.
+
+    *language* is the hub language name (e.g. "Bahasa Melayu"); it is mapped to a
+    Whisper language code to improve accuracy. Unknown names → auto-detect.
 
     Pipeline:
       1. Write audio_bytes to a temp file.
@@ -60,6 +85,7 @@ def speech_to_text(audio_bytes: bytes) -> str:
 
     Returns "" on any failure (binary missing, bad audio, timeout).
     """
+    lang_code = _WHISPER_LANG.get(language, "auto") if language else "auto"
     if not WHISPER_BIN.exists():
         log.info("Whisper.cpp binary not found at '%s' — STT unavailable.", WHISPER_BIN)
         return ""
@@ -105,6 +131,7 @@ def speech_to_text(audio_bytes: bytes) -> str:
                 str(WHISPER_BIN),
                 "-m", str(WHISPER_MODEL),
                 "-f", str(wav_file),
+                "-l", lang_code,        # language hint ("auto" = detect)
                 "--output-txt",
                 "--no-timestamps",
                 "-of", str(wav_file),   # output file prefix (Whisper appends .txt)
@@ -156,21 +183,37 @@ def speech_to_text(audio_bytes: bytes) -> str:
 # Text-to-speech
 # ---------------------------------------------------------------------------
 
-def text_to_speech(text: str) -> bytes:
+def text_to_speech(text: str, language: str = "English") -> bytes:
     """
-    Synthesise *text* to WAV audio bytes using Piper TTS.
+    Synthesise *text* to WAV audio bytes, choosing a TTS engine by language:
 
-    Returns b"" if Piper is not installed or synthesis fails.
+      - English            → Piper (offline neural voice)
+      - ms / id / th / vi  → macOS `say` (high-quality system voices, macOS only)
+      - anything else      → b"" (no voice available; the UI just shows text)
+
+    Returns b"" if no engine/voice is available or synthesis fails.
     """
+    if not text.strip():
+        return b""
+
+    if language == "English":
+        return _piper_tts(text)
+
+    voice = _SAY_VOICE.get(language)
+    if voice and sys.platform == "darwin" and shutil.which("say"):
+        return _say_tts(text, voice)
+
+    log.info("No TTS voice available for '%s' — returning silence.", language)
+    return b""
+
+
+def _piper_tts(text: str) -> bytes:
+    """Synthesise English text to WAV bytes with Piper."""
     if not PIPER_BIN.exists():
         log.info("Piper TTS binary not found at '%s' — TTS unavailable.", PIPER_BIN)
         return b""
-
     if not PIPER_MODEL.exists():
         log.warning("Piper voice model not found at '%s' — TTS unavailable.", PIPER_MODEL)
-        return b""
-
-    if not text.strip():
         return b""
 
     uid      = uuid.uuid4().hex
@@ -220,18 +263,61 @@ def text_to_speech(text: str) -> bytes:
             pass
 
 
+def _say_tts(text: str, voice: str) -> bytes:
+    """Synthesise text to WAV bytes with the macOS `say` command + ffmpeg."""
+    uid       = uuid.uuid4().hex
+    aiff_file = Path(tempfile.gettempdir()) / f"edunode_say_{uid}.aiff"
+    wav_file  = Path(tempfile.gettempdir()) / f"edunode_say_{uid}.wav"
+
+    try:
+        say = subprocess.run(
+            ["say", "-v", voice, "-o", str(aiff_file), text],
+            capture_output=True, timeout=TTS_TIMEOUT,
+        )
+        if say.returncode != 0 or not aiff_file.exists():
+            log.warning("macOS say failed for voice '%s': %s",
+                        voice, say.stderr.decode(errors="replace")[:200])
+            return b""
+
+        # Convert AIFF -> 22.05 kHz mono WAV (browser-friendly, matches Piper output)
+        conv = subprocess.run(
+            ["ffmpeg", "-y", "-i", str(aiff_file), "-ar", "22050", "-ac", "1", str(wav_file)],
+            capture_output=True, timeout=FFMPEG_TIMEOUT,
+        )
+        if conv.returncode != 0 or not wav_file.exists():
+            log.warning("ffmpeg AIFF->WAV failed: %s", conv.stderr.decode(errors="replace")[:200])
+            return b""
+
+        wav_bytes = wav_file.read_bytes()
+        log.info("TTS (say/%s) produced %d bytes for %d chars.", voice, len(wav_bytes), len(text))
+        return wav_bytes
+
+    except subprocess.TimeoutExpired:
+        log.warning("macOS say timed out after %ds.", TTS_TIMEOUT)
+        return b""
+    except Exception as exc:  # noqa: BLE001
+        log.warning("say TTS unexpected error: %s", exc)
+        return b""
+    finally:
+        for f in (aiff_file, wav_file):
+            try:
+                f.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+
 # ---------------------------------------------------------------------------
 # Podcast audio
 # ---------------------------------------------------------------------------
 
-def generate_podcast_audio(script: str) -> bytes:
+def generate_podcast_audio(script: str, language: str = "English") -> bytes:
     """
     Extract the spoken lines from a MAYA/NIKO script and synthesise to WAV.
 
-    Lines are joined with a short pause marker " ... " so Piper produces a
+    Lines are joined with a short pause marker " ... " so the voice produces a
     natural-sounding pause between speaker turns.
 
-    Returns b"" if Piper is not installed.
+    Returns b"" if no voice is available for *language*.
     """
     lines: list[str] = []
     for line in script.splitlines():
@@ -246,4 +332,4 @@ def generate_podcast_audio(script: str) -> bytes:
     else:
         combined = " ... ".join(lines)
 
-    return text_to_speech(combined)
+    return text_to_speech(combined, language)
