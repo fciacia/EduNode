@@ -1,5 +1,5 @@
 """
-app.py — EduNode Flask server (production entry point)
+app.py — Edge Flask server (production entry point)
 =======================================================
 Replaces asean_ai_tutor_project.py for the modular architecture.
 
@@ -85,6 +85,63 @@ def _startup():
 
 with app.app_context():
     _startup()
+
+
+_CURATED_TOPICS = {
+    "Mathematics":          ["Fractions", "Percentages", "Multiplication", "Geometry shapes", "Place value"],
+    "Science":              ["Photosynthesis", "The water cycle", "States of matter", "The solar system", "Food chains"],
+    "English Language":     ["Parts of speech", "Nouns and verbs", "Writing a sentence", "Reading comprehension"],
+    "Environmental Studies":["The water cycle", "Recycling", "Weather and climate", "Plants and animals"],
+    "Digital Literacy":     ["Using a computer", "Staying safe online", "What is the internet"],
+    "_default":             ["Fractions", "Photosynthesis", "The water cycle", "Parts of speech", "Map reading"],
+}
+
+
+def _suggest_topics(subject: str = "", limit: int = 8) -> list[str]:
+    """
+    Suggest study topics — derived from heading lines in the loaded curriculum
+    (so they're grounded), falling back to a curated list per subject.
+    """
+    from core.rag_engine import _detect_subject
+
+    topics: list[str] = []
+    seen: set[str] = set()
+    cdir = Path("data/curriculum")
+    if cdir.exists():
+        for f in sorted(cdir.glob("*.txt")) + sorted(cdir.glob("*.md")):
+            if subject and subject not in ("", "General") and _detect_subject(f.name) != subject:
+                continue
+            try:
+                lines = f.read_text(encoding="utf-8", errors="replace").splitlines()
+            except Exception:
+                continue
+            for i, raw in enumerate(lines):
+                line = raw.strip()
+                words = line.split()
+                if not (1 <= len(words) <= 6) or len(line) > 60:
+                    continue
+                if not line[0].isalpha() or not line[0].isupper():
+                    continue
+                if line == line.upper() or line[-1] in ".,:;?!" or line.startswith("Example"):
+                    continue
+                # A heading is followed by a longer paragraph line.
+                nxt = next((l.strip() for l in lines[i + 1:i + 3] if l.strip()), "")
+                if len(nxt.split()) < 6:
+                    continue
+                key = line.lower()
+                if key not in seen:
+                    seen.add(key)
+                    topics.append(line)
+
+    if not topics:
+        topics = _CURATED_TOPICS.get(subject, _CURATED_TOPICS["_default"])
+    return topics[:limit]
+
+
+@app.get("/api/topics")
+def api_topics():
+    subject = (request.args.get("subject") or "").strip()
+    return jsonify({"topics": _suggest_topics(subject)})
 
 
 def _grounded_context(query: str, subject: str):
@@ -644,5 +701,5 @@ if __name__ == "__main__":
     host = os.getenv("SERVER_HOST", "0.0.0.0")
     port = int(os.getenv("SERVER_PORT", "5000"))
     debug = os.getenv("FLASK_DEBUG", "0") == "1"
-    log.info("EduNode starting on %s:%d (hub: %s)", host, port, cfg.HUB_ID)
+    log.info("Edge starting on %s:%d (hub: %s)", host, port, cfg.HUB_ID)
     app.run(host=host, port=port, debug=debug, use_reloader=False)

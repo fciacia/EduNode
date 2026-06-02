@@ -1,5 +1,5 @@
 /**
- * podcast.js — EduNode podcast module
+ * podcast.js — Edge podcast module
  * Generates podcast script, renders MAYA/NIKO coloured lines, plays audio.
  *
  * Expected DOM IDs (provided by podcast.html):

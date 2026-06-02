@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Chat — EduNode{% endblock %}
+{% block title %}Chat — Edge{% endblock %}
 
 {% block extra_style %}
 .chat-header {
@@ -224,7 +224,7 @@
 
 {% block content %}
 <div class="chat-header">
-  <h2 class="chat-title"><svg class="icon icon-md" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-bot"></use></svg> Ask EduNode</h2>
+  <h2 class="chat-title"><svg class="icon icon-md" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-bot"></use></svg> Ask Edge</h2>
   <select id="subjectSel" class="sel">
     {% for s in subjects %}
     <option value="{{ s }}" {% if s == default_subject %}selected{% endif %}>{{ s }}</option>
@@ -245,7 +245,7 @@
 <div id="chatLog" class="chat-log">
   <div class="bubble bot">
     <span class="bubble-avatar"><svg class="icon icon-lg" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-bot"></use></svg></span>
-    <div class="message">Hi there! I'm <strong>EduNode</strong>, your AI tutor!<br>Pick a subject up top and ask me anything — I'm here to help you learn!</div>
+    <div class="message">Hi there! I'm <strong>Edge</strong>, your AI tutor!<br>Pick a subject up top and ask me anything — I'm here to help you learn!</div>
   </div>
 </div>
 
@@ -325,7 +325,7 @@ function newChat() {
   try { localStorage.removeItem(HISTORY_KEY()); localStorage.setItem('edu_convo', newId()); } catch(e) {}
   log.innerHTML = `<div class="bubble bot">
     <span class="bubble-avatar">${ico('bot','icon-lg')}</span>
-    <div class="message">Hi there! I'm <strong>EduNode</strong>, your AI tutor!<br>Pick a subject up top and ask me anything — I'm here to help you learn!</div>
+    <div class="message">Hi there! I'm <strong>Edge</strong>, your AI tutor!<br>Pick a subject up top and ask me anything — I'm here to help you learn!</div>
   </div>`;
 }
 
@@ -469,7 +469,7 @@ async function sendMsg(retryMsg) {
     const errWrap = document.createElement('div');
     errWrap.className = 'bubble bot';
     errWrap.innerHTML = `<span class="bubble-avatar">${ico('bot','icon-lg')}</span>
-      <div class="message">Connection error — is EduNode running?
+      <div class="message">Connection error — is Edge running?
         <br><button class="retry-btn" onclick="this.closest('.bubble').remove();sendMsg(${JSON.stringify(msg)})">${ico('refresh')} Retry</button>
       </div>`;
     log.appendChild(errWrap);

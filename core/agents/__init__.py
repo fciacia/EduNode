@@ -1,7 +1,7 @@
 """
 core/agents
 ===========
-Agentic RAG pipeline for EduNode. Shared data types live here; each agent is a
+Agentic RAG pipeline for Edge. Shared data types live here; each agent is a
 sibling module (translation, context, pedagogy, verification) and the
 orchestrator sequences them.
 """

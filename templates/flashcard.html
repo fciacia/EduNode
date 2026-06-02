@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Flashcards — EduNode{% endblock %}
+{% block title %}Flashcards — Edge{% endblock %}
 
 {% block extra_style %}
 .page-hero {
@@ -184,6 +184,8 @@
   </button>
 </div>
 
+<div id="topicSuggest" class="topic-suggest" style="display:none"></div>
+
 <div id="genError" class="gen-error" style="display:none"></div>
 
 <button class="btn-outline" id="reviewDueBtn" onclick="loadDue()"
@@ -268,6 +270,21 @@ const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${
 
 function getLang()    { return document.getElementById('langSel').value; }
 function getSubject() { return document.getElementById('subjectSel').value; }
+
+async function renderTopics() {
+  try {
+    const r = await fetch('/api/topics?subject=' + encodeURIComponent(getSubject()));
+    const d = await r.json();
+    const box = document.getElementById('topicSuggest');
+    if (!d.topics || !d.topics.length) { box.style.display = 'none'; return; }
+    box.innerHTML = '<span class="ts-label">Try</span>' +
+      d.topics.map(t => '<button class="topic-chip" type="button">' + escHtml(t) + '</button>').join('');
+    box.style.display = 'flex';
+    box.querySelectorAll('.topic-chip').forEach(btn => {
+      btn.onclick = () => { document.getElementById('topicInput').value = btn.textContent; generateDeck(); };
+    });
+  } catch(e) {}
+}
 
 function escHtml(s) {
   return String(s).replace(/[&<>"']/g, c =>
@@ -495,5 +512,8 @@ document.getElementById('langSel').addEventListener('change', e => localStorage.
 
 // Show any cards due for spaced-repetition review on load.
 refreshDueCount();
+
+document.getElementById('subjectSel').addEventListener('change', renderTopics);
+renderTopics();
 </script>
 {% endblock %}

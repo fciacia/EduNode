@@ -1345,3 +1345,38 @@ dl dd { color: var(--text-muted); margin-left: 1rem; font-size: .88rem; font-wei
 }
 .btn-retry-gen:hover  { transform: translateY(-1px); }
 .btn-retry-gen:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--primary-dark); }
+
+/* ── Topic suggestion chips (quiz + flashcard) ───────────────────────────── */
+.topic-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .45rem;
+  margin: -.65rem 0 1.5rem;
+}
+.topic-suggest .ts-label {
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-right: .1rem;
+}
+.topic-chip {
+  font-family: var(--font);
+  font-size: .82rem;
+  font-weight: 700;
+  padding: .34rem .8rem;
+  border-radius: 99px;
+  background: var(--surface);
+  color: var(--text);
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .1s;
+}
+.topic-chip:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}

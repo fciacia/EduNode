@@ -210,7 +210,7 @@ def generate_certificate_pdf(
     story = [
         Spacer(1, 0.5 * cm),
         HRFlowable(width="100%", thickness=3, color=accent, spaceAfter=0.5 * cm),
-        Paragraph("EduNode", title_style),
+        Paragraph("Edge", title_style),
         Paragraph("Offline Learning Microcredential", subtitle_style),
         HRFlowable(width="60%", thickness=1, color=colors.HexColor("#cccccc"), spaceAfter=1 * cm),
         Paragraph("This certificate is awarded to", body_style),
@@ -224,7 +224,7 @@ def generate_certificate_pdf(
         Paragraph(f"Date: {today}", body_style),
         Spacer(1, 1.5 * cm),
         Paragraph(
-            "EduNode is an offline AI tutoring platform for ASEAN communities.<br/>"
+            "Edge is an offline AI tutoring platform for ASEAN communities.<br/>"
             "This credential aligns with UNESCO SDG 4 — Quality Education.",
             small_style,
         ),

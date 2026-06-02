@@ -1,6 +1,6 @@
 {
-  "name": "EduNode — Offline AI Tutor",
-  "short_name": "EduNode",
+  "name": "Edge — Offline AI Tutor",
+  "short_name": "Edge",
   "description": "Offline AI tutor for ASEAN schools on Raspberry Pi",
   "start_url": "/",
   "display": "standalone",

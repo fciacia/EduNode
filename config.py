@@ -40,7 +40,7 @@ TIER_2_LANGS  = []
 SLM_MODEL     = "phi3:mini"
 EMBED_MODEL   = "paraphrase-multilingual-MiniLM-L12-v2"
 HUB_IP        = "192.168.1.1"
-WIFI_SSID     = "EduNode_Hub"
+WIFI_SSID     = "Edge_Hub"
 KOLIBRI_CHANNEL = "en"
 
 # ── 2. VIETNAM HUB ───────────────────────────────────────────────────────
@@ -51,7 +51,7 @@ KOLIBRI_CHANNEL = "en"
 # TIER_2_LANGS  = ["Hmong"]   # bridge mode — mountainous north VN minority
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
-# WIFI_SSID     = "EduNode_Vietnam"
+# WIFI_SSID     = "Edge_Vietnam"
 # KOLIBRI_CHANNEL = "vi"
 
 # ── 3. MALAYSIA / BRUNEI — SARAWAK HUB ───────────────────────────────────
@@ -62,7 +62,7 @@ KOLIBRI_CHANNEL = "en"
 # TIER_2_LANGS  = ["Iban", "Kedayan"]  # bridge mode — Borneo indigenous
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
-# WIFI_SSID     = "EduNode_Sarawak"
+# WIFI_SSID     = "Edge_Sarawak"
 # KOLIBRI_CHANNEL = "en"
 
 # ── 4. INDONESIA — WEST JAVA HUB ─────────────────────────────────────────
@@ -73,7 +73,7 @@ KOLIBRI_CHANNEL = "en"
 # TIER_2_LANGS  = ["Sundanese"]  # bridge mode — 40M speakers, underrepresented
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
-# WIFI_SSID     = "EduNode_WestJava"
+# WIFI_SSID     = "Edge_WestJava"
 # KOLIBRI_CHANNEL = "id"
 
 # ── 5. PHILIPPINES — VISAYAS HUB ─────────────────────────────────────────
@@ -84,7 +84,7 @@ KOLIBRI_CHANNEL = "en"
 # TIER_2_LANGS  = ["Cebuano"]  # bridge mode + cebuano-readability dataset boost
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
-# WIFI_SSID     = "EduNode_Visayas"
+# WIFI_SSID     = "Edge_Visayas"
 # KOLIBRI_CHANNEL = "en"
 
 # ── 6. THAILAND — ISAN HUB ───────────────────────────────────────────────
@@ -95,7 +95,7 @@ KOLIBRI_CHANNEL = "en"
 # TIER_2_LANGS  = ["Isan"]  # bridge mode — Thai dialect, rural northeast
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
-# WIFI_SSID     = "EduNode_Isan"
+# WIFI_SSID     = "Edge_Isan"
 # KOLIBRI_CHANNEL = "th"
 
 # ── 7. CAMBODIA HUB ──────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ KOLIBRI_CHANNEL = "en"
 # TIER_2_LANGS  = []
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
-# WIFI_SSID     = "EduNode_Cambodia"
+# WIFI_SSID     = "Edge_Cambodia"
 # KOLIBRI_CHANNEL = "km"
 
 # ── 8. LAO PDR HUB ───────────────────────────────────────────────────────
@@ -117,7 +117,7 @@ KOLIBRI_CHANNEL = "en"
 # TIER_2_LANGS  = []
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
-# WIFI_SSID     = "EduNode_Laos"
+# WIFI_SSID     = "Edge_Laos"
 # KOLIBRI_CHANNEL = "lo"
 
 # ── 9. MYANMAR — SHAN HUB ────────────────────────────────────────────────
@@ -128,7 +128,7 @@ KOLIBRI_CHANNEL = "en"
 # TIER_2_LANGS  = ["Shan"]  # bridge mode — border region, disrupted schooling
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
-# WIFI_SSID     = "EduNode_Shan"
+# WIFI_SSID     = "Edge_Shan"
 # KOLIBRI_CHANNEL = "en"
 
 # ── 10. TIMOR-LESTE HUB ──────────────────────────────────────────────────
@@ -139,7 +139,7 @@ KOLIBRI_CHANNEL = "en"
 # TIER_2_LANGS  = ["Tetum"]  # bridge mode — ASEAN newest member, ignored by big tech
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
-# WIFI_SSID     = "EduNode_TimorLeste"
+# WIFI_SSID     = "Edge_TimorLeste"
 # KOLIBRI_CHANNEL = "en"
 
 # ── 11. BRUNEI — KEDAYAN HUB ─────────────────────────────────────────────
@@ -150,7 +150,7 @@ KOLIBRI_CHANNEL = "en"
 # TIER_2_LANGS  = ["Kedayan"]  # bridge mode — Borneo indigenous, cross-border
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
-# WIFI_SSID     = "EduNode_Brunei"
+# WIFI_SSID     = "Edge_Brunei"
 # KOLIBRI_CHANNEL = "en"
 
 # ── 12. INDONESIA — KALIMANTAN HUB ───────────────────────────────────────
@@ -161,7 +161,7 @@ KOLIBRI_CHANNEL = "en"
 # TIER_2_LANGS  = ["Dayak"]  # bridge mode — Borneo indigenous
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
-# WIFI_SSID     = "EduNode_Kalimantan"
+# WIFI_SSID     = "Edge_Kalimantan"
 # KOLIBRI_CHANNEL = "id"
 
 # ── 13. MALAYSIA — PENINSULAR HUB ────────────────────────────────────────
@@ -172,7 +172,7 @@ KOLIBRI_CHANNEL = "en"
 # TIER_2_LANGS  = []
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
-# WIFI_SSID     = "EduNode_Malaysia"
+# WIFI_SSID     = "Edge_Malaysia"
 # KOLIBRI_CHANNEL = "ms"
 
 # =============================================================================
@@ -190,7 +190,7 @@ GLOSSARY_DATASETS = {
 # KOLIBRI_CHANNEL maps to the language code used in Kolibri content packs.
 # Set above per hub. "en" = English Khan Academy (default fallback).
 # =============================================================================
-KOLIBRI_PORT = 8080   # Kolibri runs alongside EduNode on a separate port
+KOLIBRI_PORT = 8080   # Kolibri runs alongside Edge on a separate port
 
 # =============================================================================
 # Subjects available on this Hub

@@ -1,5 +1,5 @@
 /**
- * chat.js — EduNode chat module
+ * chat.js — Edge chat module
  * Handles message send, voice record, TTS playback, language persistence.
  *
  * Expected DOM IDs (provided by chat.html):
@@ -129,7 +129,7 @@ async function sendMessage(text) {
     if (d.student_id) localStorage.setItem('edu_student_id', d.student_id);
   } catch (e) {
     removeTyping();
-    addBubble('Connection error — is EduNode running?', 'bot');
+    addBubble('Connection error — is Edge running?', 'bot');
   }
 }
 

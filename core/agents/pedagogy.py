@@ -36,7 +36,7 @@ def _build_prompt(query_en: str, chunks: list[Chunk], history: list[dict] | None
 def _build_system(context: StudentContext) -> str:
     guide = _DIFFICULTY_GUIDE.get(context.difficulty, _DIFFICULTY_GUIDE["standard"])
     return (
-        "You are EduNode, an offline AI tutor for rural ASEAN students. "
+        "You are Edge, an offline AI tutor for rural ASEAN students. "
         "Answer ONLY using the provided curriculum context. "
         "If the context does not contain the answer, say you don't have that "
         "information yet rather than guessing. "

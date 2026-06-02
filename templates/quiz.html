@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Quiz — EduNode{% endblock %}
+{% block title %}Quiz — Edge{% endblock %}
 
 {% block extra_style %}
 .page-hero {
@@ -153,6 +153,8 @@
   </button>
 </div>
 
+<div id="topicSuggest" class="topic-suggest" style="display:none"></div>
+
 <div id="genError" class="gen-error" style="display:none"></div>
 
 <div id="quizArea" style="display:none">
@@ -206,6 +208,21 @@ const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${
 function getLang()    { return document.getElementById('langSel').value; }
 function getSubject() { return document.getElementById('subjectSel').value; }
 function getName()    { return document.getElementById('studentName').value.trim() || 'Student'; }
+
+async function renderTopics() {
+  try {
+    const r = await fetch('/api/topics?subject=' + encodeURIComponent(getSubject()));
+    const d = await r.json();
+    const box = document.getElementById('topicSuggest');
+    if (!d.topics || !d.topics.length) { box.style.display = 'none'; return; }
+    box.innerHTML = '<span class="ts-label">Try</span>' +
+      d.topics.map(t => '<button class="topic-chip" type="button">' + escHtml(t) + '</button>').join('');
+    box.style.display = 'flex';
+    box.querySelectorAll('.topic-chip').forEach(btn => {
+      btn.onclick = () => { document.getElementById('topicInput').value = btn.textContent; generateQuiz(); };
+    });
+  } catch(e) {}
+}
 
 async function generateQuiz() {
   const topic = document.getElementById('topicInput').value.trim();
@@ -405,5 +422,8 @@ function showGrounding(d) {
   if (saved) [...document.getElementById('langSel').options].forEach(o => o.selected = (o.value === saved));
 })();
 document.getElementById('langSel').addEventListener('change', e => localStorage.setItem('edu_lang', e.target.value));
+
+document.getElementById('subjectSel').addEventListener('change', renderTopics);
+renderTopics();
 </script>
 {% endblock %}

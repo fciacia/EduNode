@@ -1,4 +1,4 @@
-/* i18n.js — EduNode UI translations for 11 ASEAN languages */
+/* i18n.js — Edge UI translations for 11 ASEAN languages */
 (function () {
   'use strict';
 

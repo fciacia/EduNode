@@ -1,4 +1,4 @@
-/* EduNode Service Worker — offline shell caching */
+/* Edge Service Worker — offline shell caching */
 const CACHE = 'edunode-v10';
 const SHELL = [
   '/static/icons/icon-192.png',

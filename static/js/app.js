@@ -67,7 +67,7 @@ function addBubble(role, text, ttsUrl) {
 function addTyping() {
   const wrap = document.createElement('div');
   wrap.className = 'bubble assistant typing';
-  wrap.setAttribute('aria-label', 'EduNode is thinking');
+  wrap.setAttribute('aria-label', 'Edge is thinking');
   wrap.innerHTML = '<div class="avatar" aria-hidden="true">🤖</div>'
     + '<div class="message">'
     + '<div class="dot"></div><div class="dot"></div><div class="dot"></div>'
@@ -110,7 +110,7 @@ chatForm.addEventListener('submit', async (e) => {
     }
   } catch {
     typing.remove();
-    addBubble('assistant', '⚠ Network error — check your connection to EduNode.');
+    addBubble('assistant', '⚠ Network error — check your connection to Edge.');
   } finally {
     inputEl.disabled = false;
     sendBtn.disabled = false;
@@ -221,7 +221,7 @@ statusBtn.addEventListener('click', async () => {
       <dt>Documents</dt>  <dd>${d.docs} chunks indexed</dd>
     `;
   } catch {
-    statusList.innerHTML = '<dt>⚠ Could not reach the EduNode server.</dt>';
+    statusList.innerHTML = '<dt>⚠ Could not reach the Edge server.</dt>';
   }
 });
 

@@ -1,8 +1,8 @@
-# EduNode — Offline AI Tutor for ASEAN Schools
+# Edge — Offline AI Tutor for ASEAN Schools
 
 > **Run a full AI-powered classroom on a $80 Raspberry Pi. No internet. No cloud. No fees.**
 
-EduNode is an off-grid, multilingual AI tutor that runs entirely on a Raspberry Pi 5
+Edge is an off-grid, multilingual AI tutor that runs entirely on a Raspberry Pi 5
 connected to a portable WiFi router. Students connect from any phone browser and get
 curriculum-grounded answers, quizzes, voice interaction, and microcredentials —
 even in areas with zero connectivity.
@@ -13,7 +13,7 @@ Built for the **AI for a Resilient ASEAN** track.
 
 ## Table of Contents
 
-1. [Why EduNode](#why-edunode)
+1. [Why Edge](#why-edunode)
 2. [Hardware Bill of Materials](#hardware-bill-of-materials)
 3. [System Architecture](#system-architecture)
 4. [Project Structure](#project-structure)
@@ -30,9 +30,9 @@ Built for the **AI for a Resilient ASEAN** track.
 
 ---
 
-## Why EduNode
+## Why Edge
 
-| Problem | EduNode Solution |
+| Problem | Edge Solution |
 |---|---|
 | 47 % of ASEAN rural schools have no internet | Runs 100 % offline on a $80 Pi |
 | AI tools require cloud subscriptions | Local SLM (Llama 3 / Gemma 2, quantized Q4) |
@@ -178,8 +178,8 @@ edunode/
 
 ```bash
 # 1. Clone
-git clone https://github.com/YOUR_USERNAME/EduNode.git
-cd EduNode
+git clone https://github.com/YOUR_USERNAME/Edge.git
+cd Edge
 
 # 2. Python environment
 python -m venv .venv && source .venv/bin/activate
@@ -206,8 +206,8 @@ terminal to test from your phone on the same WiFi.
 
 ```bash
 # On the Pi (Ubuntu 24.04 or Raspberry Pi OS Bookworm):
-git clone https://github.com/YOUR_USERNAME/EduNode.git
-cd EduNode
+git clone https://github.com/YOUR_USERNAME/Edge.git
+cd Edge
 bash setup.sh          # installs Ollama, Whisper.cpp, Piper, Python deps
 
 # Configure
@@ -233,12 +233,12 @@ gunicorn -w 2 -b 0.0.0.0:5000 'app:app'
 ```bash
 # /etc/systemd/system/edunode.service
 [Unit]
-Description=EduNode AI Tutor
+Description=Edge AI Tutor
 After=network.target
 
 [Service]
 User=pi
-WorkingDirectory=/home/pi/EduNode
+WorkingDirectory=/home/pi/Edge
 ExecStartPre=/usr/local/bin/ollama serve
 ExecStart=/home/pi/.venv/bin/gunicorn -w 2 -b 0.0.0.0:5000 app:app
 Restart=always
@@ -399,7 +399,7 @@ Certificates are aligned with the **UNESCO 2022 Microcredential Framework**.
 3. Either:
    - Drop it into `data/curriculum/` and restart the server, OR
    - Upload it via the Admin panel at `/admin`
-4. EduNode will automatically chunk and index it into ChromaDB
+4. Edge will automatically chunk and index it into ChromaDB
 
 ---
 
@@ -422,5 +422,5 @@ MIT — free for schools, NGOs, and education projects.
 
 ---
 
-*EduNode — Because every child deserves a tutor, even 80 km from the nearest city.*
+*Edge — Because every child deserves a tutor, even 80 km from the nearest city.*
 

@@ -1,4 +1,4 @@
-/* onboarding.js — EduNode first-time onboarding + Duolingo-style feature tour */
+/* onboarding.js — Edge first-time onboarding + Duolingo-style feature tour */
 (function () {
   'use strict';
 
@@ -51,16 +51,16 @@
 
   /* ── Regional flavor greetings ────────────────────────────────────────── */
   const COUNTRY_FLAVOR = {
-    'Philippines':  'Kumusta! Ako si EduNode, ang iyong AI tutor! 🌺',
-    'Indonesia':    'Halo! Aku EduNode, tutor AI kamu! 🌴 Ayo belajar!',
-    'Malaysia':     'Hai! Saya EduNode, tutor AI kamu! ✨ Jom belajar, lah!',
-    'Thailand':     'สวัสดี! ฉันคือ EduNode ครูสอนพิเศษ AI ของคุณ! 🐘',
-    'Vietnam':      'Xin chào! Mình là EduNode, gia sư AI của bạn! 🌸',
-    'Cambodia':     'សួស្តី! ខ្ញុំជា EduNode គ្រូបង្រៀន AI របស់អ្នក! 🌺',
-    'Myanmar':      'မင်္ဂလာပါ! ကျွန်တော် EduNode ပါ! 🌸 အတူတကွ သင်ကြရအောင်!',
-    'Laos':         'ສະບາຍດີ! ຂ້ອຍແມ່ນ EduNode ຄູສອນ AI ຂອງທ່ານ! 🐘',
-    'Singapore':    "Hey! I'm EduNode, your AI tutor! 🦁 Let's learn lah!",
-    'Timor-Leste':  'Olá! Eu sou EduNode, o seu tutor de IA! 🌟 Aprende comigo!',
+    'Philippines':  'Kumusta! Ako si Edge, ang iyong AI tutor! 🌺',
+    'Indonesia':    'Halo! Aku Edge, tutor AI kamu! 🌴 Ayo belajar!',
+    'Malaysia':     'Hai! Saya Edge, tutor AI kamu! ✨ Jom belajar, lah!',
+    'Thailand':     'สวัสดี! ฉันคือ Edge ครูสอนพิเศษ AI ของคุณ! 🐘',
+    'Vietnam':      'Xin chào! Mình là Edge, gia sư AI của bạn! 🌸',
+    'Cambodia':     'សួស្តី! ខ្ញុំជា Edge គ្រូបង្រៀន AI របស់អ្នក! 🌺',
+    'Myanmar':      'မင်္ဂလာပါ! ကျွန်တော် Edge ပါ! 🌸 အတူတကွ သင်ကြရအောင်!',
+    'Laos':         'ສະບາຍດີ! ຂ້ອຍແມ່ນ Edge ຄູສອນ AI ຂອງທ່ານ! 🐘',
+    'Singapore':    "Hey! I'm Edge, your AI tutor! 🦁 Let's learn lah!",
+    'Timor-Leste':  'Olá! Eu sou Edge, o seu tutor de IA! 🌟 Aprende comigo!',
   };
 
   /* ── Feature tour steps (home page only) ─────────────────────────────── */
@@ -151,7 +151,7 @@
       <div class="onb-card">
         <!-- Step 1: country -->
         <div class="onb-step active" data-step="country">
-          <h2 class="onb-heading">${ico('hand')} Welcome to EduNode!</h2>
+          <h2 class="onb-heading">${ico('hand')} Welcome to Edge!</h2>
           <p class="onb-sub">Where are you from? Pick your country to get started!</p>
           <div class="onb-country-grid">
             ${COUNTRIES.map(c => `
@@ -168,7 +168,7 @@
           <div class="onb-mascot-wrap">
             <span class="onb-mascot">${ico('bot','icon-3xl')}</span>
           </div>
-          <p class="onb-flavor" id="onb-flavor">Hello! I am EduNode, your AI tutor!</p>
+          <p class="onb-flavor" id="onb-flavor">Hello! I am Edge, your AI tutor!</p>
           <h2 class="onb-heading" style="font-size:1.3rem;margin-bottom:.35rem">What school level are you?</h2>
           <p class="onb-sub" style="margin-bottom:1rem">This helps me explain things just right for you!</p>
           <div class="onb-level-grid">
@@ -246,7 +246,7 @@
     // Fill flavor text
     const flavorEl = document.getElementById('onb-flavor');
     if (flavorEl && country) {
-      flavorEl.textContent = COUNTRY_FLAVOR[country] || "Hello! I am EduNode, your AI tutor!";
+      flavorEl.textContent = COUNTRY_FLAVOR[country] || "Hello! I am Edge, your AI tutor!";
     }
 
     // Translate the level-picker overlay to the selected language

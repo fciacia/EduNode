@@ -1,5 +1,5 @@
 /**
- * flashcard.js — EduNode flashcard module
+ * flashcard.js — Edge flashcard module
  * Generates and renders a flip-card deck with keyboard + swipe support.
  *
  * Expected DOM IDs (provided by flashcard.html):

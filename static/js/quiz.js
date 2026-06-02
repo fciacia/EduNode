@@ -1,5 +1,5 @@
 /**
- * quiz.js — EduNode quiz module
+ * quiz.js — Edge quiz module
  * Handles quiz generation, answer selection, submission, result display.
  *
  * Expected DOM IDs (provided by quiz.html):
