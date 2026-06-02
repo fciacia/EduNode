@@ -293,6 +293,7 @@ def api_chat():
     language = (data.get("language") or cfg.HUB_LANGUAGES[0]).strip()
     subject  = (data.get("subject")  or "General").strip()
     student_name = (data.get("student_name") or "Anonymous").strip()
+    conversation_id = (data.get("conversation_id") or "").strip() or None
 
     if not message:
         return jsonify({"error": "message required"}), 400
@@ -307,7 +308,8 @@ def api_chat():
     except Exception as exc:
         log.warning("Student resolution failed: %s", exc)
 
-    result = query_tutor(message, language, student_id=sid, subject=subject)
+    result = query_tutor(message, language, student_id=sid, subject=subject,
+                         conversation_id=conversation_id)
 
     try:
         if sid is not None:
@@ -543,6 +545,50 @@ def api_flashcard_generate():
     if not cards:
         payload["error"] = "generation"
     return jsonify(payload)
+
+
+# ---------------------------------------------------------------------------
+# API: spaced repetition (flashcard reviews)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/review/save")
+def api_review_save():
+    data    = request.get_json(silent=True) or {}
+    name    = (data.get("student_name") or "").strip()
+    front   = (data.get("front")   or "").strip()
+    back    = (data.get("back")    or "").strip()
+    topic   = (data.get("topic")   or "").strip()
+    verdict = (data.get("verdict") or "review").strip()
+    if not name or not front:
+        return jsonify({"error": "student_name and front required"}), 400
+
+    from core.progress_tracker import get_or_create_student
+    from core.review_engine     import save_review, count_due
+
+    try:
+        sid = get_or_create_student(name, "English")
+        save_review(sid, topic, front, back, verdict)
+        return jsonify({"ok": True, "due": count_due(sid)})
+    except Exception as exc:  # noqa: BLE001
+        log.warning("Review save failed: %s", exc)
+        return jsonify({"ok": False}), 500
+
+
+@app.get("/api/review/due")
+def api_review_due():
+    name = (request.args.get("student") or "").strip()
+    if not name:
+        return jsonify({"cards": [], "count": 0})
+
+    from core.progress_tracker import find_student_by_name
+    from core.review_engine     import get_due, count_due
+
+    sid = find_student_by_name(name)
+    if not sid:
+        return jsonify({"cards": [], "count": 0})
+
+    cards = [{"title": c["front"], "body": c["back"], "topic": c["topic"]} for c in get_due(sid)]
+    return jsonify({"cards": cards, "count": count_due(sid)})
 
 
 # ---------------------------------------------------------------------------

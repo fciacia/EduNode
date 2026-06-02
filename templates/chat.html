@@ -278,6 +278,13 @@ function getLang()    { return document.getElementById('langSel').value; }
 function getSubject() { return document.getElementById('subjectSel').value; }
 function getName()    { return document.getElementById('studentName').value.trim() || 'Student'; }
 
+function newId() { return (crypto.randomUUID ? crypto.randomUUID() : 'c' + Date.now() + Math.random().toString(36).slice(2)); }
+function getConversationId() {
+  let id = localStorage.getItem('edu_convo');
+  if (!id) { id = newId(); localStorage.setItem('edu_convo', id); }
+  return id;
+}
+
 function addBubble(text, who, skipSave) {
   const wrap = document.createElement('div');
   wrap.className = 'bubble ' + who;
@@ -315,7 +322,7 @@ function loadHistory() {
 
 function newChat() {
   if (!confirm('Start a new conversation? This will clear the current chat.')) return;
-  try { localStorage.removeItem(HISTORY_KEY()); } catch(e) {}
+  try { localStorage.removeItem(HISTORY_KEY()); localStorage.setItem('edu_convo', newId()); } catch(e) {}
   log.innerHTML = `<div class="bubble bot">
     <span class="bubble-avatar">${ico('bot','icon-lg')}</span>
     <div class="message">Hi there! I'm <strong>EduNode</strong>, your AI tutor!<br>Pick a subject up top and ask me anything — I'm here to help you learn!</div>
@@ -446,7 +453,7 @@ async function sendMsg(retryMsg) {
   try {
     const r = await fetch('/api/chat', {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({message: msg, language: getLang(), subject: getSubject(), student_name: getName()})
+      body: JSON.stringify({message: msg, language: getLang(), subject: getSubject(), student_name: getName(), conversation_id: getConversationId()})
     });
     const d = await r.json();
     removeTyping();

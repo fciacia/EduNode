@@ -186,6 +186,12 @@
 
 <div id="genError" class="gen-error" style="display:none"></div>
 
+<button class="btn-outline" id="reviewDueBtn" onclick="loadDue()"
+        style="display:none; margin-bottom:1.5rem; align-items:center; gap:.4rem">
+  <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-refresh"></use></svg>
+  Review due (<span id="dueCount">0</span>)
+</button>
+
 <div id="deckArea" style="display:none">
   <!-- Curriculum grounding (shown when cards come from the textbook) -->
   <div class="grounding-row" id="groundingRow" style="display:none">
@@ -255,7 +261,7 @@
 
 {% block extra_scripts %}
 <script>
-let cards = [], idx = 0;
+let cards = [], idx = 0, currentTopic = '';
 const knownSet = new Set(), reviewSet = new Set();
 const S = '/static/icons/sprite.svg';
 const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
@@ -269,6 +275,44 @@ function escHtml(s) {
 }
 function prettySrc(src) {
   return String(src).split(/[\\/]/).pop().replace(/\.(pdf|txt|md)$/i, '').replace(/_/g, ' ');
+}
+
+// ── Spaced repetition ──────────────────────────────────────────────────────
+function getStudentName() { return localStorage.getItem('edu_student_name') || 'Student'; }
+
+function saveReview(card, verdict) {
+  if (!card || !card.title) return;
+  fetch('/api/review/save', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({student_name: getStudentName(), topic: currentTopic,
+                          front: card.title, back: card.body, verdict})
+  }).then(() => refreshDueCount()).catch(() => {});
+}
+
+async function refreshDueCount() {
+  try {
+    const r = await fetch('/api/review/due?student=' + encodeURIComponent(getStudentName()));
+    const d = await r.json();
+    const btn = document.getElementById('reviewDueBtn');
+    document.getElementById('dueCount').textContent = d.count || 0;
+    btn.style.display = (d.count > 0) ? 'inline-flex' : 'none';
+  } catch(e) {}
+}
+
+async function loadDue() {
+  try {
+    const r = await fetch('/api/review/due?student=' + encodeURIComponent(getStudentName()));
+    const d = await r.json();
+    if (!d.cards || !d.cards.length) { refreshDueCount(); return; }
+    cards = d.cards.map(c => ({title: c.title, body: c.body, image: null}));
+    currentTopic = 'Review';
+    idx = 0; knownSet.clear(); reviewSet.clear();
+    buildDots(); showCard();
+    document.getElementById('deckArea').style.display = 'block';
+    document.getElementById('masterySummary').style.display = 'none';
+    document.getElementById('deckArea').scrollIntoView({behavior:'smooth'});
+    updateMasteryCounters();
+  } catch(e) {}
 }
 
 function hideGenError() { const b = document.getElementById('genError'); if (b) b.style.display = 'none'; }
@@ -301,6 +345,7 @@ function showGrounding(d) {
 async function generateDeck() {
   const topic = document.getElementById('topicInput').value.trim();
   if (!topic) { alert('Please enter a topic!'); return; }
+  currentTopic = topic;
   const btn = document.getElementById('generateBtn');
   btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' Generating…';
   hideGenError();
@@ -366,6 +411,7 @@ function shuffleDeck() {
 function markCard(verdict) {
   if (verdict === 'known') { knownSet.add(idx); reviewSet.delete(idx); }
   else                     { reviewSet.add(idx); knownSet.delete(idx); }
+  saveReview(cards[idx], verdict);
   updateMasteryCounters();
   if (knownSet.size + reviewSet.size === cards.length) {
     showMasterySummary();
@@ -446,5 +492,8 @@ document.addEventListener('keydown', e => {
   if (saved) [...document.getElementById('langSel').options].forEach(o => o.selected = (o.value === saved));
 })();
 document.getElementById('langSel').addEventListener('change', e => localStorage.setItem('edu_lang', e.target.value));
+
+// Show any cards due for spaced-repetition review on load.
+refreshDueCount();
 </script>
 {% endblock %}

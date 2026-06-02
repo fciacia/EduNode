@@ -4,13 +4,13 @@ import core.llm_engine as llm
 def test_query_tutor_delegates_to_pipeline(monkeypatch):
     captured = {}
 
-    def fake_pipeline(query, language, student_id, subject="General"):
-        captured["args"] = (query, language, student_id, subject)
+    def fake_pipeline(query, language, student_id, subject="General", conversation_id=None):
+        captured["args"] = (query, language, student_id, subject, conversation_id)
         return {"answer": "hi", "confidence": 0.9, "citations": [], "needs_review": False, "language": language}
 
     monkeypatch.setattr("core.agents.orchestrator.run_pipeline", fake_pipeline)
 
-    out = llm.query_tutor("Hello?", "English", student_id=5, subject="Science")
+    out = llm.query_tutor("Hello?", "English", student_id=5, subject="Science", conversation_id="c9")
     assert out["answer"] == "hi"
     assert out["confidence"] == 0.9
-    assert captured["args"] == ("Hello?", "English", 5, "Science")
+    assert captured["args"] == ("Hello?", "English", 5, "Science", "c9")

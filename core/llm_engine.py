@@ -193,7 +193,8 @@ def _bridge_translate(english_text: str, language: str) -> str:
 # Public: tutoring answer
 # ---------------------------------------------------------------------------
 
-def query_tutor(user_message: str, language: str, student_id=None, subject: str = "General") -> dict:
+def query_tutor(user_message: str, language: str, student_id=None, subject: str = "General",
+                conversation_id: str | None = None) -> dict:
     """
     Run the agentic pipeline and return a structured result:
         {answer, confidence, citations, needs_review, language}
@@ -202,7 +203,8 @@ def query_tutor(user_message: str, language: str, student_id=None, subject: str 
     (`from core.llm_engine import query_tutor`) continue to work.
     """
     from core.agents.orchestrator import run_pipeline
-    return run_pipeline(user_message, language, student_id=student_id, subject=subject)
+    return run_pipeline(user_message, language, student_id=student_id, subject=subject,
+                        conversation_id=conversation_id)
 
 
 # ---------------------------------------------------------------------------

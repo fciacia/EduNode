@@ -28,13 +28,18 @@ def _translate_out(answer: str, language: str) -> str:
     return to_native(answer, language)
 
 
-def run_pipeline(query: str, language: str, student_id, subject: str = "General") -> dict:
+def run_pipeline(query: str, language: str, student_id, subject: str = "General",
+                 conversation_id: str | None = None) -> dict:
     """
     Run the full agentic pipeline.
     Returns {answer, confidence, citations, needs_review, language}.
+
+    *conversation_id* enables conversational memory: recent English turns are
+    fed to the pedagogy agent so follow-up questions are answered in context.
     """
     from core.agents import context as context_agent
     from core.agents import pedagogy, verification
+    from core.conversation import append_turn, get_history
     from core.rag_engine import retrieve_with_citations
 
     # 1. Translate query into English
@@ -42,9 +47,14 @@ def run_pipeline(query: str, language: str, student_id, subject: str = "General"
 
     # 2. Build student context
     ctx = context_agent.build(student_id)
+    history = get_history(conversation_id)
 
     # 3. Retrieve + RETRIEVAL GATE
-    chunks = retrieve_with_citations(query_en, n_results=3, subject=subject)
+    #    Augment the retrieval query with the recent conversation so vague
+    #    follow-ups ("explain that more simply") still match the topic's chunks.
+    prior = " ".join(t["text"] for t in history if t.get("role") == "user")
+    retrieval_query = (prior + " " + query_en).strip() if prior else query_en
+    chunks = retrieve_with_citations(retrieval_query, n_results=3, subject=subject)
     best_distance = min((c.distance for c in chunks), default=1.0)
     if not chunks or best_distance > RETRIEVAL_DISTANCE_GATE:
         log.info("Retrieval gate triggered (best_distance=%.3f) — controlled non-response.", best_distance)
@@ -56,8 +66,8 @@ def run_pipeline(query: str, language: str, student_id, subject: str = "General"
             "language": language,
         }
 
-    # 4. Reason (Phi-3)
-    answer_en = pedagogy.reason(query_en, ctx, chunks)
+    # 4. Reason (Phi-3) — with conversational history for follow-ups
+    answer_en = pedagogy.reason(query_en, ctx, chunks, history)
     if not answer_en:
         return {
             "answer": _translate_out(_NON_RESPONSE_EN, language),
@@ -82,6 +92,10 @@ def run_pipeline(query: str, language: str, student_id, subject: str = "General"
 
     # 6. Translate answer back to the student's language
     answer_native = _translate_out(answer_en, language)
+
+    # 7. Remember this exchange (English) for follow-up questions
+    append_turn(conversation_id, "user", query_en)
+    append_turn(conversation_id, "assistant", answer_en)
 
     return {
         "answer": answer_native,

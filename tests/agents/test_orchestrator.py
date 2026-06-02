@@ -11,7 +11,7 @@ def _patch_all(monkeypatch, *, chunks, reason_called):
     )
     monkeypatch.setattr("core.rag_engine.retrieve_with_citations", lambda q, n_results, subject: chunks)
 
-    def fake_reason(q, ctx, ch):
+    def fake_reason(q, ctx, ch, history=None):
         reason_called.append(True)
         return "An answer grounded in curriculum."
     monkeypatch.setattr("core.agents.pedagogy.reason", fake_reason)
@@ -35,6 +35,29 @@ def test_happy_path_returns_full_payload(monkeypatch):
     assert result["needs_review"] is False
     assert result["citations"] == [{"source": "a.pdf", "page": 2}]
     assert result["language"] == "English"
+
+
+def test_conversation_memory_feeds_and_records_history(monkeypatch):
+    import core.conversation as conv
+    conv._store.clear()
+    reason_called = []
+    chunks = [Chunk(text="grounded text", source="a.pdf", page=2, distance=0.2)]
+    _patch_all(monkeypatch, chunks=chunks, reason_called=reason_called)
+
+    captured = {}
+    def fake_reason(q, ctx, ch, history=None):
+        captured["history"] = list(history or [])
+        return "Photosynthesis makes food."
+    monkeypatch.setattr("core.agents.pedagogy.reason", fake_reason)
+
+    # First turn: no prior history; the exchange is recorded afterwards.
+    orch.run_pipeline("What is photosynthesis?", "English", student_id=1, conversation_id="c1")
+    assert captured["history"] == []
+    assert [t["role"] for t in conv.get_history("c1")] == ["user", "assistant"]
+
+    # Second turn: the first exchange is now visible to the pedagogy agent.
+    orch.run_pipeline("Tell me more", "English", student_id=1, conversation_id="c1")
+    assert any("photosynthesis" in t["text"].lower() for t in captured["history"])
 
 
 def test_verification_gate_threads_needs_review(monkeypatch):

@@ -118,6 +118,18 @@ CREATE TABLE IF NOT EXISTS dialect_logs (
     detected_dialect_variant TEXT NOT NULL DEFAULT '',
     logged_at               TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS review_items (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL REFERENCES students(id),
+    topic      TEXT    NOT NULL DEFAULT '',
+    front      TEXT    NOT NULL,
+    back       TEXT    NOT NULL DEFAULT '',
+    box        INTEGER NOT NULL DEFAULT 1,
+    due_at     TEXT    NOT NULL,
+    last_seen  TEXT    NOT NULL,
+    UNIQUE(student_id, front)
+);
 """
 
 

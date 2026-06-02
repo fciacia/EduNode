@@ -15,10 +15,20 @@ _DIFFICULTY_GUIDE = {
 }
 
 
-def _build_prompt(query_en: str, chunks: list[Chunk]) -> str:
+def _build_prompt(query_en: str, chunks: list[Chunk], history: list[dict] | None = None) -> str:
     context_block = "\n---\n".join(c.text for c in chunks) if chunks else ""
+
+    history_block = ""
+    if history:
+        lines = [
+            f"{'Student' if t.get('role') == 'user' else 'Tutor'}: {t.get('text', '')}"
+            for t in history
+        ]
+        history_block = "Conversation so far:\n" + "\n".join(lines) + "\n\n"
+
     return (
         f"Curriculum context:\n{context_block}\n\n"
+        f"{history_block}"
         f"Student question: {query_en}"
     )
 
@@ -40,10 +50,15 @@ def _build_system(context: StudentContext) -> str:
     )
 
 
-def reason(query_en: str, context: StudentContext, chunks: list[Chunk]) -> str:
-    """Generate an English, curriculum-grounded answer. Returns '' on model failure."""
+def reason(query_en: str, context: StudentContext, chunks: list[Chunk],
+           history: list[dict] | None = None) -> str:
+    """Generate an English, curriculum-grounded answer. Returns '' on model failure.
+
+    *history* is the recent conversation (English turns) so the tutor can handle
+    follow-up questions in context.
+    """
     from core.llm_engine import _ollama_generate
 
-    prompt = _build_prompt(query_en, chunks)
+    prompt = _build_prompt(query_en, chunks, history)
     system = _build_system(context)
     return _ollama_generate(prompt, temperature=0.5, system=system)
