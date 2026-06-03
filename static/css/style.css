@@ -1405,6 +1405,7 @@ html.lite { --shadow: none; --shadow-sm: none; }
 html.lite *, html.lite *::before, html.lite *::after {
   animation-duration: .001s !important;
   animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;   /* stop infinite loops shaking */
   transition-duration: .001s !important;
 }
 
