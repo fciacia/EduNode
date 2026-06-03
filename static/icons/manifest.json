@@ -4,8 +4,8 @@
   "description": "Offline AI tutor for ASEAN schools on Raspberry Pi",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f1f3f4",
-  "theme_color": "#1a73e8",
+  "background_color": "#F3EEFF",
+  "theme_color": "#7C3AED",
   "orientation": "any",
   "icons": [
     {
