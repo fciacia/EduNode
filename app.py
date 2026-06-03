@@ -76,11 +76,33 @@ def require_admin(f):
 # Startup: DB + RAG ingest
 # ---------------------------------------------------------------------------
 
+def _prewarm():
+    """Load heavy models in the background so the first request isn't a ~16s stall.
+
+    Always warms the embedder (needed for retrieval + verification). Warms NLLB
+    only if the hub serves a non-English language. Disable with EDGE_PREWARM=0.
+    """
+    try:
+        from core.rag_engine import get_embedder
+        get_embedder().encode(["warm up"])
+        non_english = [l for l in getattr(cfg, "HUB_LANGUAGES", []) if l != "English"]
+        if non_english:
+            from core.agents.translation import _load
+            _load()
+        log.info("Prewarm complete (embedder%s).", " + NLLB" if non_english else "")
+    except Exception as exc:  # noqa: BLE001
+        log.warning("Prewarm failed (models will load on first use): %s", exc)
+
+
 def _startup():
     from core.progress_tracker import init_db
     from core.rag_engine import ingest_pdfs
     init_db()
     ingest_pdfs("data/curriculum")
+
+    if os.getenv("EDGE_PREWARM", "1") != "0":
+        import threading
+        threading.Thread(target=_prewarm, daemon=True).start()
 
 
 with app.app_context():

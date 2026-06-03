@@ -28,6 +28,7 @@ import subprocess
 import sys
 import tempfile
 import uuid
+from collections import OrderedDict
 from pathlib import Path
 
 log = logging.getLogger(__name__)
@@ -59,7 +60,9 @@ _MMS_LANG: dict[str, str] = {
     "Filipino": "tgl", "Tagalog": "tgl",
     "Khmer": "khm", "Lao": "lao", "Burmese": "mya",
 }
-_mms_cache: dict[str, tuple] = {}
+# Cap how many MMS voice models stay resident (~150 MB each) to bound RAM on the Pi.
+_MMS_CACHE_MAX = 2
+_mms_cache: "OrderedDict[str, tuple]" = OrderedDict()
 
 # ---------------------------------------------------------------------------
 # Binary / model paths (can be overridden via env)
@@ -237,6 +240,9 @@ def _mms_tts(text: str, code: str) -> bytes:
         if code not in _mms_cache:
             name = f"facebook/mms-tts-{code}"
             _mms_cache[code] = (VitsModel.from_pretrained(name), AutoTokenizer.from_pretrained(name))
+            while len(_mms_cache) > _MMS_CACHE_MAX:
+                _mms_cache.popitem(last=False)   # evict least-recently-loaded
+        _mms_cache.move_to_end(code)
         model, tokenizer = _mms_cache[code]
 
         inputs = tokenizer(text, return_tensors="pt")
