@@ -86,6 +86,15 @@
 /* Responsive card height */
 .card-scene { height: min(260px, 44vw); min-height: 180px; }
 
+/* Flashcard diagram (shown on the back when curriculum media exists) */
+.card-image {
+  max-width: 60%;
+  max-height: 42%;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  margin: .25rem auto .5rem;
+}
+
 /* Deck toolbar */
 .deck-toolbar {
   display: flex;
@@ -221,6 +230,7 @@
       </div>
       <div class="card-face back">
         <div class="card-label"><svg class="icon icon-xs" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book-open"></use></svg> Definition</div>
+        <img id="cardImage" class="card-image" alt="" style="display:none">
         <div class="card-body" id="cardBack">—</div>
       </div>
     </div>
@@ -401,6 +411,17 @@ function showCard() {
   card3d.classList.remove('flipped');
   document.getElementById('cardFront').textContent = cards[idx].title || '—';
   document.getElementById('cardBack').textContent  = cards[idx].body  || '—';
+
+  // Diagram on the back, if the curriculum has matching media (hide if missing).
+  const img = document.getElementById('cardImage');
+  if (cards[idx].image) {
+    img.onerror = () => { img.style.display = 'none'; };
+    img.onload  = () => { img.style.display = 'block'; };
+    img.src = '/api/media/' + encodeURIComponent(cards[idx].image);
+  } else {
+    img.style.display = 'none';
+    img.removeAttribute('src');
+  }
   document.getElementById('deckCounter').textContent = `${idx + 1} / ${cards.length}`;
   document.querySelectorAll('.deck-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
   document.getElementById('masteryBtns').style.display = 'none';

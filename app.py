@@ -561,6 +561,36 @@ def api_audio(filename: str):
 
 
 # ---------------------------------------------------------------------------
+# API: curriculum diagrams / media (for flashcards)
+# ---------------------------------------------------------------------------
+
+MEDIA_DIR = Path(os.getenv("MEDIA_DIR", "data/media"))
+
+
+@app.get("/api/media/<filename>")
+def api_media(filename: str):
+    """
+    Serve a curriculum diagram for a flashcard. Teachers drop images into
+    data/media/. The AI suggests a filename; we match tolerantly by stem so a
+    suggested "photosynthesis.png" can resolve to a "photosynthesis.svg" on disk.
+    """
+    if not re.fullmatch(r"[\w\-]+\.(png|jpg|jpeg|gif|webp|svg)", filename or ""):
+        abort(400)
+    if not MEDIA_DIR.exists():
+        abort(404)
+
+    target = MEDIA_DIR / filename
+    if not target.exists():
+        stem = Path(filename).stem.lower()
+        match = next((p for p in MEDIA_DIR.iterdir()
+                      if p.is_file() and p.stem.lower() == stem), None)
+        if not match:
+            abort(404)
+        target = match
+    return send_from_directory(str(MEDIA_DIR), target.name)
+
+
+# ---------------------------------------------------------------------------
 # API: P2P share
 # ---------------------------------------------------------------------------
 
