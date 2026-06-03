@@ -423,6 +423,7 @@ function decorateAnswer(msgEl, d) {
 }
 
 async function playTTS(text, btn) {
+  const msgEl = btn ? btn.closest('.message') : null;
   try {
     btn.innerHTML = ico('loader','icon-spin') + ' Loading…';
     const r = await fetch('/api/voice/tts', {
@@ -433,11 +434,31 @@ async function playTTS(text, btn) {
     const blob = await r.blob();
     const audio = new Audio(URL.createObjectURL(blob));
     btn.innerHTML = ico('pause') + ' Playing';
-    audio.onended = () => { btn.innerHTML = ico('volume') + ' Listen'; };
+    msgEl && msgEl.classList.add('speaking');
+    const done = () => { btn.innerHTML = ico('volume') + ' Listen'; msgEl && msgEl.classList.remove('speaking'); };
+    audio.onended = done; audio.onerror = done;
     audio.play();
   } catch(e) {
     btn.innerHTML = ico('volume') + ' Listen';
+    msgEl && msgEl.classList.remove('speaking');
   }
+}
+
+// Voice-first: read an answer aloud automatically when the pref is on.
+function maybeReadAloud(msgEl, text) {
+  if (window.EdgePrefs && window.EdgePrefs.isReadAloud()) {
+    const pb = msgEl.querySelector('.play-btn');
+    if (pb) playTTS(text, pb);
+  }
+}
+
+// Tap any answer to hear it (skips taps on buttons/badges).
+function enableTapToHear(msgEl, text) {
+  msgEl.addEventListener('click', e => {
+    if (e.target.closest('button, a, .conf-badge, .cite-chip')) return;
+    const pb = msgEl.querySelector('.play-btn');
+    if (pb) playTTS(text, pb);
+  });
 }
 
 async function sendMsg(retryMsg) {
@@ -461,6 +482,8 @@ async function sendMsg(retryMsg) {
     if (d.response) {
       decorateAnswer(msgEl, d);
       addPlayBtn(msgEl, d.response);
+      enableTapToHear(msgEl, d.response);
+      maybeReadAloud(msgEl, d.response);
     }
     if (d.student_id) localStorage.setItem('edu_student_id', d.student_id);
     localStorage.setItem('edu_student_name', getName());

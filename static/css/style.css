@@ -1380,3 +1380,137 @@ dl dd { color: var(--text-muted); margin-left: 1rem; font-size: .88rem; font-wei
   color: var(--primary);
   transform: translateY(-1px);
 }
+
+/* ══ Rural-learner accessibility modes ════════════════════════════════════ */
+
+/* Big text: scale every rem-based size up for cheap small screens / low vision */
+html.a11y-large { font-size: 119%; }
+
+/* High contrast: darker borders + full-strength muted text for sunlight/old screens */
+html.a11y-contrast {
+  --border: #6D28D9;
+  --text-muted: var(--text);
+}
+html.a11y-contrast .message,
+html.a11y-contrast .nav,
+html.a11y-contrast .topic-chip,
+html.a11y-contrast .cite-chip,
+html.a11y-contrast .conf-badge { border-width: 2.5px; }
+html.a11y-contrast a:focus-visible,
+html.a11y-contrast button:focus-visible,
+html.a11y-contrast input:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+/* Lite / low-power: kill motion + heavy shadows to save battery on weak phones */
+html.lite { --shadow: none; --shadow-sm: none; }
+html.lite *, html.lite *::before, html.lite *::after {
+  animation-duration: .001s !important;
+  animation-delay: 0s !important;
+  transition-duration: .001s !important;
+}
+
+/* ══ Preferences sheet + Settings FAB ═════════════════════════════════════ */
+.prefs-fab {
+  position: fixed;
+  right: 1.1rem;
+  bottom: 4.6rem;            /* sits above the theme FAB */
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .55rem .9rem;
+  border-radius: 99px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: .85rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+.prefs-fab:hover { border-color: var(--primary); color: var(--primary); }
+.prefs-fab .icon { width: 18px; height: 18px; }
+
+.prefs-overlay {
+  position: fixed; inset: 0; z-index: 80;
+  background: rgba(31,18,53,.45);
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.prefs-overlay.open { display: flex; animation: fade-in .2s ease; }
+
+.prefs-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border-radius: var(--radius) var(--radius) 0 0;
+  border: 2.5px solid var(--border);
+  border-bottom: none;
+  padding: 1.1rem 1.25rem 1.6rem;
+  box-shadow: 0 -8px 30px rgba(0,0,0,.18);
+  animation: sheet-up .28s cubic-bezier(.34,1.4,.64,1);
+}
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.prefs-sheet h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem; color: var(--primary);
+  margin: 0 0 .9rem; display: flex; align-items: center; gap: .45rem;
+}
+.prefs-section-label {
+  font-size: .7rem; font-weight: 800; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--text-muted);
+  margin: .9rem 0 .4rem;
+}
+
+.pref-row {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .7rem .2rem;
+  border-bottom: 1.5px solid var(--border);
+}
+.pref-row:last-child { border-bottom: none; }
+.pref-row .icon { width: 22px; height: 22px; color: var(--primary); flex-shrink: 0; }
+.pref-row .pref-text { flex: 1; }
+.pref-row .pref-text b { font-weight: 800; display: block; font-size: .95rem; }
+.pref-row .pref-text small { color: var(--text-muted); font-weight: 700; font-size: .78rem; }
+
+/* iOS-style switch */
+.pref-switch {
+  width: 50px; height: 30px; border-radius: 99px;
+  border: none; background: var(--border); position: relative;
+  cursor: pointer; flex-shrink: 0; transition: background .15s;
+}
+.pref-switch::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 24px; height: 24px; border-radius: 50%; background: #fff;
+  transition: transform .18s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+.pref-switch[aria-checked="true"] { background: var(--primary); }
+.pref-switch[aria-checked="true"]::after { transform: translateX(20px); }
+
+/* Student switcher */
+.student-list { display: flex; flex-wrap: wrap; gap: .45rem; margin-bottom: .6rem; }
+.student-pill {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .4rem .8rem; border-radius: 99px;
+  border: 2px solid var(--border); background: var(--surface2);
+  font-family: var(--font); font-weight: 800; font-size: .85rem;
+  color: var(--text); cursor: pointer;
+}
+.student-pill.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+.student-pill .icon { width: 15px; height: 15px; }
+.student-add {
+  display: flex; gap: .5rem;
+}
+.student-add input {
+  flex: 1; border: 2px solid var(--border); border-radius: 99px;
+  padding: .45rem .9rem; font-family: var(--font); font-weight: 700;
+  background: var(--surface); color: var(--text); outline: none;
+}
+.student-add input:focus { border-color: var(--primary); }
+
+/* Tap-to-hear affordance on bot messages */
+.bubble.bot .message { cursor: pointer; }
+.bubble.bot .message.speaking { box-shadow: 0 0 0 3px var(--primary-light); }

@@ -11,6 +11,15 @@
   <link rel="stylesheet" href="/static/css/style.css">
   <title>{% block title %}Edge{% endblock %}</title>
   <style>{% block extra_style %}{% endblock %}</style>
+  <script>
+    /* Apply accessibility prefs before paint (no flash of unstyled mode) */
+    (function () {
+      var d = document.documentElement;
+      if (localStorage.getItem('edge_bigtext')  === '1') d.classList.add('a11y-large');
+      if (localStorage.getItem('edge_contrast') === '1') d.classList.add('a11y-contrast');
+      if (localStorage.getItem('edge_lite')     === '1') d.classList.add('lite');
+    })();
+  </script>
 </head>
 <body>
 
@@ -42,6 +51,11 @@
 <div class="page-wrap">
   {% block content %}{% endblock %}
 </div>
+
+<!-- Settings (accessibility + student switcher) -->
+<button class="prefs-fab" id="prefsFab" aria-label="Settings">
+  <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-settings"></use></svg><span class="toggle-label">Settings</span>
+</button>
 
 <!-- Floating theme toggle — must be in DOM before the script below -->
 <button class="theme-fab" id="themeToggle" aria-label="Toggle theme">
@@ -84,6 +98,7 @@
 
 <script src="/static/js/i18n.js" defer></script>
 <script src="/static/js/onboarding.js" defer></script>
+<script src="/static/js/prefs.js" defer></script>
 {% block extra_scripts %}{% endblock %}
 </body>
 </html>
