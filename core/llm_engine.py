@@ -147,15 +147,24 @@ def _load_glossary(language: str) -> dict[str, str]:
         log.debug("No glossary found for '%s' at %s.", language, path)
         return {}
     try:
-        entries = json.loads(path.read_text(encoding="utf-8"))
-        return {
-            e["english"].lower(): e["native"]
-            for e in entries
-            if "english" in e and "native" in e and e["english"] and e["native"]
-        }
+        data = json.loads(path.read_text(encoding="utf-8"))
     except Exception as exc:  # noqa: BLE001
         log.warning("Could not load glossary for '%s': %s", language, exc)
         return {}
+
+    # Accept either a flat {english: native} map (keys starting with "_" are
+    # metadata, e.g. attribution) or a list of {"english","native"} entries.
+    if isinstance(data, dict):
+        return {
+            str(k).lower(): str(v)
+            for k, v in data.items()
+            if k and v and not str(k).startswith("_")
+        }
+    return {
+        e["english"].lower(): e["native"]
+        for e in data
+        if isinstance(e, dict) and e.get("english") and e.get("native")
+    }
 
 
 def _bridge_translate(english_text: str, language: str) -> str:
@@ -169,9 +178,10 @@ def _bridge_translate(english_text: str, language: str) -> str:
 
     glossary_hint = ""
     if glossary:
-        sample = list(glossary.items())[:30]
+        sample = list(glossary.items())[:80]
         glossary_hint = (
-            f"Key terms to use: {', '.join(f'{k}={v}' for k, v in sample)}. "
+            f"Use these exact {language} words where they apply: "
+            f"{', '.join(f'{k}={v}' for k, v in sample)}. "
         )
 
     prompt = (

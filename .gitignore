@@ -21,6 +21,8 @@ static/shared/*.png
 data/chroma/
 data/curriculum/
 data/glossaries/*.json
+# …but ship curated reference glossaries (e.g. the Iban word list)
+!data/glossaries/iban.json
 
 # Model binaries (downloaded by setup.sh)
 models/
