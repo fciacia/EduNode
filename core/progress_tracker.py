@@ -130,6 +130,15 @@ CREATE TABLE IF NOT EXISTS review_items (
     last_seen  TEXT    NOT NULL,
     UNIQUE(student_id, front)
 );
+
+CREATE TABLE IF NOT EXISTS conversation_turns (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id TEXT    NOT NULL,
+    role            TEXT    NOT NULL,
+    text            TEXT    NOT NULL,
+    created_at      TEXT    NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_conversation ON conversation_turns(conversation_id, id);
 """
 
 

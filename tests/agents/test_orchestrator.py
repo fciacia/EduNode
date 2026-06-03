@@ -37,9 +37,8 @@ def test_happy_path_returns_full_payload(monkeypatch):
     assert result["language"] == "English"
 
 
-def test_conversation_memory_feeds_and_records_history(monkeypatch):
+def test_conversation_memory_feeds_and_records_history(monkeypatch, temp_db):
     import core.conversation as conv
-    conv._store.clear()
     reason_called = []
     chunks = [Chunk(text="grounded text", source="a.pdf", page=2, distance=0.2)]
     _patch_all(monkeypatch, chunks=chunks, reason_called=reason_called)
