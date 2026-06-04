@@ -41,7 +41,6 @@ SLM_MODEL     = "phi3:mini"
 EMBED_MODEL   = "paraphrase-multilingual-MiniLM-L12-v2"
 HUB_IP        = "192.168.1.1"
 WIFI_SSID     = "Edge_Hub"
-KOLIBRI_CHANNEL = "en"
 
 # ── 2. VIETNAM HUB ───────────────────────────────────────────────────────
 # HUB_ID        = "vietnam"
@@ -52,7 +51,6 @@ KOLIBRI_CHANNEL = "en"
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
 # WIFI_SSID     = "Edge_Vietnam"
-# KOLIBRI_CHANNEL = "vi"
 
 # ── 3. MALAYSIA / BRUNEI — SARAWAK HUB ───────────────────────────────────
 # HUB_ID        = "sarawak"
@@ -63,7 +61,6 @@ KOLIBRI_CHANNEL = "en"
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
 # WIFI_SSID     = "Edge_Sarawak"
-# KOLIBRI_CHANNEL = "en"
 
 # ── 4. INDONESIA — WEST JAVA HUB ─────────────────────────────────────────
 # HUB_ID        = "west_java"
@@ -74,7 +71,6 @@ KOLIBRI_CHANNEL = "en"
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
 # WIFI_SSID     = "Edge_WestJava"
-# KOLIBRI_CHANNEL = "id"
 
 # ── 5. PHILIPPINES — VISAYAS HUB ─────────────────────────────────────────
 # HUB_ID        = "visayas"
@@ -85,7 +81,6 @@ KOLIBRI_CHANNEL = "en"
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
 # WIFI_SSID     = "Edge_Visayas"
-# KOLIBRI_CHANNEL = "en"
 
 # ── 6. THAILAND — ISAN HUB ───────────────────────────────────────────────
 # HUB_ID        = "isan"
@@ -96,7 +91,6 @@ KOLIBRI_CHANNEL = "en"
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
 # WIFI_SSID     = "Edge_Isan"
-# KOLIBRI_CHANNEL = "th"
 
 # ── 7. CAMBODIA HUB ──────────────────────────────────────────────────────
 # HUB_ID        = "cambodia"
@@ -107,7 +101,6 @@ KOLIBRI_CHANNEL = "en"
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
 # WIFI_SSID     = "Edge_Cambodia"
-# KOLIBRI_CHANNEL = "km"
 
 # ── 8. LAO PDR HUB ───────────────────────────────────────────────────────
 # HUB_ID        = "laos"
@@ -118,7 +111,6 @@ KOLIBRI_CHANNEL = "en"
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
 # WIFI_SSID     = "Edge_Laos"
-# KOLIBRI_CHANNEL = "lo"
 
 # ── 9. MYANMAR — SHAN HUB ────────────────────────────────────────────────
 # HUB_ID        = "shan"
@@ -129,7 +121,6 @@ KOLIBRI_CHANNEL = "en"
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
 # WIFI_SSID     = "Edge_Shan"
-# KOLIBRI_CHANNEL = "en"
 
 # ── 10. TIMOR-LESTE HUB ──────────────────────────────────────────────────
 # HUB_ID        = "timor_leste"
@@ -140,7 +131,6 @@ KOLIBRI_CHANNEL = "en"
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
 # WIFI_SSID     = "Edge_TimorLeste"
-# KOLIBRI_CHANNEL = "en"
 
 # ── 11. BRUNEI — KEDAYAN HUB ─────────────────────────────────────────────
 # HUB_ID        = "brunei"
@@ -151,7 +141,6 @@ KOLIBRI_CHANNEL = "en"
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
 # WIFI_SSID     = "Edge_Brunei"
-# KOLIBRI_CHANNEL = "en"
 
 # ── 12. INDONESIA — KALIMANTAN HUB ───────────────────────────────────────
 # HUB_ID        = "kalimantan"
@@ -162,7 +151,6 @@ KOLIBRI_CHANNEL = "en"
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
 # WIFI_SSID     = "Edge_Kalimantan"
-# KOLIBRI_CHANNEL = "id"
 
 # ── 13. MALAYSIA — PENINSULAR HUB ────────────────────────────────────────
 # HUB_ID        = "peninsular_malaysia"
@@ -173,7 +161,6 @@ KOLIBRI_CHANNEL = "en"
 # SLM_MODEL     = "llama3.2:3b-instruct-q4_K_M"
 # HUB_IP        = "192.168.1.1"
 # WIFI_SSID     = "Edge_Malaysia"
-# KOLIBRI_CHANNEL = "ms"
 
 # =============================================================================
 # GLOSSARY DATASETS (HuggingFace) — used by Tier-2 bridge mode
@@ -184,13 +171,6 @@ GLOSSARY_DATASETS = {
     "Iban":    "VynerCK/Iban-language-data",
     # Add more as community datasets become available
 }
-
-# =============================================================================
-# Kolibri + Khan Academy content channel
-# KOLIBRI_CHANNEL maps to the language code used in Kolibri content packs.
-# Set above per hub. "en" = English Khan Academy (default fallback).
-# =============================================================================
-KOLIBRI_PORT = 8080   # Kolibri runs alongside Edge on a separate port
 
 # =============================================================================
 # Subjects available on this Hub

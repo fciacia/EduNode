@@ -5,7 +5,6 @@ Replaces asean_ai_tutor_project.py for the modular architecture.
 
 Start:
     ollama serve &
-    python -m kolibri start &   # optional
     python app.py
 
 Or with gunicorn:
@@ -211,7 +210,6 @@ def home():
         region=cfg.HUB_REGION,
         languages=cfg.HUB_LANGUAGES,
         subjects=cfg.AVAILABLE_SUBJECTS,
-        kolibri_port=cfg.KOLIBRI_PORT,
     )
 
 
@@ -333,18 +331,6 @@ def api_status():
     except Exception:
         pass
 
-    # Check Kolibri
-    kolibri_ok = False
-    try:
-        import requests as req
-        r = req.get(
-            f"http://localhost:{cfg.KOLIBRI_PORT}/api/public/v1/info/",
-            timeout=2,
-        )
-        kolibri_ok = r.status_code == 200
-    except Exception:
-        pass
-
     try:
         doc_count = get_collection().count()
     except Exception:
@@ -358,7 +344,6 @@ def api_status():
         "model":   os.getenv("OLLAMA_MODEL", cfg.SLM_MODEL),
         "hub":     cfg.HUB_ID,
         "region":  cfg.HUB_REGION,
-        "kolibri": kolibri_ok,
     })
 
 

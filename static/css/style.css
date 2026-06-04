@@ -158,21 +158,6 @@ body { display: flex; flex-direction: column; }
   border-color: var(--primary);
 }
 
-.nav-kolibri {
-  padding: .38rem .8rem;
-  border-radius: 99px;
-  text-decoration: none;
-  font-size: .82rem;
-  font-weight: 800;
-  color: #fff;
-  background: var(--accent);
-  border: 2px solid transparent;
-  transition: opacity .15s, transform .1s;
-  margin-left: .25rem;
-}
-
-.nav-kolibri:hover { opacity: .88; transform: scale(1.04); }
-
 /* ── Floating theme toggle (bottom-right FAB) ────────────────────────────── */
 .theme-fab {
   position: fixed;
