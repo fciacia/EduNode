@@ -32,7 +32,9 @@ def main(argv: list[str]) -> int:
 
     # If given a different folder, copy its curriculum files in first.
     if src.is_dir() and src.resolve() != CURRICULUM_DIR.resolve():
-        files = [p for p in sorted(src.iterdir()) if p.suffix.lower() in _SUFFIXES]
+        files = [p for p in sorted(src.iterdir())
+                 if p.suffix.lower() in _SUFFIXES
+                 and p.name.upper() not in {"ATTRIBUTIONS.MD", "README.MD", "LICENSE.MD"}]
         if not files:
             print(f"No .pdf/.txt/.md files found in {src}")
             return 1

@@ -1,0 +1,24 @@
+MATHEMATICS — FRACTIONS
+
+What a Fraction Is
+A fraction represents parts of a whole. We write a fraction as a over b. The
+bottom number, the denominator, tells how many equal parts the whole has been
+divided into. The top number, the numerator, tells how many of those parts are
+included. If a pizza is cut into four equal slices and you eat one slice, you have
+eaten one quarter of the pizza, written 1/4.
+
+Proper and Improper Fractions
+When the numerator is smaller than the denominator, the fraction is a proper
+fraction and its value is less than one, such as 1/2, 3/7, or 11/18. When the
+numerator is greater than or equal to the denominator, the fraction is an improper
+fraction and its value is one or more, such as 5/4, 3/2, or 7/3.
+
+Mixed Numbers
+An improper fraction can be written as a mixed number, which is a whole number
+together with a proper fraction. For example, 8/5 is the same as 1 and 3/5. Mixed
+numbers make a quantity easier to picture.
+
+Equivalent Fractions
+Different fractions can stand for the same amount. If you multiply the numerator
+and the denominator by the same number, you get an equivalent fraction. So 1/2
+equals 2/4, which also equals 4/8 — they all show the same part of a whole.

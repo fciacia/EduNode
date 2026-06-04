@@ -1,0 +1,22 @@
+SCIENCE — PHOTOSYNTHESIS (LIGHT REACTIONS)
+
+How Light Starts Photosynthesis
+Photosynthesis begins when pigments in a plant absorb light. The sun gives off
+many kinds of light, but plants can only use a narrow range of it. Plants absorb
+light with wavelengths between about 400 and 700 nanometres, which scientists
+call photosynthetically active radiation. The green pigment chlorophyll absorbs
+blue and red light but reflects green light, which is why leaves look green.
+
+The Photosystems
+The change from light energy into chemical energy happens in protein groups
+called photosystems, found in the thylakoid membrane inside the leaf cells. There
+are two photosystems, called Photosystem II and Photosystem I. Light-harvesting
+groups with hundreds of chlorophyll molecules pass the captured energy along until
+it reaches a special pair of chlorophyll molecules at the reaction centre.
+
+Making Energy for the Plant
+Photosystem II takes electrons from water molecules, while Photosystem I helps
+make a carrier molecule called NADPH. As the electrons move along a chain, they
+push hydrogen ions to one side of the membrane. The ions then flow back through a
+protein called ATP synthase, and this flow makes ATP. ATP and NADPH are the
+energy-rich products the plant uses to build sugar.
