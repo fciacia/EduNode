@@ -19,9 +19,16 @@ or a list of `{"english": "...", "native": "..."}` entries. Keys beginning with
 
 ## Bundled
 
-- **`iban.json`** — English→Iban word lists (animals, objects) from the
-  [VynerCK/Iban-language-data](https://huggingface.co/datasets/VynerCK/Iban-language-data)
-  dataset (MIT licence, © Vyner[CK] Jalla).
+- **`iban.json`** — ~790 English→Iban terms compiled from two open sources:
+  - [VynerCK/Iban-language-data](https://huggingface.co/datasets/VynerCK/Iban-language-data)
+    (HuggingFace, MIT licence, © Vyner[CK] Jalla) — animals & objects.
+  - Iban entries from English Wiktionary via
+    [kaikki.org](https://kaikki.org/dictionary/Iban/) (**CC BY-SA / GFDL** — keep
+    attribution and the share-alike licence on any redistribution).
+
+  We deliberately do **not** use sources without a clear open licence (e.g.
+  borneodictionary.com, or copyrighted print dictionaries) per the project's
+  open-data policy.
 
 ## The dialect flywheel
 

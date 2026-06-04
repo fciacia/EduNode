@@ -178,7 +178,11 @@ def _bridge_translate(english_text: str, language: str) -> str:
 
     glossary_hint = ""
     if glossary:
-        sample = list(glossary.items())[:80]
+        # Inject only the glossary terms that actually appear in this text, so the
+        # hints stay relevant even for a large glossary.
+        words = set(re.findall(r"[a-z]+", english_text.lower()))
+        relevant = [(k, v) for k, v in glossary.items() if k in words]
+        sample = relevant[:60] if relevant else list(glossary.items())[:30]
         glossary_hint = (
             f"Use these exact {language} words where they apply: "
             f"{', '.join(f'{k}={v}' for k, v in sample)}. "
