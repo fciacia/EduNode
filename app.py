@@ -15,6 +15,7 @@ Or with gunicorn:
 from __future__ import annotations
 
 import io
+import json
 import logging
 import os
 import re
@@ -588,6 +589,49 @@ def api_media(filename: str):
             abort(404)
         target = match
     return send_from_directory(str(MEDIA_DIR), target.name)
+
+
+# ---------------------------------------------------------------------------
+# Admin API: glossary editor (dialect flywheel)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/glossary/add")
+@require_admin
+def api_glossary_add():
+    """Teachers add a word to a low-resource-language glossary (e.g. Iban)."""
+    data     = request.get_json(silent=True) or request.form
+    language = (data.get("language") or "").strip()
+    english  = (data.get("english")  or "").strip().lower()
+    native   = (data.get("native")   or "").strip()
+    if not language or not english or not native:
+        return jsonify({"error": "language, english and native are required"}), 400
+
+    from core.llm_engine import GLOSSARY_DIR
+    GLOSSARY_DIR.mkdir(parents=True, exist_ok=True)
+    path = GLOSSARY_DIR / f"{language.lower()}.json"
+
+    terms: dict = {}
+    attribution = "Includes teacher-contributed terms (Edge dialect flywheel)."
+    if path.exists():
+        try:
+            loaded = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                attribution = loaded.pop("_attribution", attribution)
+                terms = {k: v for k, v in loaded.items() if not str(k).startswith("_")}
+            elif isinstance(loaded, list):
+                terms = {e["english"].lower(): e["native"] for e in loaded
+                         if isinstance(e, dict) and e.get("english") and e.get("native")}
+        except Exception as exc:  # noqa: BLE001
+            log.warning("Glossary read failed for %s: %s", language, exc)
+
+    terms[english] = native
+    ordered = {"_attribution": attribution}
+    for k in sorted(terms):
+        ordered[k] = terms[k]
+    path.write_text(json.dumps(ordered, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return jsonify({"ok": True, "language": language, "english": english,
+                    "native": native, "count": len(terms)})
 
 
 # ---------------------------------------------------------------------------

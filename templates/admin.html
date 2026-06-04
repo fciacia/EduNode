@@ -49,6 +49,27 @@
   <div id="uploadMsg" class="msg-box"></div>
 </div>
 
+<!-- Glossary editor (dialect flywheel) -->
+<div class="section">
+  <h3>Improve a Language (Glossary)</h3>
+  <p style="color:#777;font-size:.85rem;margin:-.5rem 0 .9rem">
+    Add native words for languages the AI can't translate well yet (e.g. Iban).
+    Each word you add helps the tutor speak more naturally over time.
+  </p>
+  <div class="upload-row">
+    <select id="glossLang" class="btn-primary" style="background:var(--surface);color:var(--text);border:1px solid var(--border)">
+      <option>Iban</option><option>Kedayan</option><option>Dayak</option>
+      <option>Hmong</option><option>Isan</option><option>Tetum</option>
+    </select>
+    <input id="glossEn" type="text" placeholder="English word (e.g. teacher)"
+           style="border:1px solid var(--border);border-radius:8px;padding:.4rem .65rem;font-size:.85rem">
+    <input id="glossNative" type="text" placeholder="Word in that language"
+           style="border:1px solid var(--border);border-radius:8px;padding:.4rem .65rem;font-size:.85rem">
+    <button class="btn-primary" onclick="addGlossary()">Add Word</button>
+  </div>
+  <div id="glossMsg" class="msg-box"></div>
+</div>
+
 <!-- Sources -->
 <div class="section">
   <h3>Ingested Sources ({{ sources | length }} files)</h3>
@@ -118,6 +139,30 @@ async function uploadFile() {
   } catch(e) {
     msg.className = 'msg-box msg-err'; msg.textContent = 'Upload failed: ' + e.message;
     msg.style.display = 'block';
+  }
+}
+
+async function addGlossary() {
+  const language = document.getElementById('glossLang').value;
+  const english  = document.getElementById('glossEn').value.trim();
+  const native   = document.getElementById('glossNative').value.trim();
+  const msg = document.getElementById('glossMsg');
+  msg.style.display = 'none';
+  if (!english || !native) { alert('Enter both the English word and the local word.'); return; }
+  try {
+    const r = await fetch('/api/glossary/add?token=' + encodeURIComponent(TOKEN), {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({language, english, native})
+    });
+    const d = await r.json();
+    msg.className = r.ok ? 'msg-box msg-ok' : 'msg-box msg-err';
+    msg.textContent = r.ok
+      ? '“' + d.english + '” → “' + d.native + '” added. ' + language + ' now has ' + d.count + ' words.'
+      : (d.error || 'Error');
+    msg.style.display = 'block';
+    if (r.ok) { document.getElementById('glossEn').value = ''; document.getElementById('glossNative').value = ''; }
+  } catch(e) {
+    msg.className = 'msg-box msg-err'; msg.textContent = 'Failed: ' + e.message; msg.style.display = 'block';
   }
 }
 
