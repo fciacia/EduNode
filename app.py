@@ -560,7 +560,7 @@ def api_audio(filename: str):
 # API: curriculum diagrams / media (for flashcards)
 # ---------------------------------------------------------------------------
 
-MEDIA_DIR = Path(os.getenv("MEDIA_DIR", "data/media"))
+from core.media import MEDIA_DIR, find_media
 
 
 @app.get("/api/media/<filename>")
@@ -586,25 +586,13 @@ def api_media(filename: str):
     return send_from_directory(str(MEDIA_DIR), target.name)
 
 
-_IMG_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"}
-
-
 @app.get("/api/media/find")
 def api_media_find():
     """Best-effort: return a local image whose filename shares a keyword with
     the query, so a slide's image_query ('green leaf') can surface a matching
     diagram if a teacher has dropped one in. Returns {"file": null} otherwise."""
-    q = (request.args.get("q") or "").lower()
-    tokens = {t for t in re.split(r"[^a-z0-9]+", q) if len(t) > 2}
-    if not tokens or not MEDIA_DIR.exists():
-        return jsonify({"file": None})
-    for p in sorted(MEDIA_DIR.iterdir()):
-        if not (p.is_file() and p.suffix.lower() in _IMG_EXT):
-            continue
-        stem_tokens = set(re.split(r"[^a-z0-9]+", p.stem.lower()))
-        if tokens & stem_tokens:
-            return jsonify({"file": p.name})
-    return jsonify({"file": None})
+    match = find_media(request.args.get("q") or "")
+    return jsonify({"file": match.name if match else None})
 
 
 # ---------------------------------------------------------------------------

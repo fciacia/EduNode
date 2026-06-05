@@ -38,3 +38,20 @@ def test_build_pptx_puts_notes_in_speaker_notes():
 def test_build_pptx_returns_nonempty_bytes():
     blob = build_pptx("x", SLIDES)
     assert isinstance(blob, (bytes, bytearray)) and len(blob) > 1000
+
+
+def test_build_pptx_embeds_matching_local_image(tmp_path):
+    from PIL import Image
+    Image.new("RGB", (64, 48), "green").save(tmp_path / "green_leaf.png")
+    deck = [{"title": "Leaf", "bullets": ["green"], "image_query": "green leaf", "emoji": "🌿"}]
+    prs = _open(build_pptx("leaf", deck, media_dir=tmp_path))
+    pics = [sh for sh in prs.slides[0].shapes if sh.shape_type == 13]  # 13 = PICTURE
+    assert len(pics) == 1
+
+
+def test_build_pptx_emoji_fallback_when_no_image(tmp_path):
+    deck = [{"title": "Sun", "bullets": ["hot"], "image_query": "nonexistent thing", "emoji": "☀️"}]
+    prs = _open(build_pptx("sun", deck, media_dir=tmp_path))
+    pics = [sh for sh in prs.slides[0].shapes if sh.shape_type == 13]
+    text = "\n".join(sh.text_frame.text for sh in prs.slides[0].shapes if sh.has_text_frame)
+    assert not pics and "☀️" in text
