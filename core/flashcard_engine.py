@@ -46,6 +46,7 @@ def generate_flashcards(
     topic: str,
     language: str,
     rag_context: str,
+    level: str = "",
 ) -> list[dict]:
     """
     Generate flashcards about *topic* grounded in *rag_context*.
@@ -57,13 +58,14 @@ def generate_flashcards(
 
     Returns [] on any parse failure so the caller can degrade gracefully.
     """
-    from core.llm_engine import _ollama_generate  # reuse the shared Ollama helper
+    from core.llm_engine import _ollama_generate, level_instruction  # shared helpers
 
     context_block = (
         f"Curriculum context:\n{rag_context}\n\n"
         if rag_context.strip()
         else ""
     )
+    level_hint = level_instruction(level)
 
     system = (
         "You are a flashcard generator for school students. "
@@ -71,7 +73,8 @@ def generate_flashcards(
         "Each flashcard must have: "
         '{"title": "short concept name", "body": "1-3 sentence explanation", '
         '"image": "relevant_image.png or null"} '
-        "Do not include any text outside the JSON array."
+        + (level_hint + " " if level_hint else "")
+        + "Do not include any text outside the JSON array."
     )
 
     prompt = (

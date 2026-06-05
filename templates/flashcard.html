@@ -280,6 +280,7 @@ const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${
 
 function getLang()    { return document.getElementById('langSel').value; }
 function getSubject() { return document.getElementById('subjectSel').value; }
+function getLevel()   { return localStorage.getItem('edu_level') || ''; }
 
 /* Localized UI string (falls back to the given English). */
 function T(key, fallback) { return (window.EduI18n && window.EduI18n.t) ? window.EduI18n.t(key) : fallback; }
@@ -382,7 +383,7 @@ async function generateDeck() {
   try {
     const r = await fetch('/api/flashcard/generate', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({topic, language: getLang(), subject: getSubject()})
+      body: JSON.stringify({topic, language: getLang(), subject: getSubject(), level: getLevel()})
     });
     const d = await r.json().catch(() => ({}));
     if (r.status === 503 || d.error === 'offline') { showGenError('offline'); return; }

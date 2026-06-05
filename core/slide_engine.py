@@ -43,15 +43,17 @@ SLIDE_SCHEMA: dict = {
 }
 
 
-def generate_slides(topic: str, language: str, rag_context: str) -> list[dict]:
+def generate_slides(topic: str, language: str, rag_context: str, level: str = "") -> list[dict]:
     """Generate a lesson deck about *topic*, grounded in *rag_context*."""
-    from core.llm_engine import _ollama_generate
+    from core.llm_engine import _ollama_generate, level_instruction
 
     context_block = (
         f"Curriculum context:\n{rag_context}\n\n" if rag_context.strip() else ""
     )
+    level_hint = level_instruction(level)
     system = (
-        "You are a teacher making a short lesson slide deck for school students. "
+        (level_hint + " " if level_hint else "")
+        + "You are a teacher making a short lesson slide deck for school students. "
         f"Output ONLY a JSON object with a 'slides' array of {MAX_SLIDES} slides: a title "
         "slide, a few content slides, and a summary slide. Each slide has a short 'title', "
         "3-5 short 'bullets', 'notes' (one or two spoken sentences the teacher would say), "

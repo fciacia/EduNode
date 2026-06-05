@@ -57,9 +57,10 @@ def validate_questions(raw: list) -> list[dict]:
             continue
 
         validated.append({
-            "question": question.strip(),
-            "options":  [str(o).strip() for o in options],
-            "answer":   answer,
+            "question":    question.strip(),
+            "options":     [str(o).strip() for o in options],
+            "answer":      answer,
+            "explanation": str(item.get("explanation", "")).strip(),
         })
 
         if len(validated) == MAX_QUESTIONS:

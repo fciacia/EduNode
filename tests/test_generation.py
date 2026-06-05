@@ -7,7 +7,7 @@ from core.flashcard_engine import generate_flashcards
 # --- quiz: schema-mode output is a JSON object {"questions": [...]} ----------
 QUIZ_OBJ = (
     '{"questions":['
-    '{"question":"Q1?","options":["A. a","B. b","C. c","D. d"],"answer":"B"},'
+    '{"question":"Q1?","options":["A. a","B. b","C. c","D. d"],"answer":"B","explanation":"because b"},'
     '{"question":"Q2?","options":["A. a","B. b","C. c","D. d"],"answer":"A"}]}'
 )
 
@@ -18,6 +18,18 @@ def test_generate_quiz_parses_schema_object(monkeypatch):
     assert len(qs) == 2
     assert qs[0]["answer"] == "B"
     assert len(qs[0]["options"]) == 4
+    assert qs[0]["explanation"] == "because b"
+    assert qs[1]["explanation"] == ""          # missing -> empty, not KeyError
+
+
+def test_generate_quiz_passes_level_hint_to_prompt(monkeypatch):
+    seen = {}
+    def fake(prompt, temperature=0.7, max_tokens=512, system="", schema=None):
+        seen["system"] = system
+        return QUIZ_OBJ
+    monkeypatch.setattr(llm, "_ollama_generate", fake)
+    generate_quiz("x", "English", "", level="primary")
+    assert "primary school" in seen["system"]
 
 
 def test_generate_quiz_passes_schema_to_model(monkeypatch):

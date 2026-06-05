@@ -242,6 +242,7 @@ QUIZ_SCHEMA: dict = {
                         "maxItems": 4,
                     },
                     "answer": {"type": "string", "enum": ["A", "B", "C", "D"]},
+                    "explanation": {"type": "string"},
                 },
                 "required": ["question", "options", "answer"],
             },
@@ -251,23 +252,38 @@ QUIZ_SCHEMA: dict = {
 }
 
 
-def generate_quiz(topic: str, language: str, rag_context: str) -> list[dict]:
+def level_instruction(level: str) -> str:
+    """A reading-level hint for prompts, from the student's onboarding level."""
+    l = (level or "").lower()
+    if l == "primary":
+        return "The student is in primary school (around ages 7-12); use very simple words and short sentences."
+    if l == "secondary":
+        return "The student is in secondary school (around ages 13-17); you may use more detailed, precise language."
+    return ""
+
+
+def generate_quiz(topic: str, language: str, rag_context: str, level: str = "") -> list[dict]:
     """
     Generate 3 multiple-choice questions about *topic*.
 
     Returns a list of dicts:
-        [{"question": str, "options": [str, str, str, str], "answer": "A"}, ...]
+        [{"question": str, "options": [str, str, str, str], "answer": "A",
+          "explanation": str}, ...]
     Returns [] if the SLM output cannot be parsed as valid JSON.
     """
     context_block = f"Curriculum context:\n{rag_context}\n\n" if rag_context.strip() else ""
+    level_hint = level_instruction(level)
 
     system = (
         "You are a quiz generator for school students. "
         "Output ONLY a JSON array of exactly 3 multiple-choice questions. "
         "Each item must have: "
-        '{"question": "...", "options": ["A. ...", "B. ...", "C. ...", "D. ..."], "answer": "A"} '
-        "where answer is the letter of the correct option. "
-        "Do not include any text outside the JSON array."
+        '{"question": "...", "options": ["A. ...", "B. ...", "C. ...", "D. ..."], "answer": "A", '
+        '"explanation": "..."} '
+        "where answer is the letter of the correct option and explanation is one short "
+        "sentence saying why that answer is correct. "
+        + (level_hint + " " if level_hint else "")
+        + "Do not include any text outside the JSON array."
     )
 
     prompt = (
@@ -276,7 +292,7 @@ def generate_quiz(topic: str, language: str, rag_context: str) -> list[dict]:
         f"Respond in {language}."
     )
 
-    raw = _ollama_generate(prompt, temperature=0.2, max_tokens=700, system=system, schema=QUIZ_SCHEMA)
+    raw = _ollama_generate(prompt, temperature=0.2, max_tokens=900, system=system, schema=QUIZ_SCHEMA)
     if not raw:
         return []
 
@@ -316,9 +332,10 @@ def _parse_quiz_json(raw: str) -> list[dict]:
             and isinstance(answer, str) and answer.upper() in ("A", "B", "C", "D")
         ):
             validated.append({
-                "question": q.strip(),
-                "options":  [str(o).strip() for o in options],
-                "answer":   answer.upper(),
+                "question":    q.strip(),
+                "options":     [str(o).strip() for o in options],
+                "answer":      answer.upper(),
+                "explanation": str(item.get("explanation", "")).strip(),
             })
         if len(validated) == 3:
             break

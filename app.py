@@ -481,6 +481,8 @@ def api_quiz_generate():
     if not topic:
         return jsonify({"error": "topic required"}), 400
 
+    level    = (data.get("level") or "").strip()
+
     from core.llm_engine  import generate_quiz, ollama_available
     from core.quiz_engine import validate_questions
 
@@ -488,7 +490,7 @@ def api_quiz_generate():
         return jsonify({"questions": [], "error": "offline"}), 503
 
     rag_ctx, grounded, sources = _grounded_context(topic, subject)
-    raw_qs    = generate_quiz(topic, language, rag_ctx)
+    raw_qs    = generate_quiz(topic, language, rag_ctx, level)
     questions = validate_questions(raw_qs)
 
     payload = {"questions": questions, "grounded": grounded, "sources": sources}
@@ -628,6 +630,8 @@ def api_slides_generate():
     if not topic:
         return jsonify({"error": "topic required"}), 400
 
+    level    = (data.get("level") or "").strip()
+
     from core.slide_engine import generate_slides
     from core.llm_engine   import ollama_available
 
@@ -635,7 +639,7 @@ def api_slides_generate():
         return jsonify({"slides": [], "error": "offline"}), 503
 
     rag_ctx, grounded, sources = _grounded_context(topic, subject)
-    slides = generate_slides(topic, language, rag_ctx)
+    slides = generate_slides(topic, language, rag_ctx, level)
 
     payload = {"slides": slides, "grounded": grounded, "sources": sources}
     if not slides:
@@ -761,6 +765,8 @@ def api_flashcard_generate():
     if not topic:
         return jsonify({"error": "topic required"}), 400
 
+    level    = (data.get("level") or "").strip()
+
     from core.flashcard_engine import generate_flashcards
     from core.llm_engine import ollama_available
 
@@ -768,7 +774,7 @@ def api_flashcard_generate():
         return jsonify({"flashcards": [], "error": "offline"}), 503
 
     rag_ctx, grounded, sources = _grounded_context(topic, subject)
-    cards   = generate_flashcards(topic, language, rag_ctx)
+    cards   = generate_flashcards(topic, language, rag_ctx, level)
 
     payload = {"flashcards": cards, "grounded": grounded, "sources": sources}
     if not cards:

@@ -99,6 +99,23 @@
   color: var(--text-muted);
 }
 
+/* Per-question explanation (revealed after submitting) */
+.q-explain {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  margin-top: .75rem;
+  padding: .65rem .85rem;
+  background: var(--primary-light);
+  border-radius: var(--radius-sm);
+  font-size: .88rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--text);
+  animation: fade-in .25s ease;
+}
+.q-explain .icon { color: var(--primary); flex: 0 0 auto; margin-top: .1rem; }
+
 /* Score ring */
 .score-ring-wrap {
   position: relative;
@@ -208,6 +225,7 @@ const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${
 function getLang()    { return document.getElementById('langSel').value; }
 function getSubject() { return document.getElementById('subjectSel').value; }
 function getName()    { return document.getElementById('studentName').value.trim() || 'Student'; }
+function getLevel()   { return localStorage.getItem('edu_level') || ''; }
 
 /* Localized UI string (falls back to the given English). */
 function T(key, fallback) { return (window.EduI18n && window.EduI18n.t) ? window.EduI18n.t(key) : fallback; }
@@ -242,7 +260,7 @@ async function generateQuiz() {
   try {
     const r = await fetch('/api/quiz/generate', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({topic, language: getLang(), subject: getSubject()})
+      body: JSON.stringify({topic, language: getLang(), subject: getSubject(), level: getLevel()})
     });
     const d = await r.json().catch(() => ({}));
     if (r.status === 503 || d.error === 'offline') { showGenError('offline'); return; }
@@ -277,7 +295,8 @@ function renderQuestions(qs) {
     card.style.animationDelay = (i * .05) + 's';
     card.style.animation = 'pop-in .3s ease both';
     card.innerHTML = `<div class="q-text">Q${i+1}. ${escHtml(q.question)}</div>
-      <div class="options" id="opts-${i}"></div>`;
+      <div class="options" id="opts-${i}"></div>
+      <div class="q-explain" id="explain-${i}" style="display:none"></div>`;
     c.appendChild(card);
     const optsDiv = card.querySelector(`#opts-${i}`);
     q.options.forEach((opt, oi) => {
@@ -360,6 +379,12 @@ function markAnswers(result) {
       else if (selectedAnswers[i] === letter)  b.classList.add('wrong');
       b.disabled = true;
     });
+    // Reveal the grounded "why" for this question.
+    const ex = document.getElementById(`explain-${i}`);
+    if (ex && q.explanation) {
+      ex.innerHTML = ico('lightbulb') + '<span>' + escHtml(q.explanation) + '</span>';
+      ex.style.display = 'flex';
+    }
   });
 }
 
