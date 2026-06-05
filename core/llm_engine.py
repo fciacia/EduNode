@@ -39,7 +39,7 @@ log = logging.getLogger(__name__)
 # Configuration (env overrides)
 # ---------------------------------------------------------------------------
 OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://127.0.0.1:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:3b-instruct-q4_K_M")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "phi3:mini")
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", "512"))
 GLOSSARY_DIR = Path("data/glossaries")
 
@@ -65,7 +65,11 @@ def _resolve_ollama_model() -> str:
     if OLLAMA_MODEL in available or not available:
         return OLLAMA_MODEL
 
-    fallback_model = available[0]
+    # Prefer the same model family (e.g. any "phi3:*" when "phi3:mini" was
+    # configured but the box has "phi3:latest") before any unrelated model.
+    base = OLLAMA_MODEL.split(":")[0]
+    same_family = next((m for m in available if m.split(":")[0] == base), None)
+    fallback_model = same_family or available[0]
     log.warning("Configured Ollama model '%s' not found; using '%s' instead.", OLLAMA_MODEL, fallback_model)
     return fallback_model
 

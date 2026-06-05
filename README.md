@@ -36,7 +36,7 @@ Built for the **AI for a Resilient ASEAN** track.
 | Problem | Edge Solution |
 |---|---|
 | 47 % of ASEAN rural schools have no internet | Runs 100 % offline on a $80 Pi |
-| AI tools require cloud subscriptions | Local SLM (Llama 3 / Gemma 2, quantized Q4) |
+| AI tools require cloud subscriptions | Local SLM (Phi-3 Mini, 4-bit GGUF via Ollama) |
 | Students speak minority languages | Per-hub language config (Iban, Cebuano, Dayak…) |
 | No power infrastructure | 50 W solar panel + 30 000 mAh battery powers Pi all day |
 | No way to update content remotely | Sneakernet USB sync — teacher plugs in a drive monthly |
@@ -90,7 +90,7 @@ Built for the **AI for a Resilient ASEAN** track.
 │                  │                               │                       │
 │  ┌───────────────▼──────────┐   ┌───────────────▼────────────────────┐  │
 │  │  VOICE LAYER             │   │  AI / RAG LAYER                     │  │
-│  │  Whisper.cpp (STT)       │   │  Ollama — llama3.2:3b Q4            │  │
+│  │  Whisper.cpp (STT)       │   │  Ollama — phi3:mini (Q4)           │  │
 │  │  Piper TTS               │   │  ChromaDB — curriculum vectors      │  │
 │  └──────────────────────────┘   └─────────────────────────────────────┘  │
 │                                                                          │
@@ -187,7 +187,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 # 3. Pull the SLM (one-time, ~2 GB)
-ollama pull llama3.2:3b-instruct-q4_K_M
+ollama pull phi3:mini
 
 # 4. Configure
 cp .env.example .env
@@ -295,7 +295,7 @@ Copy `.env.example` to `.env` and edit:
 
 ```ini
 OLLAMA_BASE=http://127.0.0.1:11434
-OLLAMA_MODEL=llama3.2:3b-instruct-q4_K_M
+OLLAMA_MODEL=phi3:mini
 EMBED_MODEL=all-MiniLM-L6-v2
 CHUNK_SIZE=400
 CHUNK_OVERLAP=60

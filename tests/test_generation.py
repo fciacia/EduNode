@@ -66,6 +66,24 @@ def test_generate_flashcards_parses_schema_object(monkeypatch):
     assert cards[0]["image"] is None
 
 
+# --- model resolution -------------------------------------------------------
+class _Tags:
+    def __init__(self, names): self._names = names
+    def raise_for_status(self): pass
+    def json(self): return {"models": [{"name": n} for n in self._names]}
+
+
+def test_default_model_is_phi3():
+    assert llm.OLLAMA_MODEL.split(":")[0] == "phi3"
+
+
+def test_resolve_prefers_phi3_family_over_llama(monkeypatch):
+    # Configured phi3:mini isn't installed, but phi3:latest is — pick phi3, not llama.
+    monkeypatch.setattr(llm, "OLLAMA_MODEL", "phi3:mini")
+    monkeypatch.setattr("requests.get", lambda *a, **k: _Tags(["llama3.1:8b", "phi3:latest"]))
+    assert llm._resolve_ollama_model() == "phi3:latest"
+
+
 # --- ollama health ----------------------------------------------------------
 def test_ollama_available_true(monkeypatch):
     class R:
