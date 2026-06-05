@@ -56,11 +56,24 @@ def _num(v):
         return None
 
 
+# Tolerate near-miss type names a small model might emit.
+_ALIASES = {
+    "triangle": "right_triangle", "righttriangle": "right_triangle",
+    "rect": "rectangle", "square": "rectangle",
+    "bar": "bar_chart", "barchart": "bar_chart", "chart": "bar_chart",
+    "fraction": "fraction_bar", "fractions": "fraction_bar", "fractionbar": "fraction_bar",
+    "numberline": "number_line", "line": "function_plot", "graph": "function_plot",
+    "plot": "function_plot", "function": "function_plot",
+}
+
+
 def validate_diagram(spec) -> dict | None:
     """Return a cleaned, renderable spec or None (a wrong figure is worse than none)."""
     if not isinstance(spec, dict):
         return None
     kind = spec.get("type")
+    if isinstance(kind, str) and kind not in TYPES:
+        kind = _ALIASES.get(kind.strip().lower().replace(" ", "").replace("-", "").replace("_", ""), kind)
     if kind not in TYPES:                       # includes "none"
         return None
 
@@ -149,7 +162,15 @@ def generate_diagram(question: str, rag_context: str = "", language: str = "Engl
         "- right_triangle: base, height, unit\n"
         "- function_plot: expression (in x, e.g. \"2*x+1\"), xmin, xmax\n"
         "Use only numbers that match the question. No text outside the JSON. "
-        f"Write any text labels in {language}."
+        f"Write any text labels in {language}.\n"
+        "Examples:\n"
+        'Q: add 1/2 and 1/4 -> {"type":"fraction_bar","fractions":[{"numerator":1,"denominator":2},{"numerator":1,"denominator":4}]}\n'
+        'Q: area of a triangle with base 6 and height 4 -> {"type":"right_triangle","base":6,"height":4}\n'
+        'Q: area of a rectangle 5 by 3 cm -> {"type":"rectangle","width":5,"height":3,"unit":"cm"}\n'
+        'Q: graph y = 2x + 1 -> {"type":"function_plot","expression":"2*x+1","xmin":-5,"xmax":5}\n'
+        'Q: class A has 3 pets and class B has 5 -> {"type":"bar_chart","title":"Pets","bars":[{"label":"Class A","value":3},{"label":"Class B","value":5}]}\n'
+        'Q: show 7 on a number line 0 to 10 -> {"type":"number_line","min":0,"max":10,"step":1,"points":[{"value":7,"label":"7"}]}\n'
+        'Q: what is your name -> {"type":"none"}'
     )
     ctx = f"Context:\n{rag_context}\n\n" if rag_context.strip() else ""
     prompt = f"{ctx}Question: {question}\nDiagram JSON:"

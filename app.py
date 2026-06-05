@@ -844,8 +844,9 @@ def api_diagram():
         return jsonify({"diagram": None})
 
     from core.diagram_engine import generate_diagram
-    rag_ctx, _g, _s = _grounded_context(question, subject)
-    spec = generate_diagram(question, rag_ctx, language)
+    # No RAG context: diagrams come from the question's own numbers, and
+    # retrieved prose tends to confuse the small model's structured output.
+    spec = generate_diagram(question, "", language)
     payload = {"diagram": spec}
     if spec:
         content_cache.put("diagram", subject, language, "", question, payload)

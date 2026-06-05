@@ -41,6 +41,11 @@ def test_function_plot_rejects_unsafe_expression():
     assert validate_diagram({"type": "function_plot", "expression": "__import__('os')"}) is None
 
 
+def test_type_aliases_are_normalized():
+    assert validate_diagram({"type": "triangle", "base": 3, "height": 4})["type"] == "right_triangle"
+    assert validate_diagram({"type": "bar", "bars": [{"label": "A", "value": 2}]})["type"] == "bar_chart"
+
+
 def test_generate_diagram_parses_model_output(monkeypatch):
     obj = json.dumps({"type": "bar_chart", "bars": [{"label": "A", "value": 3}, {"label": "B", "value": 5}]})
     monkeypatch.setattr(llm, "_ollama_generate", lambda *a, **k: obj)
