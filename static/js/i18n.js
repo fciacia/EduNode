@@ -361,6 +361,24 @@
     if (TRANSLATIONS[l]) Object.assign(TRANSLATIONS[l], QC_I18N[l]);
   });
 
+  // "Report a wrong translation" — dialect flywheel safety net.
+  const REPORT_I18N = {
+    'English':          { 'report.tip':'Report a wrong translation', 'report.prompt':'What looks wrong? (optional)', 'report.thanks':'Thanks! A teacher will review it.' },
+    'Filipino':         { 'report.tip':'I-report ang maling pagsasalin', 'report.prompt':'Ano ang mali? (opsyonal)', 'report.thanks':'Salamat! Ire-review ito ng guro.' },
+    'Bahasa Melayu':    { 'report.tip':'Laporkan terjemahan salah', 'report.prompt':'Apa yang salah? (pilihan)', 'report.thanks':'Terima kasih! Guru akan menyemaknya.' },
+    'Bahasa Indonesia': { 'report.tip':'Laporkan terjemahan salah', 'report.prompt':'Apa yang salah? (opsional)', 'report.thanks':'Terima kasih! Guru akan meninjaunya.' },
+    'Thai':             { 'report.tip':'รายงานคำแปลที่ผิด', 'report.prompt':'อะไรผิด? (ไม่บังคับ)', 'report.thanks':'ขอบคุณ! ครูจะตรวจสอบ' },
+    'Vietnamese':       { 'report.tip':'Báo dịch sai', 'report.prompt':'Có gì sai? (tùy chọn)', 'report.thanks':'Cảm ơn! Giáo viên sẽ xem lại.' },
+    'Khmer':            { 'report.tip':'រាយការណ៍ការបកប្រែខុស', 'report.prompt':'មានអ្វីខុស? (ស្រេចចិត្ត)', 'report.thanks':'អរគុណ! គ្រូនឹងពិនិត្យ។' },
+    'Lao':              { 'report.tip':'ລາຍງານການແປຜິດ', 'report.prompt':'ມີຫຍັງຜິດ? (ບໍ່ບັງຄັບ)', 'report.thanks':'ຂອບໃຈ! ຄູຈະກວດສອບ.' },
+    'Burmese':          { 'report.tip':'မှားသော ဘာသာပြန်ကို တိုင်ကြားပါ', 'report.prompt':'ဘာမှားသလဲ? (ရွေးချယ်)', 'report.thanks':'ကျေးဇူးတင်ပါတယ်! ဆရာ စစ်ဆေးပါမည်။' },
+    'Cebuano':          { 'report.tip':'I-report ang sayop nga hubad', 'report.prompt':'Unsa ang sayop? (opsyonal)', 'report.thanks':'Salamat! Repasohon kini sa magtutudlo.' },
+    'Iban':             { 'report.tip':'Lapur jaku ti salah', 'report.prompt':'Nama ti salah? (pilih)', 'report.thanks':'Terima kasih! Pengajar deka mansik.' },
+  };
+  Object.keys(REPORT_I18N).forEach(function (l) {
+    if (TRANSLATIONS[l]) Object.assign(TRANSLATIONS[l], REPORT_I18N[l]);
+  });
+
   var _current = 'English';
 
   function applyLang(lang) {
@@ -439,6 +457,20 @@
     if (d[key] !== undefined) return d[key];
     return TRANSLATIONS['English'][key] !== undefined ? TRANSLATIONS['English'][key] : key;
   }
+
+  // Flag a wrong translation (e.g. an MT'd topic chip) for teacher review.
+  window.reportTranslation = function (shown) {
+    var note = prompt(t('report.prompt', 'What looks wrong? (optional)'));
+    if (note === null) return;                 // cancelled
+    fetch('/api/translation/report', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        language: localStorage.getItem('edu_lang') || 'English',
+        shown: shown || '', note: note, page: location.pathname,
+      }),
+    }).then(function () { alert(t('report.thanks', 'Thanks! A teacher will review it.')); })
+      .catch(function () {});
+  };
 
   window.EduI18n = { applyLang: applyLang, setLang: setLang, t: t, TRANSLATIONS: TRANSLATIONS };
 

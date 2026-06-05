@@ -623,6 +623,26 @@ def api_media_find():
     return jsonify({"file": match.name if match else None})
 
 
+@app.post("/api/translation/report")
+def api_translation_report():
+    """Log a student/teacher flag that a translation looks wrong, for review
+    (and feeding back into the dialect glossary flywheel)."""
+    from datetime import datetime, timezone
+    data  = request.get_json(silent=True) or {}
+    entry = {
+        "ts":       datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "language": (data.get("language") or "").strip()[:60],
+        "shown":    (data.get("shown") or "").strip()[:500],
+        "note":     (data.get("note") or "").strip()[:500],
+        "page":     (data.get("page") or "").strip()[:120],
+    }
+    path = Path("data/translation_reports.jsonl")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    return jsonify({"ok": True})
+
+
 # ---------------------------------------------------------------------------
 # API: slides (offline lesson deck generator)
 # ---------------------------------------------------------------------------

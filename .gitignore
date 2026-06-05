@@ -20,6 +20,7 @@ static/shared/*.json
 static/shared/*.png
 data/chroma/
 data/cache/
+data/translation_reports.jsonl
 data/curriculum/
 data/glossaries/*.json
 # …but ship curated reference glossaries (e.g. the Iban word list)
