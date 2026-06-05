@@ -483,6 +483,11 @@ def api_quiz_generate():
 
     level    = (data.get("level") or "").strip()
 
+    from core import content_cache
+    cached = content_cache.get("quiz", subject, language, level, topic)
+    if cached is not None:
+        return jsonify(cached)
+
     from core.llm_engine  import generate_quiz, ollama_available
     from core.quiz_engine import validate_questions
 
@@ -496,6 +501,8 @@ def api_quiz_generate():
     payload = {"questions": questions, "grounded": grounded, "sources": sources}
     if not questions:
         payload["error"] = "generation"
+    else:
+        content_cache.put("quiz", subject, language, level, topic, payload)
     return jsonify(payload)
 
 
@@ -632,6 +639,11 @@ def api_slides_generate():
 
     level    = (data.get("level") or "").strip()
 
+    from core import content_cache
+    cached = content_cache.get("slides", subject, language, level, topic)
+    if cached is not None:
+        return jsonify(cached)
+
     from core.slide_engine import generate_slides
     from core.llm_engine   import ollama_available
 
@@ -644,6 +656,8 @@ def api_slides_generate():
     payload = {"slides": slides, "grounded": grounded, "sources": sources}
     if not slides:
         payload["error"] = "generation"
+    else:
+        content_cache.put("slides", subject, language, level, topic, payload)
     return jsonify(payload)
 
 
@@ -767,6 +781,11 @@ def api_flashcard_generate():
 
     level    = (data.get("level") or "").strip()
 
+    from core import content_cache
+    cached = content_cache.get("cards", subject, language, level, topic)
+    if cached is not None:
+        return jsonify(cached)
+
     from core.flashcard_engine import generate_flashcards
     from core.llm_engine import ollama_available
 
@@ -779,6 +798,8 @@ def api_flashcard_generate():
     payload = {"flashcards": cards, "grounded": grounded, "sources": sources}
     if not cards:
         payload["error"] = "generation"
+    else:
+        content_cache.put("cards", subject, language, level, topic, payload)
     return jsonify(payload)
 
 
