@@ -512,7 +512,7 @@ async function sendMsg(retryMsg) {
       addPlayBtn(msgEl, d.response);
       enableTapToHear(msgEl, d.response);
       maybeReadAloud(msgEl, d.response);
-      if (getSubject() === 'Mathematics') maybeDrawDiagram(msgEl, msg);
+      if (['Mathematics', 'Science'].includes(getSubject())) maybeDrawDiagram(msgEl, msg);
     }
     if (d.student_id) localStorage.setItem('edu_student_id', d.student_id);
     localStorage.setItem('edu_student_name', getName());

@@ -41,6 +41,30 @@ def test_function_plot_rejects_unsafe_expression():
     assert validate_diagram({"type": "function_plot", "expression": "__import__('os')"}) is None
 
 
+def test_flow_needs_two_steps():
+    spec = validate_diagram({"type": "flow", "steps": [{"label": "Grass"}, {"label": "Frog"}]})
+    assert spec["type"] == "flow" and len(spec["steps"]) == 2
+    assert validate_diagram({"type": "flow", "steps": [{"label": "only one"}]}) is None
+
+
+def test_cycle_needs_three_steps_and_accepts_bare_strings():
+    spec = validate_diagram({"type": "cycle", "steps": ["Evaporation", "Condensation", "Precipitation"]})
+    assert spec["type"] == "cycle" and [s["label"] for s in spec["steps"]][0] == "Evaporation"
+    assert validate_diagram({"type": "cycle", "steps": ["a", "b"]}) is None
+
+
+def test_comparison_needs_two_columns():
+    spec = validate_diagram({"type": "comparison", "columns": [
+        {"label": "Solid", "items": ["fixed"]}, {"label": "Gas", "items": ["fills space"]}]})
+    assert len(spec["columns"]) == 2 and spec["columns"][0]["label"] == "Solid"
+    assert validate_diagram({"type": "comparison", "columns": [{"label": "Solid"}]}) is None
+
+
+def test_science_aliases_normalized():
+    assert validate_diagram({"type": "process", "steps": [{"label": "a"}, {"label": "b"}]})["type"] == "flow"
+    assert validate_diagram({"type": "lifecycle", "steps": ["a", "b", "c"]})["type"] == "cycle"
+
+
 def test_type_aliases_are_normalized():
     assert validate_diagram({"type": "triangle", "base": 3, "height": 4})["type"] == "right_triangle"
     assert validate_diagram({"type": "bar", "bars": [{"label": "A", "value": 2}]})["type"] == "bar_chart"

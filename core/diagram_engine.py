@@ -21,7 +21,8 @@ import re
 
 log = logging.getLogger(__name__)
 
-TYPES = ("number_line", "fraction_bar", "bar_chart", "rectangle", "right_triangle", "function_plot")
+TYPES = ("number_line", "fraction_bar", "bar_chart", "rectangle", "right_triangle", "function_plot",
+         "cycle", "flow", "comparison")
 
 # Only digits, x, basic operators, parens, dot, caret, space — no identifiers
 # (so no function names / globals can be evaluated).
@@ -43,6 +44,11 @@ DIAGRAM_SCHEMA: dict = {
         "width": {"type": "number"}, "height": {"type": "number"}, "base": {"type": "number"},
         "unit": {"type": "string"},
         "expression": {"type": "string"}, "xmin": {"type": "number"}, "xmax": {"type": "number"},
+        "steps": {"type": "array", "items": {"type": "object", "properties": {
+            "label": {"type": "string"}}, "required": ["label"]}},
+        "columns": {"type": "array", "items": {"type": "object", "properties": {
+            "label": {"type": "string"}, "items": {"type": "array", "items": {"type": "string"}}},
+            "required": ["label"]}},
     },
     "required": ["type"],
 }
@@ -64,6 +70,9 @@ _ALIASES = {
     "fraction": "fraction_bar", "fractions": "fraction_bar", "fractionbar": "fraction_bar",
     "numberline": "number_line", "line": "function_plot", "graph": "function_plot",
     "plot": "function_plot", "function": "function_plot",
+    "process": "flow", "sequence": "flow", "chain": "flow", "foodchain": "flow", "steps": "flow",
+    "lifecycle": "cycle", "loop": "cycle",
+    "compare": "comparison", "comparison_table": "comparison", "table": "comparison", "columns": "comparison",
 }
 
 
@@ -145,6 +154,27 @@ def validate_diagram(spec) -> dict | None:
             xmin, xmax = -10.0, 10.0
         return {"type": kind, "expression": expr, "xmin": xmin, "xmax": xmax}
 
+    if kind in ("cycle", "flow"):
+        steps = []
+        for s in (spec.get("steps") or [])[:6]:
+            label = (s.get("label") if isinstance(s, dict) else s) if s is not None else ""
+            label = str(label).strip()[:34]
+            if label:
+                steps.append({"label": label})
+        need = 3 if kind == "cycle" else 2
+        return {"type": kind, "steps": steps} if len(steps) >= need else None
+
+    if kind == "comparison":
+        cols = []
+        for c in (spec.get("columns") or [])[:3]:
+            if not isinstance(c, dict):
+                continue
+            label = str(c.get("label", "")).strip()[:20]
+            items = [str(it).strip()[:40] for it in (c.get("items") or [])[:5] if str(it).strip()]
+            if label:
+                cols.append({"label": label, "items": items})
+        return {"type": kind, "columns": cols} if len(cols) >= 2 else None
+
     return None
 
 
@@ -161,15 +191,20 @@ def generate_diagram(question: str, rag_context: str = "", language: str = "Engl
         "- rectangle: width, height, unit\n"
         "- right_triangle: base, height, unit\n"
         "- function_plot: expression (in x, e.g. \"2*x+1\"), xmin, xmax\n"
-        "Use only numbers that match the question. No text outside the JSON. "
+        "- cycle: steps:[{label}] — a repeating cycle (3-6 stages)\n"
+        "- flow: steps:[{label}] — a process, sequence or chain (2-6 stages in order)\n"
+        "- comparison: columns:[{label, items:[...]}] — compare 2-3 things\n"
+        "Use only facts that match the question. No text outside the JSON. "
         f"Write any text labels in {language}.\n"
         "Examples:\n"
         'Q: add 1/2 and 1/4 -> {"type":"fraction_bar","fractions":[{"numerator":1,"denominator":2},{"numerator":1,"denominator":4}]}\n'
         'Q: area of a triangle with base 6 and height 4 -> {"type":"right_triangle","base":6,"height":4}\n'
-        'Q: area of a rectangle 5 by 3 cm -> {"type":"rectangle","width":5,"height":3,"unit":"cm"}\n'
         'Q: graph y = 2x + 1 -> {"type":"function_plot","expression":"2*x+1","xmin":-5,"xmax":5}\n'
-        'Q: class A has 3 pets and class B has 5 -> {"type":"bar_chart","title":"Pets","bars":[{"label":"Class A","value":3},{"label":"Class B","value":5}]}\n'
         'Q: show 7 on a number line 0 to 10 -> {"type":"number_line","min":0,"max":10,"step":1,"points":[{"value":7,"label":"7"}]}\n'
+        'Q: explain the water cycle -> {"type":"cycle","steps":[{"label":"Evaporation"},{"label":"Condensation"},{"label":"Precipitation"},{"label":"Collection"}]}\n'
+        'Q: what is a food chain -> {"type":"flow","steps":[{"label":"Grass"},{"label":"Grasshopper"},{"label":"Frog"},{"label":"Snake"}]}\n'
+        'Q: how does photosynthesis work -> {"type":"flow","steps":[{"label":"Sunlight + Water + CO2"},{"label":"Glucose + Oxygen"}]}\n'
+        'Q: compare solids liquids and gases -> {"type":"comparison","columns":[{"label":"Solid","items":["Fixed shape","Packed tightly"]},{"label":"Liquid","items":["Takes container shape","Flows"]},{"label":"Gas","items":["Fills all space"]}]}\n'
         'Q: what is your name -> {"type":"none"}'
     )
     ctx = f"Context:\n{rag_context}\n\n" if rag_context.strip() else ""

@@ -115,6 +115,80 @@
     return svg(W, H, b);
   }
 
+  // ── shared text helpers (science diagrams) ───────────────────────────────
+  function wrap(text, maxChars) {
+    const words = String(text).split(/\s+/), lines = []; let cur = '';
+    words.forEach(w => {
+      if ((cur + ' ' + w).trim().length <= maxChars) cur = (cur + ' ' + w).trim();
+      else { if (cur) lines.push(cur); cur = w; }
+    });
+    if (cur) lines.push(cur);
+    return lines.length ? lines : [''];
+  }
+  const tspans = (lines, x, y0, lh, attrs) =>
+    lines.map((l, i) => `<text x="${x}" y="${(y0 + i*lh).toFixed(1)}" text-anchor="middle" ${attrs}>${esc(l)}</text>`).join('');
+
+  function flow(s) {
+    const steps = s.steps, N = steps.length, m = 8, aw = 16, fs = N > 4 ? 9 : 11;
+    const bw = Math.max(54, (340 - 2*m - (N-1)*aw) / N);
+    const cpl = Math.max(7, Math.floor(bw / (fs * 0.62)));
+    const wr = steps.map(st => wrap(st.label, cpl));
+    const maxL = Math.max(...wr.map(w => w.length));
+    const bh = maxL * (fs + 3) + 14, top = 12, H = bh + 24;
+    const W = 2*m + N*bw + (N-1)*aw;
+    let b = '';
+    steps.forEach((st, i) => {
+      const x = m + i*(bw + aw), my = top + bh/2;
+      b += `<rect x="${x}" y="${top}" width="${bw.toFixed(1)}" height="${bh}" rx="9" fill="${FILL}" stroke="${ACCENT}" stroke-width="2"/>`;
+      const ty = my - ((wr[i].length - 1) * (fs+3)) / 2 + fs/2;
+      b += tspans(wr[i], x + bw/2, ty, fs + 3, `font-size="${fs}" ${INK}`);
+      if (i < N - 1) {
+        const ax = x + bw, ax2 = ax + aw;
+        b += `<line x1="${ax}" y1="${my}" x2="${ax2-4}" y2="${my}" stroke="${ACCENT}" stroke-width="2"/>`;
+        b += `<polygon points="${ax2},${my} ${ax2-6},${my-4} ${ax2-6},${my+4}" fill="${ACCENT}"/>`;
+      }
+    });
+    return svg(W, H, b);
+  }
+
+  function cycle(s) {
+    const steps = s.steps, N = steps.length, W = 300, H = 280, cx = 150, cy = 140, r = 92, bw = 86, bh = 42;
+    const node = i => { const a = -Math.PI/2 + i*2*Math.PI/N; return [cx + r*Math.cos(a), cy + r*Math.sin(a)]; };
+    let b = '';
+    for (let i = 0; i < N; i++) {                      // clockwise arrows (under boxes)
+      const p = node(i), q = node((i+1) % N);
+      const dx = q[0]-p[0], dy = q[1]-p[1], L = Math.hypot(dx, dy) || 1, ux = dx/L, uy = dy/L;
+      const x1 = p[0]+ux*48, y1 = p[1]+uy*24, x2 = q[0]-ux*48, y2 = q[1]-uy*24;
+      b += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${ACCENT2}" stroke-width="2"/>`;
+      b += `<polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${(x2-ux*8-uy*4).toFixed(1)},${(y2-uy*8+ux*4).toFixed(1)} ${(x2-ux*8+uy*4).toFixed(1)},${(y2-uy*8-ux*4).toFixed(1)}" fill="${ACCENT2}"/>`;
+    }
+    for (let i = 0; i < N; i++) {
+      const p = node(i), lines = wrap(steps[i].label, 13);
+      b += `<rect x="${(p[0]-bw/2).toFixed(1)}" y="${(p[1]-bh/2).toFixed(1)}" width="${bw}" height="${bh}" rx="9" fill="${FILL}" stroke="${ACCENT}" stroke-width="2"/>`;
+      b += tspans(lines, p[0], p[1] - ((lines.length-1)*12)/2 + 4, 12, `font-size="10.5" ${INK}`);
+    }
+    return svg(W, H, b);
+  }
+
+  function comparison(s) {
+    const cols = s.columns, N = cols.length, m = 6, gap = 10, W = 340;
+    const cw = (W - 2*m - (N-1)*gap) / N, hH = 28, ilH = 16, pad = 8;
+    const wrapped = cols.map(c => c.items.map(it => wrap(it, Math.max(6, Math.floor(cw/6.2)))).flat());
+    const maxLines = Math.max(1, ...wrapped.map(w => w.length));
+    const bodyH = maxLines*ilH + pad*2, H = hH + 6 + bodyH + 8;
+    let b = '';
+    cols.forEach((c, i) => {
+      const x = m + i*(cw + gap);
+      b += `<rect x="${x.toFixed(1)}" y="2" width="${cw.toFixed(1)}" height="${hH}" rx="8" fill="${ACCENT}"/>`;
+      b += `<text x="${(x+cw/2).toFixed(1)}" y="${2+hH/2+5}" text-anchor="middle" font-size="12.5" style="fill:#fff;font-weight:800">${esc(c.label)}</text>`;
+      b += `<rect x="${x.toFixed(1)}" y="${hH+6}" width="${cw.toFixed(1)}" height="${bodyH}" rx="8" fill="none" stroke="var(--border,#d8d4e8)" stroke-width="1.5"/>`;
+      wrapped[i].forEach((line, j) => {
+        b += `<text x="${(x+cw/2).toFixed(1)}" y="${hH+6+pad+j*ilH+11}" text-anchor="middle" font-size="10.5" ${INK}>${esc(line)}</text>`;
+      });
+    });
+    return svg(W, H, b);
+  }
+
   window.renderDiagram = function (spec) {
     if (!spec || !spec.type) return '';
     try {
@@ -125,6 +199,9 @@
         case 'rectangle':     return rectangle(spec);
         case 'right_triangle':return rightTriangle(spec);
         case 'function_plot': return functionPlot(spec);
+        case 'cycle':         return cycle(spec);
+        case 'flow':          return flow(spec);
+        case 'comparison':    return comparison(spec);
       }
     } catch (e) {}
     return '';
