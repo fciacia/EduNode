@@ -18,15 +18,16 @@ Built for the **AI for a Resilient ASEAN** track.
 3. [System Architecture](#system-architecture)
 4. [Project Structure](#project-structure)
 5. [Quick Start (Laptop Dev)](#quick-start-laptop-dev)
-6. [Raspberry Pi Deployment](#raspberry-pi-deployment)
-7. [Configuration](#configuration)
-8. [Feature Overview](#feature-overview)
-9. [API Reference](#api-reference)
-10. [Multilingual Support](#multilingual-support)
-11. [Sneakernet USB Sync](#sneakernet-usb-sync)
-12. [Microcredentials](#microcredentials)
-13. [Contributing / Adding Curriculum](#contributing--adding-curriculum)
-14. [Roadmap](#roadmap)
+6. [Verified Offline Demo (Airplane Mode)](#verified-offline-demo-airplane-mode)
+7. [Raspberry Pi Deployment](#raspberry-pi-deployment)
+8. [Configuration](#configuration)
+9. [Feature Overview](#feature-overview)
+10. [API Reference](#api-reference)
+11. [Multilingual Support](#multilingual-support)
+12. [Sneakernet USB Sync](#sneakernet-usb-sync)
+13. [Microcredentials](#microcredentials)
+14. [Contributing / Adding Curriculum](#contributing--adding-curriculum)
+15. [Roadmap](#roadmap)
 
 ---
 
@@ -199,6 +200,41 @@ python app.py                         # or: python asean_ai_tutor_project.py
 
 Open `http://localhost:5000` in your browser. Scan the QR code printed in the
 terminal to test from your phone on the same WiFi.
+
+---
+
+## Verified Offline Demo (Airplane Mode)
+
+Edge is offline-first. To demo it with **no internet at all** (and prove there's
+no hidden cloud dependency):
+
+```bash
+# 1. ONE-TIME, while you still have Ollama running: pre-bake study content
+#    so the first tap is instant. Generates + caches quizzes, flashcards and
+#    slides for the bundled curriculum topics.
+python prebake.py                       # English; add --lang / --level for more
+
+# 2. Cut the cord — turn on airplane mode / switch off Wi-Fi.
+
+# 3. Run as normal and use it:
+python app.py
+#    • every page loads                         (local Flask + PWA shell)
+#    • pre-baked quizzes/cards/slides are instant (served from data/cache,
+#      no model call) — they work even with Ollama stopped
+#    • voice (Whisper STT, Piper/MMS/say TTS) and translation (NLLB +
+#      glossaries) run fully on-device
+```
+
+**Why "verified":** an automated test blocks *every* connection that isn't
+localhost, then drives the app and asserts it still serves every page and
+generates a quiz from cache. If any code reached the internet, the test fails.
+
+```bash
+pytest tests/test_offline.py -q         # blocks non-localhost, drives the app
+```
+
+> "Offline" means *no internet* — localhost services (the app itself, Ollama on
+> `127.0.0.1`) are still allowed. The guard trips only on a real outbound call.
 
 ---
 
