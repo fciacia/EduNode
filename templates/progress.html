@@ -53,6 +53,25 @@
 }
 .btn-amber:hover { background: #D97706; transform: translateY(-1px); }
 .btn-amber:active { transform: translateY(2px); box-shadow: 0 2px 0 #B45309; }
+
+/* Badges are tappable — show what each one means */
+.badge-card { cursor: pointer; font-family: var(--font); transition: transform .1s, background .15s; }
+.badge-card:hover { transform: translateY(-1px); }
+.badge-card.active { background: var(--accent); color: #fff; }
+.badge-desc {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .85rem;
+  padding: .6rem .9rem;
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--text);
+  animation: fade-in .2s ease;
+}
+.badge-desc .icon { color: var(--accent); flex: 0 0 auto; }
 {% endblock %}
 
 {% block content %}
@@ -74,6 +93,7 @@
     <h3 id="studentName">—</h3>
     <div class="meta" id="studentMeta"></div>
     <div class="badges-grid" id="badgesGrid"></div>
+    <div class="badge-desc" id="badgeDesc" style="display:none"></div>
   </div>
 
   <p class="section-title"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-clipboard"></use></svg> Quiz History</p>
@@ -109,11 +129,26 @@ function renderProgress(d) {
   const badgesGrid = document.getElementById('badgesGrid');
   badgesGrid.innerHTML = '';
   const badgeIcons = {'First Step':'sparkles','Quiz Ace':'trophy','Week Warrior':'zap','Dialect Pioneer':'globe'};
+  const badgeDescs = d.badge_descriptions || {};
+  const desc = document.getElementById('badgeDesc');
   (d.badges || []).forEach(b => {
-    const el = document.createElement('div'); el.className = 'badge-card';
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'badge-card';
     el.innerHTML = ico(badgeIcons[b] || 'award') + ' ' + b;
+    const text = badgeDescs[b] || '';
+    el.title = text;                         // hover tooltip on desktop
+    el.onclick = () => {                      // tap reveals what it means (mobile-friendly)
+      const active = el.classList.contains('active');
+      badgesGrid.querySelectorAll('.badge-card').forEach(c => c.classList.remove('active'));
+      if (active) { desc.style.display = 'none'; return; }
+      el.classList.add('active');
+      desc.innerHTML = ico(badgeIcons[b] || 'award') + '<span><strong>' + escHtml(b) + '</strong> — ' + escHtml(text) + '</span>';
+      desc.style.display = 'flex';
+    };
     badgesGrid.appendChild(el);
   });
+  desc.style.display = 'none';
   if (!d.badges?.length) {
     badgesGrid.innerHTML = '<span style="color:var(--text-muted);font-size:.88rem;font-weight:700">No badges yet — keep learning!</span>';
   }

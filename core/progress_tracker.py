@@ -373,6 +373,7 @@ def get_progress(student_id: int) -> dict:
         "student":      student,
         "sessions":     sessions,
         "badges":       badge_names,
+        "badge_descriptions": {name: desc for name, desc, _ in _BADGE_RULES},
         "quiz_results": quiz_results,
     }
 
