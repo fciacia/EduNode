@@ -29,9 +29,11 @@ SLIDE_SCHEMA: dict = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "title":   {"type": "string"},
-                    "bullets": {"type": "array", "items": {"type": "string"}},
-                    "notes":   {"type": "string"},
+                    "title":       {"type": "string"},
+                    "bullets":     {"type": "array", "items": {"type": "string"}},
+                    "notes":       {"type": "string"},
+                    "emoji":       {"type": "string"},
+                    "image_query": {"type": "string"},
                 },
                 "required": ["title", "bullets"],
             },
@@ -52,8 +54,10 @@ def generate_slides(topic: str, language: str, rag_context: str) -> list[dict]:
         "You are a teacher making a short lesson slide deck for school students. "
         f"Output ONLY a JSON object with a 'slides' array of {MAX_SLIDES} slides: a title "
         "slide, a few content slides, and a summary slide. Each slide has a short 'title', "
-        "3-5 short 'bullets', and 'notes' (one or two spoken sentences the teacher would "
-        "say). Use simple words. Base it on the curriculum context when provided."
+        "3-5 short 'bullets', 'notes' (one or two spoken sentences the teacher would say), "
+        "one 'emoji' — an actual emoji character such as 🌿 or 🔬 (never a text code like "
+        ":leaf:) — and 'image_query' (1-3 English keywords to find a picture). Use simple "
+        "words. Base it on the curriculum context when provided."
     )
     prompt = f"{context_block}Make a {MAX_SLIDES}-slide lesson about: {topic}\nRespond in {language}."
 
@@ -61,6 +65,21 @@ def generate_slides(topic: str, language: str, rag_context: str) -> list[dict]:
     if not raw:
         return []
     return _parse_slides_json(raw)
+
+
+def _normalize_emoji(raw: str) -> str:
+    """Small SLMs often emit ':sunflower:' shortcodes instead of a real emoji.
+    Convert known shortcodes to the character; drop anything still unresolved so
+    the UI can fall back to a default icon rather than show literal ':leaf:'."""
+    raw = raw.strip()
+    if not raw or ":" not in raw:
+        return raw
+    try:
+        import emoji
+        out = emoji.emojize(raw, language="alias")
+        return out if ":" not in out else ""
+    except Exception:
+        return ""
 
 
 def _parse_slides_json(raw: str) -> list[dict]:
@@ -90,6 +109,8 @@ def _parse_slides_json(raw: str) -> list[dict]:
         title   = item.get("title", "")
         bullets = item.get("bullets", [])
         notes   = item.get("notes", "")
+        emoji   = item.get("emoji", "")
+        img_q   = item.get("image_query", "")
         if not (isinstance(title, str) and title.strip()):
             continue
         if not isinstance(bullets, list):
@@ -98,9 +119,11 @@ def _parse_slides_json(raw: str) -> list[dict]:
         if not clean_bullets:
             continue
         validated.append({
-            "title":   title.strip(),
-            "bullets": clean_bullets[:6],
-            "notes":   str(notes).strip(),
+            "title":       title.strip(),
+            "bullets":     clean_bullets[:6],
+            "notes":       str(notes).strip(),
+            "emoji":       _normalize_emoji(str(emoji)),
+            "image_query": str(img_q).strip(),
         })
         if len(validated) == MAX_SLIDES:
             break
