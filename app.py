@@ -160,10 +160,29 @@ def _suggest_topics(subject: str = "", limit: int = 8) -> list[str]:
     return topics[:limit]
 
 
+_TOPIC_TX: dict[tuple[str, str], str] = {}
+
+
+def _translate_topic(text: str, language: str) -> str:
+    """Translate a suggested topic into the student's language (cached)."""
+    key = (language, text)
+    if key not in _TOPIC_TX:
+        try:
+            from core.agents.translation import to_native
+            _TOPIC_TX[key] = to_native(text, language) or text
+        except Exception:
+            _TOPIC_TX[key] = text
+    return _TOPIC_TX[key]
+
+
 @app.get("/api/topics")
 def api_topics():
-    subject = (request.args.get("subject") or "").strip()
-    return jsonify({"topics": _suggest_topics(subject)})
+    subject  = (request.args.get("subject") or "").strip()
+    language = (request.args.get("language") or "").strip()
+    topics = _suggest_topics(subject)
+    if language and language != cfg.HUB_LANGUAGES[0]:        # not English
+        topics = [_translate_topic(t, language) for t in topics]
+    return jsonify({"topics": topics})
 
 
 def _grounded_context(query: str, subject: str):

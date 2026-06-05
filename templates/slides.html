@@ -230,13 +230,21 @@ function escHtml(s) {
 }
 function prettySrc(src) { return String(src).split(/[\\/]/).pop().replace(/\.(pdf|txt|md)$/i,'').replace(/_/g,' '); }
 
+/* "Try" label per hub language (chips themselves are translated server-side) */
+const SUG_TRY = {
+  'English':'Try','Filipino':'Subukan','Bahasa Melayu':'Cuba','Bahasa Indonesia':'Coba',
+  'Thai':'ลองดู','Vietnamese':'Thử','Khmer':'សាកល្បង','Lao':'ລອງ','Burmese':'စမ်းကြည့်ပါ',
+  'Cebuano':'Sulayi','Iban':'Cuba'
+};
+
 async function renderTopics() {
   try {
-    const r = await fetch('/api/topics?subject=' + encodeURIComponent(getSubject()));
+    const r = await fetch('/api/topics?subject=' + encodeURIComponent(getSubject()) +
+                          '&language=' + encodeURIComponent(getLang()));
     const d = await r.json();
     const box = document.getElementById('topicSuggest');
     if (!d.topics || !d.topics.length) { box.style.display='none'; return; }
-    box.innerHTML = '<span class="ts-label">Try</span>' +
+    box.innerHTML = '<span class="ts-label">' + escHtml(SUG_TRY[getLang()] || 'Try') + '</span>' +
       d.topics.map(t => '<button class="topic-chip" type="button">' + escHtml(t) + '</button>').join('');
     box.style.display = 'flex';
     box.querySelectorAll('.topic-chip').forEach(b => b.onclick = () => {
@@ -472,7 +480,7 @@ document.addEventListener('keydown', e => {
   const saved = localStorage.getItem('edu_lang');
   if (saved) [...document.getElementById('langSel').options].forEach(o => o.selected = (o.value === saved));
 })();
-document.getElementById('langSel').addEventListener('change', e => localStorage.setItem('edu_lang', e.target.value));
+document.getElementById('langSel').addEventListener('change', e => { localStorage.setItem('edu_lang', e.target.value); renderTopics(); });
 document.getElementById('subjectSel').addEventListener('change', renderTopics);
 renderTopics();
 </script>
