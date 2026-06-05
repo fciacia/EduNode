@@ -1,0 +1,6 @@
+# Dev/test-only dependencies (not needed to run Edge).
+#   pip install -r requirements-dev.txt
+# Frontend smoke tests use your installed Google Chrome (no browser download):
+#   EDGE_SMOKE=1 pytest tests/test_frontend_smoke.py
+-r requirements.txt
+playwright>=1.40
