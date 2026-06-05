@@ -133,14 +133,14 @@
 <div class="page-hero">
   <div class="hero-emoji"><svg class="icon icon-2xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg></div>
   <div class="page-hero-text">
-    <h2>Lesson Slides!</h2>
-    <p>Turn any topic into a slide deck you can present and narrate — offline</p>
+    <h2 data-i18n="slides.title">Lesson Slides!</h2>
+    <p data-i18n="slides.subtitle">Turn any topic into a slide deck you can present and narrate — offline</p>
   </div>
 </div>
 
 <div class="controls-row">
   <select id="subjectSel" class="sel">
-    {% for s in subjects %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+    {% for s in subjects %}<option value="{{ s }}" data-i18n="subject.{{ s }}">{{ s }}</option>{% endfor %}
   </select>
   <select id="langSel" class="sel">
     {% for l in languages %}<option value="{{ l }}">{{ l }}</option>{% endfor %}
@@ -148,7 +148,7 @@
 </div>
 
 <div class="generate-row">
-  <input id="topicInput" class="topic-input" type="text" placeholder="Topic (e.g. the water cycle, fractions…)">
+  <input id="topicInput" class="topic-input" type="text" data-i18n-ph="slides.topicPh" placeholder="Topic (e.g. the water cycle, fractions…)">
   <button class="btn-indigo" id="generateBtn" onclick="generateSlides()">
     <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg> Make Slides
   </button>
@@ -159,7 +159,7 @@
 
 <div id="deckArea" style="display:none">
   <div class="grounding-row" id="groundingRow" style="display:none">
-    <span class="grounding-badge"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book-open"></use></svg> From your textbook</span>
+    <span class="grounding-badge" id="groundBadge"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book-open"></use></svg> From your textbook</span>
     <span class="src-chips" id="srcChips"></span>
   </div>
 
@@ -175,7 +175,7 @@
           <button type="button" onclick="downloadDeck('pptx')"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg> PowerPoint (.pptx)</button>
         </div>
       </span>
-      <button class="btn-indigo" onclick="enterPresent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg> Present</button>
+      <button class="btn-indigo" id="presentBtn" onclick="enterPresent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg> Present</button>
     </div>
   </div>
 
@@ -190,9 +190,9 @@
 
   <div class="deck-dots" id="deckDots"></div>
   <div class="deck-nav" style="margin-top:1rem">
-    <button class="btn-outline" onclick="prevSlide()">‹ Prev</button>
+    <button class="btn-outline" id="prevBtn" onclick="prevSlide()">‹ Prev</button>
     <span class="deck-counter" id="deckCounter2">1 / 1</span>
-    <button class="btn-outline" onclick="nextSlide()">Next ›</button>
+    <button class="btn-outline" id="nextBtn" onclick="nextSlide()">Next ›</button>
   </div>
 </div>
 
@@ -206,7 +206,7 @@
     </div>
   </div>
   <div class="present-bar">
-    <button class="btn-outline" onclick="exitPresent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-square"></use></svg> Exit</button>
+    <button class="btn-outline" id="exitBtn" onclick="exitPresent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-square"></use></svg> Exit</button>
     <span class="counter" id="presentCounter">1 / 1</span>
     <div style="display:flex;gap:.5rem">
       <button class="btn-outline js-narrate" onclick="narrateCurrent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-volume"></use></svg></button>
@@ -230,12 +230,10 @@ function escHtml(s) {
 }
 function prettySrc(src) { return String(src).split(/[\\/]/).pop().replace(/\.(pdf|txt|md)$/i,'').replace(/_/g,' '); }
 
-/* "Try" label per hub language (chips themselves are translated server-side) */
-const SUG_TRY = {
-  'English':'Try','Filipino':'Subukan','Bahasa Melayu':'Cuba','Bahasa Indonesia':'Coba',
-  'Thai':'ลองดู','Vietnamese':'Thử','Khmer':'សាកល្បង','Lao':'ລອງ','Burmese':'စမ်းကြည့်ပါ',
-  'Cebuano':'Sulayi','Iban':'Cuba'
-};
+/* Pull a UI string in the current language (falls back to the given English). */
+function T(key, fallback) {
+  return (window.EduI18n && window.EduI18n.t) ? window.EduI18n.t(key) : fallback;
+}
 
 async function renderTopics() {
   try {
@@ -244,7 +242,7 @@ async function renderTopics() {
     const d = await r.json();
     const box = document.getElementById('topicSuggest');
     if (!d.topics || !d.topics.length) { box.style.display='none'; return; }
-    box.innerHTML = '<span class="ts-label">' + escHtml(SUG_TRY[getLang()] || 'Try') + '</span>' +
+    box.innerHTML = '<span class="ts-label">' + escHtml(T('slides.try','Try')) + '</span>' +
       d.topics.map(t => '<button class="topic-chip" type="button">' + escHtml(t) + '</button>').join('');
     box.style.display = 'flex';
     box.querySelectorAll('.topic-chip').forEach(b => b.onclick = () => {
@@ -268,9 +266,9 @@ function hideGenError(){ const b=document.getElementById('genError'); if(b) b.st
 function showGenError(kind){
   const box=document.getElementById('genError'); const offline=kind==='offline';
   box.innerHTML = ico(offline?'wifi-off':'refresh') +
-    '<span>'+(offline?'The AI tutor is starting up. Please wait a few seconds and try again.'
-                     :'Could not make slides for that just now. Try again or a simpler topic.')+
-    '</span><button class="btn-retry-gen">'+(offline?'Try again':'Retry')+'</button>';
+    '<span>'+escHtml(offline ? T('slides.errOffline','The AI tutor is starting up. Please wait a moment and try again.')
+                              : T('slides.errGen','Could not make slides for that just now. Try again or a simpler topic.'))+
+    '</span><button class="btn-retry-gen">'+escHtml(T('slides.retry','Retry'))+'</button>';
   box.style.display='flex';
   box.querySelector('.btn-retry-gen').onclick = () => { hideGenError(); generateSlides(); };
 }
@@ -280,7 +278,7 @@ async function generateSlides() {
   if (!topic) { alert('Please enter a topic!'); return; }
   currentTopic = topic;
   const btn = document.getElementById('generateBtn');
-  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' Generating…';
+  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' ' + T('slides.making','Generating…');
   hideGenError();
   try {
     const r = await fetch('/api/slides/generate', {
@@ -296,7 +294,7 @@ async function generateSlides() {
     document.getElementById('deckArea').style.display = 'block';
     document.getElementById('deckArea').scrollIntoView({behavior:'smooth'});
   } catch(e) { showGenError('offline'); }
-  finally { btn.disabled = false; btn.innerHTML = ico('monitor') + ' Make Slides'; }
+  finally { btn.disabled = false; btn.innerHTML = ico('monitor') + ' ' + T('slides.make','Make Slides'); }
 }
 
 function buildDots() {
@@ -371,7 +369,7 @@ async function downloadDeck(fmt) {
   if (!slides.length) return;
   const btn = document.getElementById('downloadBtn');
   const orig = btn.innerHTML;
-  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' Preparing…';
+  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' ' + T('slides.preparing','Preparing…');
   try {
     const r = await fetch('/api/slides/download', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -427,7 +425,8 @@ function slideSpeech(s) { return (s.notes && s.notes.trim()) ? s.notes : (s.bull
 function setNarrateState(on) {
   document.querySelectorAll('.js-narrate').forEach(b => {
     b.classList.toggle('speaking', on);
-    b.innerHTML = (on ? ico('square') : ico('volume')) + (b.hasAttribute('data-full') ? (on ? ' Stop' : ' Narrate') : '');
+    b.innerHTML = (on ? ico('square') : ico('volume')) +
+      (b.hasAttribute('data-full') ? ' ' + (on ? T('slides.stop','Stop') : T('slides.narrate','Narrate')) : '');
   });
 }
 async function narrateCurrent() {
@@ -439,7 +438,8 @@ async function narrateCurrent() {
 
 function setPlayAllBtn(playing) {
   const b = document.getElementById('playAllBtn');
-  b.innerHTML = playing ? ico('square') + ' Stop' : ico('play') + ' Play all';
+  b.innerHTML = playing ? ico('square') + ' ' + T('slides.stop','Stop')
+                        : ico('play') + ' ' + T('slides.playAll','Play all');
 }
 function togglePlayAll() { playingAll ? stopAll() : playAll(); }
 function stopAll() { playingAll = false; stopAudio(); setPlayAllBtn(false); setNarrateState(false); }
@@ -476,12 +476,31 @@ document.addEventListener('keydown', e => {
   });
 })();
 
+/* Localize the whole Slides page (nav + static text via i18n, JS-built
+   controls here) and refresh topic chips — re-run whenever language changes. */
+function applySlidesLang() {
+  if (window.EduI18n) window.EduI18n.applyLang(getLang());
+  const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  const gb = document.getElementById('generateBtn'); if (gb && !gb.disabled) gb.innerHTML = ico('monitor') + ' ' + T('slides.make','Make Slides');
+  const db = document.getElementById('downloadBtn'); if (db && !db.disabled) db.innerHTML = ico('arrow-down') + ' ' + T('slides.download','Download');
+  set('presentBtn', ico('monitor') + ' ' + T('slides.present','Present'));
+  set('prevBtn', '‹ ' + escHtml(T('slides.prev','Prev')));
+  set('nextBtn', escHtml(T('slides.next','Next')) + ' ›');
+  set('exitBtn', ico('square') + ' ' + T('slides.exit','Exit'));
+  set('groundBadge', ico('book-open') + ' ' + escHtml(T('slides.fromBook','From your textbook')));
+  if (!currentAudio && !playingAll) { setNarrateState(false); setPlayAllBtn(false); }
+  renderTopics();
+}
+
 (function() {
   const saved = localStorage.getItem('edu_lang');
   if (saved) [...document.getElementById('langSel').options].forEach(o => o.selected = (o.value === saved));
 })();
-document.getElementById('langSel').addEventListener('change', e => { localStorage.setItem('edu_lang', e.target.value); renderTopics(); });
+document.getElementById('langSel').addEventListener('change', e => {
+  localStorage.setItem('edu_lang', e.target.value);
+  applySlidesLang();
+});
 document.getElementById('subjectSel').addEventListener('change', renderTopics);
-renderTopics();
+window.addEventListener('DOMContentLoaded', applySlidesLang);
 </script>
 {% endblock %}
