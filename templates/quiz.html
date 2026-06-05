@@ -131,23 +131,23 @@
 <div class="page-hero">
   <div class="hero-emoji"><svg class="icon icon-2xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-brain"></use></svg></div>
   <div class="page-hero-text">
-    <h2>Quiz Challenge!</h2>
-    <p>Test your knowledge and earn certificates</p>
+    <h2 data-i18n="quiz.title">Quiz Challenge!</h2>
+    <p data-i18n="quiz.subtitle">Test your knowledge and earn certificates</p>
   </div>
 </div>
 
 <div class="controls-row">
   <select id="subjectSel" class="sel">
-    {% for s in subjects %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+    {% for s in subjects %}<option value="{{ s }}" data-i18n="subject.{{ s }}">{{ s }}</option>{% endfor %}
   </select>
   <select id="langSel" class="sel">
     {% for l in languages %}<option value="{{ l }}">{{ l }}</option>{% endfor %}
   </select>
-  <input id="studentName" class="name-input" type="text" placeholder="Your name…">
+  <input id="studentName" class="name-input" type="text" data-i18n-ph="quiz.namePh" placeholder="Your name…">
 </div>
 
 <div class="generate-row">
-  <input id="topicInput" class="topic-input" type="text" placeholder="Enter a topic (e.g. the water cycle, fractions…)">
+  <input id="topicInput" class="topic-input" type="text" data-i18n-ph="quiz.topicPh" placeholder="Enter a topic (e.g. the water cycle, fractions…)">
   <button class="btn-primary" id="generateBtn" onclick="generateQuiz()">
     <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-target"></use></svg> Generate Quiz
   </button>
@@ -160,19 +160,19 @@
 <div id="quizArea" style="display:none">
   <!-- Curriculum grounding (shown when questions come from the textbook) -->
   <div class="grounding-row" id="groundingRow" style="display:none">
-    <span class="grounding-badge"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book-open"></use></svg> From your textbook</span>
+    <span class="grounding-badge" id="groundBadge"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book-open"></use></svg> From your textbook</span>
     <span class="src-chips" id="srcChips"></span>
   </div>
 
   <!-- Progress bar -->
   <div class="quiz-progress-wrap">
     <div class="quiz-progress-bar" id="quizProgressBar" style="width:0%"></div>
-    <span class="quiz-progress-label" id="quizProgressLabel">0 / 0 answered</span>
+    <span class="quiz-progress-label" id="quizProgressLabel">0 / 0</span>
   </div>
 
   <div id="questionsContainer"></div>
   <div style="margin-top:.5rem">
-    <button class="btn-primary" onclick="submitQuiz()">
+    <button class="btn-primary" id="submitBtn" onclick="submitQuiz()">
       <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-check-circle"></use></svg> Submit Answers
     </button>
   </div>
@@ -192,7 +192,7 @@
   <div class="score-heading" id="scoreHeading"></div>
   <p style="color:var(--text-muted);font-weight:700;margin-top:.35rem" id="scoreSub"></p>
   <div id="certLinks"></div>
-  <button class="btn-primary" style="margin-top:1.5rem" onclick="resetQuiz()">
+  <button class="btn-primary" id="newQuizBtn" style="margin-top:1.5rem" onclick="resetQuiz()">
     <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-refresh"></use></svg> New Quiz
   </button>
 </div>
@@ -209,13 +209,17 @@ function getLang()    { return document.getElementById('langSel').value; }
 function getSubject() { return document.getElementById('subjectSel').value; }
 function getName()    { return document.getElementById('studentName').value.trim() || 'Student'; }
 
+/* Localized UI string (falls back to the given English). */
+function T(key, fallback) { return (window.EduI18n && window.EduI18n.t) ? window.EduI18n.t(key) : fallback; }
+function answeredLabel(a, t) { return a + ' / ' + t + ' ' + T('quiz.answered','answered'); }
+
 async function renderTopics() {
   try {
     const r = await fetch('/api/topics?subject=' + encodeURIComponent(getSubject()));
     const d = await r.json();
     const box = document.getElementById('topicSuggest');
     if (!d.topics || !d.topics.length) { box.style.display = 'none'; return; }
-    box.innerHTML = '<span class="ts-label">Try</span>' +
+    box.innerHTML = '<span class="ts-label">' + escHtml(T('slides.try','Try')) + '</span>' +
       d.topics.map(t => '<button class="topic-chip" type="button">' + escHtml(t) + '</button>').join('');
     box.style.display = 'flex';
     box.querySelectorAll('.topic-chip').forEach(btn => {
@@ -226,15 +230,15 @@ async function renderTopics() {
 
 async function generateQuiz() {
   const topic = document.getElementById('topicInput').value.trim();
-  if (!topic) { alert('Please enter a topic!'); return; }
+  if (!topic) { alert(T('ui.enterTopic','Please enter a topic!')); return; }
   const btn = document.getElementById('generateBtn');
-  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' Generating…';
+  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' ' + T('slides.making','Generating…');
   hideGenError();
   document.getElementById('quizArea').style.display = 'none';
   document.getElementById('scoreCard').style.display = 'none';
   Object.keys(selectedAnswers).forEach(k => delete selectedAnswers[k]);
   document.getElementById('quizProgressBar').style.width = '0%';
-  document.getElementById('quizProgressLabel').textContent = '0 / 0 answered';
+  document.getElementById('quizProgressLabel').textContent = answeredLabel(0, 0);
   try {
     const r = await fetch('/api/quiz/generate', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -246,10 +250,10 @@ async function generateQuiz() {
     if (!currentQuestions.length || d.error === 'generation') { showGenError('generation'); return; }
     renderQuestions(currentQuestions);
     showGrounding(d);
-    document.getElementById('quizProgressLabel').textContent = '0 / ' + currentQuestions.length + ' answered';
+    document.getElementById('quizProgressLabel').textContent = answeredLabel(0, currentQuestions.length);
     document.getElementById('quizArea').style.display = 'block';
   } catch(e) { showGenError('offline'); }
-  finally { btn.disabled = false; btn.innerHTML = ico('target') + ' Generate Quiz'; }
+  finally { btn.disabled = false; btn.innerHTML = ico('target') + ' ' + T('quiz.generate','Generate Quiz'); }
 }
 
 function hideGenError() { const b = document.getElementById('genError'); if (b) b.style.display = 'none'; }
@@ -257,10 +261,10 @@ function showGenError(kind) {
   const box = document.getElementById('genError');
   const offline = kind === 'offline';
   box.innerHTML = ico(offline ? 'wifi-off' : 'refresh') +
-    '<span>' + (offline
-      ? 'The AI tutor is starting up. Please wait a few seconds and try again.'
-      : 'Could not make a quiz for that just now. Try again or pick a simpler topic.') +
-    '</span><button class="btn-retry-gen">' + (offline ? 'Try again' : 'Retry') + '</button>';
+    '<span>' + escHtml(offline
+      ? T('slides.errOffline','The AI tutor is starting up. Please wait a moment and try again.')
+      : T('quiz.errGen','Could not make a quiz for that just now. Try again or pick a simpler topic.')) +
+    '</span><button class="btn-retry-gen">' + escHtml(T('slides.retry','Retry')) + '</button>';
   box.style.display = 'flex';
   box.querySelector('.btn-retry-gen').onclick = () => { hideGenError(); generateQuiz(); };
 }
@@ -300,7 +304,7 @@ function updateProgress() {
   const answered = Object.keys(selectedAnswers).length;
   const pct = total ? (answered / total) * 100 : 0;
   document.getElementById('quizProgressBar').style.width = pct + '%';
-  document.getElementById('quizProgressLabel').textContent = answered + ' / ' + total + ' answered';
+  document.getElementById('quizProgressLabel').textContent = answeredLabel(answered, total);
 }
 
 /* Keyboard shortcuts: A–D or 1–4 selects option, Enter submits if all answered */
@@ -325,7 +329,7 @@ document.addEventListener('keydown', function(e) {
 
 async function submitQuiz() {
   if (Object.keys(selectedAnswers).length < currentQuestions.length) {
-    if (!confirm('You have unanswered questions. Submit anyway?')) return;
+    if (!confirm(T('quiz.confirmSubmit','You have unanswered questions. Submit anyway?'))) return;
   }
   try {
     const r = await fetch('/api/quiz/submit', {
@@ -366,7 +370,7 @@ function showResults(result, certs) {
   document.getElementById('scoreEmoji').innerHTML = ico(scoreIcon, 'icon-2xl');
   document.getElementById('scoreEmoji').style.color = pct >= 70 ? 'var(--primary)' : 'var(--accent)';
   document.getElementById('scoreHeading').textContent = `${result.score} / ${result.total}  (${pct}%)`;
-  document.getElementById('scoreSub').textContent = pct >= 70 ? 'Amazing work! Keep it up!' : 'Good try! Keep practising!';
+  document.getElementById('scoreSub').textContent = pct >= 70 ? T('quiz.scoreGood','Amazing work! Keep it up!') : T('quiz.scoreTry','Good try! Keep practising!');
   /* Animate score ring */
   const circumference = 327;
   const offset = circumference - (pct / 100) * circumference;
@@ -378,7 +382,7 @@ function showResults(result, certs) {
   document.getElementById('scoreRingLabel').textContent = pct + '%';
   const certDiv = document.getElementById('certLinks'); certDiv.innerHTML = '';
   certs.forEach(c => {
-    certDiv.innerHTML += `<a class="cert-link" href="${c.cert_url}" target="_blank">${ico('file-text')} Download ${escHtml(c.topic)} Certificate</a> `;
+    certDiv.innerHTML += `<a class="cert-link" href="${c.cert_url}" target="_blank">${ico('file-text')} ${T('quiz.cert','Download {t} Certificate').replace('{t}', escHtml(c.topic))}</a> `;
   });
   card.style.display = 'block';
   card.scrollIntoView({behavior:'smooth'});
@@ -389,7 +393,7 @@ function resetQuiz() {
   document.getElementById('scoreCard').style.display = 'none';
   document.getElementById('topicInput').value = '';
   document.getElementById('quizProgressBar').style.width = '0%';
-  document.getElementById('quizProgressLabel').textContent = '0 / 0 answered';
+  document.getElementById('quizProgressLabel').textContent = answeredLabel(0, 0);
   const fill = document.getElementById('scoreRingFill');
   if (fill) fill.style.strokeDashoffset = '327';
   currentQuestions = [];
@@ -417,13 +421,29 @@ function showGrounding(d) {
   row.style.display = 'flex';
 }
 
+/* Localize the page (nav + static via i18n, JS-built controls here) and
+   refresh chips — re-run whenever the language changes. */
+function applyQuizLang() {
+  if (window.EduI18n) window.EduI18n.applyLang(getLang());
+  const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  const gb = document.getElementById('generateBtn'); if (gb && !gb.disabled) gb.innerHTML = ico('target') + ' ' + T('quiz.generate','Generate Quiz');
+  set('submitBtn', ico('check-circle') + ' ' + T('quiz.submit','Submit Answers'));
+  set('newQuizBtn', ico('refresh') + ' ' + T('quiz.newQuiz','New Quiz'));
+  set('groundBadge', ico('book-open') + ' ' + escHtml(T('slides.fromBook','From your textbook')));
+  document.getElementById('quizProgressLabel').textContent =
+    answeredLabel(Object.keys(selectedAnswers).length, currentQuestions.length);
+  renderTopics();
+}
+
 (function() {
   const saved = localStorage.getItem('edu_lang');
   if (saved) [...document.getElementById('langSel').options].forEach(o => o.selected = (o.value === saved));
 })();
-document.getElementById('langSel').addEventListener('change', e => localStorage.setItem('edu_lang', e.target.value));
-
+document.getElementById('langSel').addEventListener('change', e => {
+  localStorage.setItem('edu_lang', e.target.value);
+  applyQuizLang();
+});
 document.getElementById('subjectSel').addEventListener('change', renderTopics);
-renderTopics();
+window.addEventListener('DOMContentLoaded', applyQuizLang);
 </script>
 {% endblock %}

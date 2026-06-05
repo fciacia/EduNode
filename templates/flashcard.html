@@ -172,14 +172,14 @@
 <div class="page-hero">
   <div class="hero-emoji"><svg class="icon icon-2xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-layers"></use></svg></div>
   <div class="page-hero-text">
-    <h2>Flashcard Deck!</h2>
-    <p>Tap a card to flip it and see the answer</p>
+    <h2 data-i18n="cards.title">Flashcard Deck!</h2>
+    <p data-i18n="cards.subtitle">Tap a card to flip it and see the answer</p>
   </div>
 </div>
 
 <div class="controls-row">
   <select id="subjectSel" class="sel">
-    {% for s in subjects %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+    {% for s in subjects %}<option value="{{ s }}" data-i18n="subject.{{ s }}">{{ s }}</option>{% endfor %}
   </select>
   <select id="langSel" class="sel">
     {% for l in languages %}<option value="{{ l }}">{{ l }}</option>{% endfor %}
@@ -187,7 +187,7 @@
 </div>
 
 <div class="generate-row">
-  <input id="topicInput" class="topic-input" type="text" placeholder="Topic (e.g. plant cells, multiplication tables…)">
+  <input id="topicInput" class="topic-input" type="text" data-i18n-ph="cards.topicPh" placeholder="Topic (e.g. plant cells, multiplication tables…)">
   <button class="btn-blue" id="generateBtn" onclick="generateDeck()">
     <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-layers"></use></svg> Make Cards
   </button>
@@ -200,19 +200,19 @@
 <button class="btn-outline" id="reviewDueBtn" onclick="loadDue()"
         style="display:none; margin-bottom:1.5rem; align-items:center; gap:.4rem">
   <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-refresh"></use></svg>
-  Review due (<span id="dueCount">0</span>)
+  <span id="reviewDueLabel">Review due</span> (<span id="dueCount">0</span>)
 </button>
 
 <div id="deckArea" style="display:none">
   <!-- Curriculum grounding (shown when cards come from the textbook) -->
   <div class="grounding-row" id="groundingRow" style="display:none">
-    <span class="grounding-badge"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book-open"></use></svg> From your textbook</span>
+    <span class="grounding-badge" id="groundBadge"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book-open"></use></svg> From your textbook</span>
     <span class="src-chips" id="srcChips"></span>
   </div>
 
   <!-- Deck toolbar: shuffle + mastery counters -->
   <div class="deck-toolbar">
-    <button class="btn-outline deck-shuffle-btn" onclick="shuffleDeck()" title="Shuffle cards">
+    <button class="btn-outline deck-shuffle-btn" id="shuffleBtn" onclick="shuffleDeck()" title="Shuffle cards">
       <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-refresh"></use></svg> Shuffle
     </button>
     <div class="mastery-counters">
@@ -224,12 +224,12 @@
   <div class="card-scene" id="cardScene" onclick="flipCard()" title="Click to flip!">
     <div class="card-3d" id="card3d">
       <div class="card-face front">
-        <div class="card-label"><svg class="icon icon-xs" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-lightbulb"></use></svg> Concept</div>
+        <div class="card-label" id="frontLabel"><svg class="icon icon-xs" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-lightbulb"></use></svg> Concept</div>
         <div class="card-title" id="cardFront">—</div>
-        <div class="card-hint"><svg class="icon icon-xs" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-arrow-down"></use></svg> Tap to reveal!</div>
+        <div class="card-hint" id="revealHint"><svg class="icon icon-xs" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-arrow-down"></use></svg> Tap to reveal!</div>
       </div>
       <div class="card-face back">
-        <div class="card-label"><svg class="icon icon-xs" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book-open"></use></svg> Definition</div>
+        <div class="card-label" id="backLabel"><svg class="icon icon-xs" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book-open"></use></svg> Definition</div>
         <img id="cardImage" class="card-image" alt="" style="display:none">
         <div class="card-body" id="cardBack">—</div>
       </div>
@@ -239,17 +239,17 @@
   <div class="deck-dots" id="deckDots"></div>
 
   <div class="deck-nav" style="margin-top:1rem">
-    <button class="btn-outline" onclick="prevCard()">‹ Prev</button>
+    <button class="btn-outline" id="prevBtn" onclick="prevCard()">‹ Prev</button>
     <span class="deck-counter" id="deckCounter">1 / 1</span>
-    <button class="btn-outline" onclick="nextCard()">Next ›</button>
+    <button class="btn-outline" id="nextBtn" onclick="nextCard()">Next ›</button>
   </div>
 
   <!-- Mastery buttons (shown only when card is flipped) -->
   <div class="mastery-btns" id="masteryBtns" style="display:none">
-    <button class="btn-mastery btn-review" onclick="markCard('review')">
+    <button class="btn-mastery btn-review" id="reviewAgainBtn" onclick="markCard('review')">
       <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-refresh"></use></svg> Review again
     </button>
-    <button class="btn-mastery btn-known" onclick="markCard('known')">
+    <button class="btn-mastery btn-known" id="gotItBtn" onclick="markCard('known')">
       <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-check-circle"></use></svg> Got it!
     </button>
   </div>
@@ -261,7 +261,7 @@
   <h3 id="summaryTitle">Deck complete!</h3>
   <p id="summaryBody"></p>
   <div style="display:flex;gap:.65rem;justify-content:center;margin-top:1.25rem">
-    <button class="btn-outline" onclick="restartDeck()">
+    <button class="btn-outline" id="restartBtn" onclick="restartDeck()">
       <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-refresh"></use></svg> Restart
     </button>
     <button class="btn-primary" onclick="reviewOnly()" id="reviewOnlyBtn">
@@ -281,13 +281,16 @@ const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${
 function getLang()    { return document.getElementById('langSel').value; }
 function getSubject() { return document.getElementById('subjectSel').value; }
 
+/* Localized UI string (falls back to the given English). */
+function T(key, fallback) { return (window.EduI18n && window.EduI18n.t) ? window.EduI18n.t(key) : fallback; }
+
 async function renderTopics() {
   try {
     const r = await fetch('/api/topics?subject=' + encodeURIComponent(getSubject()));
     const d = await r.json();
     const box = document.getElementById('topicSuggest');
     if (!d.topics || !d.topics.length) { box.style.display = 'none'; return; }
-    box.innerHTML = '<span class="ts-label">Try</span>' +
+    box.innerHTML = '<span class="ts-label">' + escHtml(T('slides.try','Try')) + '</span>' +
       d.topics.map(t => '<button class="topic-chip" type="button">' + escHtml(t) + '</button>').join('');
     box.style.display = 'flex';
     box.querySelectorAll('.topic-chip').forEach(btn => {
@@ -347,10 +350,10 @@ function showGenError(kind) {
   const box = document.getElementById('genError');
   const offline = kind === 'offline';
   box.innerHTML = ico(offline ? 'wifi-off' : 'refresh') +
-    '<span>' + (offline
-      ? 'The AI tutor is starting up. Please wait a few seconds and try again.'
-      : 'Could not make cards for that just now. Try again or pick a simpler topic.') +
-    '</span><button class="btn-retry-gen">' + (offline ? 'Try again' : 'Retry') + '</button>';
+    '<span>' + escHtml(offline
+      ? T('slides.errOffline','The AI tutor is starting up. Please wait a moment and try again.')
+      : T('cards.errGen','Could not make cards for that just now. Try again or pick a simpler topic.')) +
+    '</span><button class="btn-retry-gen">' + escHtml(T('slides.retry','Retry')) + '</button>';
   box.style.display = 'flex';
   box.querySelector('.btn-retry-gen').onclick = () => { hideGenError(); generateDeck(); };
 }
@@ -371,10 +374,10 @@ function showGrounding(d) {
 
 async function generateDeck() {
   const topic = document.getElementById('topicInput').value.trim();
-  if (!topic) { alert('Please enter a topic!'); return; }
+  if (!topic) { alert(T('ui.enterTopic','Please enter a topic!')); return; }
   currentTopic = topic;
   const btn = document.getElementById('generateBtn');
-  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' Generating…';
+  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' ' + T('slides.making','Generating…');
   hideGenError();
   try {
     const r = await fetch('/api/flashcard/generate', {
@@ -395,7 +398,7 @@ async function generateDeck() {
     document.getElementById('deckArea').scrollIntoView({behavior:'smooth'});
     updateMasteryCounters();
   } catch(e) { showGenError('offline'); }
-  finally { btn.disabled = false; btn.innerHTML = ico('layers') + ' Make Cards'; }
+  finally { btn.disabled = false; btn.innerHTML = ico('layers') + ' ' + T('cards.make','Make Cards'); }
 }
 
 function buildDots() {
@@ -459,8 +462,8 @@ function markCard(verdict) {
 }
 
 function updateMasteryCounters() {
-  document.getElementById('knownCount').textContent  = knownSet.size + ' known';
-  document.getElementById('reviewCount').textContent = reviewSet.size + ' review';
+  document.getElementById('knownCount').textContent  = knownSet.size + ' ' + T('cards.known','known');
+  document.getElementById('reviewCount').textContent = reviewSet.size + ' ' + T('cards.review','review');
 }
 
 function showMasterySummary() {
@@ -470,9 +473,10 @@ function showMasterySummary() {
   const total = cards.length;
   const k = knownSet.size;
   document.getElementById('summaryTitle').textContent =
-    k === total ? 'Perfect! You know them all!' : k > total / 2 ? 'Great work!' : 'Keep practising!';
-  document.getElementById('summaryBody').textContent =
-    `${k} / ${total} cards mastered. ${reviewSet.size > 0 ? reviewSet.size + ' marked for review.' : ''}`;
+    k === total ? T('cards.perfect','Perfect! You know them all!') : k > total / 2 ? T('cards.great','Great work!') : T('cards.keepGoing','Keep practising!');
+  const masteredTxt = T('cards.mastered','{k} / {total} cards mastered.').replace('{k}', k).replace('{total}', total);
+  const reviewTxt = reviewSet.size > 0 ? ' ' + T('cards.markedReview','{n} marked for review.').replace('{n}', reviewSet.size) : '';
+  document.getElementById('summaryBody').textContent = masteredTxt + reviewTxt;
   document.getElementById('reviewOnlyBtn').style.display = reviewSet.size > 0 ? '' : 'none';
   summary.scrollIntoView({behavior:'smooth'});
 }
@@ -525,16 +529,41 @@ document.addEventListener('keydown', e => {
   /* Remove onclick flip from scene when swiping — card handles tap via its own onclick */
 })();
 
+/* Localize the page (nav + static via i18n, JS-built controls here) and
+   refresh chips — re-run whenever the language changes. */
+function applyCardsLang() {
+  if (window.EduI18n) window.EduI18n.applyLang(getLang());
+  const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  const gb = document.getElementById('generateBtn'); if (gb && !gb.disabled) gb.innerHTML = ico('layers') + ' ' + T('cards.make','Make Cards');
+  set('shuffleBtn', ico('refresh') + ' ' + T('cards.shuffle','Shuffle'));
+  set('reviewDueLabel', escHtml(T('cards.reviewDue','Review due')));
+  set('groundBadge', ico('book-open') + ' ' + escHtml(T('slides.fromBook','From your textbook')));
+  set('frontLabel', ico('lightbulb','icon-xs') + ' ' + escHtml(T('cards.concept','Concept')));
+  set('backLabel', ico('book-open','icon-xs') + ' ' + escHtml(T('cards.definition','Definition')));
+  set('revealHint', ico('arrow-down','icon-xs') + ' ' + escHtml(T('cards.reveal','Tap to reveal!')));
+  set('prevBtn', '‹ ' + escHtml(T('slides.prev','Prev')));
+  set('nextBtn', escHtml(T('slides.next','Next')) + ' ›');
+  set('reviewAgainBtn', ico('refresh') + ' ' + escHtml(T('cards.reviewAgain','Review again')));
+  set('gotItBtn', ico('check-circle') + ' ' + escHtml(T('cards.gotIt','Got it!')));
+  set('restartBtn', ico('refresh') + ' ' + escHtml(T('cards.restart','Restart')));
+  set('reviewOnlyBtn', ico('brain') + ' ' + escHtml(T('cards.reviewMarked','Review marked')));
+  if (cards.length) updateMasteryCounters();
+  renderTopics();
+}
+
 (function() {
   const saved = localStorage.getItem('edu_lang');
   if (saved) [...document.getElementById('langSel').options].forEach(o => o.selected = (o.value === saved));
 })();
-document.getElementById('langSel').addEventListener('change', e => localStorage.setItem('edu_lang', e.target.value));
+document.getElementById('langSel').addEventListener('change', e => {
+  localStorage.setItem('edu_lang', e.target.value);
+  applyCardsLang();
+});
 
 // Show any cards due for spaced-repetition review on load.
 refreshDueCount();
 
 document.getElementById('subjectSel').addEventListener('change', renderTopics);
-renderTopics();
+window.addEventListener('DOMContentLoaded', applyCardsLang);
 </script>
 {% endblock %}
