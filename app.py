@@ -626,22 +626,26 @@ def api_slides_generate():
 
 @app.post("/api/slides/download")
 def api_slides_download():
-    """Export the current deck as a standard .pptx for offline study."""
+    """Export the current deck as a .pdf or .pptx for offline study."""
     data   = request.get_json(silent=True) or {}
     topic  = (data.get("topic") or "slides").strip()
     slides = data.get("slides") or []
+    fmt    = (data.get("format") or "pptx").lower()
     if not slides:
         return jsonify({"error": "no slides"}), 400
 
-    from core.pptx_export import build_pptx
-    blob  = build_pptx(topic, slides)
+    if fmt == "pdf":
+        from core.pdf_export import build_pdf
+        blob, mime, ext = build_pdf(topic, slides), "application/pdf", "pdf"
+    else:
+        from core.pptx_export import build_pptx
+        blob = build_pptx(topic, slides)
+        mime = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        ext  = "pptx"
+
     fname = re.sub(r"[^A-Za-z0-9]+", "_", topic).strip("_") or "slides"
-    return send_file(
-        io.BytesIO(blob),
-        mimetype="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        as_attachment=True,
-        download_name=f"{fname}.pptx",
-    )
+    return send_file(io.BytesIO(blob), mimetype=mime, as_attachment=True,
+                     download_name=f"{fname}.{ext}")
 
 
 # ---------------------------------------------------------------------------

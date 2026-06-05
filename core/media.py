@@ -37,6 +37,44 @@ def find_media(query: str, root: Path | None = None) -> Path | None:
     return None
 
 
+# Colour-emoji fonts by platform, with a Pillow-supported bitmap strike size.
+_EMOJI_FONTS = [
+    ("/System/Library/Fonts/Apple Color Emoji.ttc", 160),
+    ("/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf", 109),
+    ("/usr/share/fonts/NotoColorEmoji.ttf", 109),
+    ("C:\\Windows\\Fonts\\seguiemj.ttf", 109),
+]
+
+
+def emoji_png(text: str) -> BytesIO | None:
+    """Render an emoji to a transparent PNG so it can be embedded where text
+    fonts can't show it (e.g. a reportlab PDF). None if no emoji font is found."""
+    text = (text or "").strip()
+    if not text:
+        return None
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except Exception:
+        return None
+    for path, size in _EMOJI_FONTS:
+        if not os.path.exists(path):
+            continue
+        try:
+            font = ImageFont.truetype(path, size)
+            canvas = Image.new("RGBA", (size * 3, size * 2), (0, 0, 0, 0))
+            ImageDraw.Draw(canvas).text((size // 2, size // 3), text, font=font, embedded_color=True)
+            bbox = canvas.getbbox()
+            if not bbox:
+                continue
+            out = BytesIO()
+            canvas.crop(bbox).save(out, "PNG")
+            out.seek(0)
+            return out
+        except Exception:
+            continue
+    return None
+
+
 def load_raster(path: Path) -> BytesIO | None:
     """Return embeddable PNG/JPG bytes for *path*, converting WEBP via Pillow.
     Returns None for formats python-pptx cannot embed (e.g. SVG)."""

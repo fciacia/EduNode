@@ -51,6 +51,19 @@
 .deck-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 .deck-actions .btn-outline, .deck-actions .btn-indigo { font-size: .82rem; padding: .4rem .9rem; display: inline-flex; align-items: center; gap: .35rem; }
 .btn-outline.speaking { background: #6366F1; color: #fff; border-color: #6366F1; }
+.dl-wrap { position: relative; display: inline-block; }
+.dl-menu {
+  display: none; position: absolute; right: 0; top: calc(100% + .35rem); z-index: 20;
+  background: var(--surface); border: 2.5px solid var(--border); border-radius: 14px;
+  box-shadow: var(--shadow); padding: .35rem; min-width: 12rem;
+}
+.dl-menu.open { display: block; animation: fade-in .12s ease; }
+.dl-menu button {
+  display: flex; align-items: center; gap: .5rem; width: 100%; text-align: left;
+  background: none; border: none; border-radius: 9px; padding: .5rem .65rem;
+  font-family: var(--font); font-size: .85rem; font-weight: 700; color: var(--text); cursor: pointer;
+}
+.dl-menu button:hover { background: var(--surface2); }
 
 /* Slide card — accent + media tile + faint slide number */
 .slide-card {
@@ -155,7 +168,13 @@
     <div class="deck-actions">
       <button class="btn-outline js-narrate" data-full id="narrateBtn" onclick="narrateCurrent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-volume"></use></svg> Narrate</button>
       <button class="btn-outline" id="playAllBtn" onclick="togglePlayAll()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-play"></use></svg> Play all</button>
-      <button class="btn-outline" id="downloadBtn" onclick="downloadDeck()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-arrow-down"></use></svg> Download</button>
+      <span class="dl-wrap">
+        <button class="btn-outline" id="downloadBtn" onclick="toggleDlMenu(event)"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-arrow-down"></use></svg> Download</button>
+        <div class="dl-menu" id="dlMenu">
+          <button type="button" onclick="downloadDeck('pdf')"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-file-text"></use></svg> PDF</button>
+          <button type="button" onclick="downloadDeck('pptx')"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg> PowerPoint (.pptx)</button>
+        </div>
+      </span>
       <button class="btn-indigo" onclick="enterPresent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg> Present</button>
     </div>
   </div>
@@ -332,8 +351,15 @@ function showSlide() {
 function prevSlide() { if (idx>0) { if (!playingAll) stopAll(); idx--; showSlide(); } }
 function nextSlide() { if (idx<slides.length-1) { if (!playingAll) stopAll(); idx++; showSlide(); } }
 
-/* ── Download deck as PowerPoint (.pptx) for offline study ─────────────────── */
-async function downloadDeck() {
+/* ── Download deck (PDF / PowerPoint) for offline study ────────────────────── */
+function toggleDlMenu(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('dlMenu').classList.toggle('open');
+}
+document.addEventListener('click', () => document.getElementById('dlMenu')?.classList.remove('open'));
+
+async function downloadDeck(fmt) {
+  document.getElementById('dlMenu').classList.remove('open');
   if (!slides.length) return;
   const btn = document.getElementById('downloadBtn');
   const orig = btn.innerHTML;
@@ -341,14 +367,14 @@ async function downloadDeck() {
   try {
     const r = await fetch('/api/slides/download', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({topic: currentTopic, slides})
+      body: JSON.stringify({topic: currentTopic, slides, format: fmt})
     });
     if (!r.ok) throw new Error('export failed');
     const blob = await r.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = ((currentTopic || 'slides').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'') || 'slides') + '.pptx';
+    a.download = ((currentTopic || 'slides').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'') || 'slides') + '.' + fmt;
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
   } catch(e) {
