@@ -2,6 +2,14 @@
 {% block title %}Chat — Edge{% endblock %}
 
 {% block extra_style %}
+.math-diagram {
+  margin-top: .65rem;
+  padding: .6rem .75rem;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
 .chat-header {
   display: flex;
   gap: .75rem;
@@ -265,6 +273,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="/static/js/diagram.js" defer></script>
 <script>
 const log = document.getElementById('chatLog');
 const input = document.getElementById('msgInput');
@@ -444,6 +453,25 @@ async function playTTS(text, btn) {
   }
 }
 
+// For maths questions, ask for a diagram and render it as exact SVG below the answer.
+async function maybeDrawDiagram(msgEl, question) {
+  try {
+    const r = await fetch('/api/diagram', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({question, subject: getSubject(), language: getLang()})
+    });
+    if (!r.ok) return;
+    const d = await r.json();
+    const out = d.diagram && window.renderDiagram ? window.renderDiagram(d.diagram) : '';
+    if (!out) return;
+    const box = document.createElement('div');
+    box.className = 'math-diagram';
+    box.innerHTML = out;
+    msgEl.appendChild(box);
+    requestAnimationFrame(() => { log.scrollTop = log.scrollHeight; });
+  } catch (e) {}
+}
+
 // Voice-first: read an answer aloud automatically when the pref is on.
 function maybeReadAloud(msgEl, text) {
   if (window.EdgePrefs && window.EdgePrefs.isReadAloud()) {
@@ -484,6 +512,7 @@ async function sendMsg(retryMsg) {
       addPlayBtn(msgEl, d.response);
       enableTapToHear(msgEl, d.response);
       maybeReadAloud(msgEl, d.response);
+      if (getSubject() === 'Mathematics') maybeDrawDiagram(msgEl, msg);
     }
     if (d.student_id) localStorage.setItem('edu_student_id', d.student_id);
     localStorage.setItem('edu_student_name', getName());

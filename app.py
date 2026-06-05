@@ -823,6 +823,35 @@ def api_flashcard_generate():
     return jsonify(payload)
 
 
+@app.post("/api/diagram")
+def api_diagram():
+    """Return a validated maths-diagram spec for a question (or {diagram:null}).
+    Best-effort + cached; the frontend renders the spec as exact SVG."""
+    data     = request.get_json(silent=True) or {}
+    question = (data.get("question") or "").strip()
+    subject  = (data.get("subject")  or "").strip()
+    language = (data.get("language") or cfg.HUB_LANGUAGES[0]).strip()
+    if not question:
+        return jsonify({"diagram": None})
+
+    from core import content_cache
+    cached = content_cache.get("diagram", subject, language, "", question)
+    if cached is not None:
+        return jsonify(cached)
+
+    from core.llm_engine import ollama_available
+    if not ollama_available():
+        return jsonify({"diagram": None})
+
+    from core.diagram_engine import generate_diagram
+    rag_ctx, _g, _s = _grounded_context(question, subject)
+    spec = generate_diagram(question, rag_ctx, language)
+    payload = {"diagram": spec}
+    if spec:
+        content_cache.put("diagram", subject, language, "", question, payload)
+    return jsonify(payload)
+
+
 # ---------------------------------------------------------------------------
 # API: spaced repetition (flashcard reviews)
 # ---------------------------------------------------------------------------
