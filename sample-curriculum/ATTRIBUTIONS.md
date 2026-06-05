@@ -23,6 +23,15 @@ the runtime `data/curriculum/` via the Admin panel or `python ingest.py`.
 > OpenStax is **CC BY**: free to use and adapt, including commercially, **with
 > attribution** and an indication that changes were made (done above).
 
+- **`mathematics_core_lessons.txt`** and **`science_core_lessons.txt`**
+  **Original lesson text written for Edge**, covering standard Grade 6–8
+  mathematics and science topics (facts that are common knowledge, not taken
+  from any single copyrighted source). Licence: **CC BY-SA 4.0**
+  (https://creativecommons.org/licenses/by-sa/4.0/). Free to use, adapt and
+  share with attribution. These are concise teaching summaries, not a
+  nationally-certified syllabus — load real ministry materials per hub (below)
+  for formal alignment.
+
 ## National curriculum (added per hub, not bundled)
 
 Each hub loads its own nationally-aligned materials. These are **not** uniformly

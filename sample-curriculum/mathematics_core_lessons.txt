@@ -1,0 +1,91 @@
+MATHEMATICS — CORE LESSONS (Grades 6–8)
+
+Place Value
+In our number system every digit has a place value that depends on its position.
+Reading from the right, the places are ones, tens, hundreds, thousands, and so on,
+each ten times larger than the place to its right. In the number 3 472 the 3 means
+three thousands, the 4 means four hundreds, the 7 means seven tens, and the 2 means
+two ones. Understanding place value lets us compare numbers, line them up to add and
+subtract, and understand decimals, where places to the right of the point are tenths,
+hundredths and thousandths.
+
+Fractions
+A fraction shows a part of a whole. It is written as a numerator over a denominator,
+such as 3/4. The denominator tells how many equal parts the whole is divided into,
+and the numerator tells how many of those parts we take. Fractions with the same
+value, like 1/2 and 2/4, are called equivalent fractions. To add or subtract
+fractions they must have the same denominator; we rewrite them using a common
+denominator first. A fraction whose numerator is smaller than its denominator is a
+proper fraction; if it is larger, it is an improper fraction.
+
+Decimals
+A decimal is another way to write a fraction whose denominator is ten, a hundred, a
+thousand, and so on. The digits after the decimal point show tenths, hundredths and
+thousandths. For example, 0.75 means seventy-five hundredths, which is the same as
+the fraction 3/4. To add or subtract decimals we line up the decimal points so that
+each place value matches. Decimals make it easy to work with money and measurements.
+
+Percentages
+A percentage is a fraction out of one hundred; the word percent means "per hundred".
+The symbol is %. So 50% means 50 out of 100, which equals the fraction 1/2 or the
+decimal 0.5. To find a percentage of an amount, change the percent to a decimal and
+multiply. For example, 20% of 60 is 0.2 times 60, which is 12. Percentages are used
+for discounts, test scores, and interest.
+
+Ratio and Proportion
+A ratio compares two quantities of the same kind, written with a colon, such as 2:3.
+A ratio of 2:3 of boys to girls means that for every 2 boys there are 3 girls. We can
+simplify ratios by dividing both numbers by a common factor, just like fractions. A
+proportion is a statement that two ratios are equal, such as 2:3 = 4:6. Ratios help us
+share amounts fairly and scale recipes or maps up and down.
+
+Integers
+Integers are the whole numbers together with their negatives and zero: …, -3, -2, -1,
+0, 1, 2, 3, … Negative numbers describe things below a reference point, such as
+temperatures below zero or money owed. On a number line, numbers increase to the right
+and decrease to the left, so -5 is less than -1. Adding a positive number moves right;
+adding a negative number moves left. Two negatives multiplied together give a positive.
+
+Introduction to Algebra
+Algebra uses letters, called variables, to stand for unknown numbers. An expression
+like 2x + 3 means "two times a number, plus three". An equation says that two
+expressions are equal, such as 2x + 3 = 11. To solve it we do the same operation to
+both sides to keep the balance: subtract 3 from both sides to get 2x = 8, then divide
+both sides by 2 to find x = 4. Algebra lets us describe patterns and solve problems
+where a quantity is unknown.
+
+Perimeter and Area
+The perimeter of a shape is the total distance around its edge, found by adding the
+lengths of all the sides. The area is the amount of flat space the shape covers,
+measured in square units. The area of a rectangle is length times width. The area of a
+triangle is one half times the base times the height. For example, a rectangle 5 cm by
+3 cm has a perimeter of 16 cm and an area of 15 square centimetres.
+
+Angles
+An angle is the amount of turn between two lines that meet at a point, measured in
+degrees. A right angle is exactly 90 degrees and is marked with a small square. An
+acute angle is less than 90 degrees, and an obtuse angle is between 90 and 180 degrees.
+A straight line forms an angle of 180 degrees. The three angles inside any triangle
+always add up to 180 degrees.
+
+The Pythagorean Theorem
+A right-angled triangle has one angle of 90 degrees. The longest side, opposite the
+right angle, is called the hypotenuse. The Pythagorean theorem states that the square
+of the hypotenuse equals the sum of the squares of the other two sides: a² + b² = c².
+For example, a triangle with shorter sides 3 and 4 has a hypotenuse of 5, because
+9 + 16 = 25, and the square root of 25 is 5.
+
+Averages
+An average is a single value that represents a set of numbers. The mean is found by
+adding all the values and dividing by how many there are. The median is the middle
+value when the numbers are placed in order. The mode is the value that appears most
+often. For the numbers 2, 4, 4, 6 and 9, the mean is 5, the median is 4, and the mode
+is 4. Averages help us summarise and compare data.
+
+Probability
+Probability measures how likely an event is to happen, on a scale from 0 to 1. A
+probability of 0 means impossible and a probability of 1 means certain. For equally
+likely outcomes, the probability equals the number of favourable outcomes divided by
+the total number of outcomes. When tossing a fair coin there are two outcomes, so the
+probability of heads is 1/2. When rolling a six-sided die, the probability of getting a
+4 is 1/6.
