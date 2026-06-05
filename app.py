@@ -636,6 +636,26 @@ def api_slides_generate():
     return jsonify(payload)
 
 
+@app.post("/api/slides/download")
+def api_slides_download():
+    """Export the current deck as a standard .pptx for offline study."""
+    data   = request.get_json(silent=True) or {}
+    topic  = (data.get("topic") or "slides").strip()
+    slides = data.get("slides") or []
+    if not slides:
+        return jsonify({"error": "no slides"}), 400
+
+    from core.pptx_export import build_pptx
+    blob  = build_pptx(topic, slides)
+    fname = re.sub(r"[^A-Za-z0-9]+", "_", topic).strip("_") or "slides"
+    return send_file(
+        io.BytesIO(blob),
+        mimetype="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        as_attachment=True,
+        download_name=f"{fname}.pptx",
+    )
+
+
 # ---------------------------------------------------------------------------
 # Admin API: glossary editor (dialect flywheel)
 # ---------------------------------------------------------------------------

@@ -155,6 +155,7 @@
     <div class="deck-actions">
       <button class="btn-outline js-narrate" data-full id="narrateBtn" onclick="narrateCurrent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-volume"></use></svg> Narrate</button>
       <button class="btn-outline" id="playAllBtn" onclick="togglePlayAll()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-play"></use></svg> Play all</button>
+      <button class="btn-outline" id="downloadBtn" onclick="downloadDeck()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-arrow-down"></use></svg> Download</button>
       <button class="btn-indigo" onclick="enterPresent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg> Present</button>
     </div>
   </div>
@@ -330,6 +331,32 @@ function showSlide() {
 
 function prevSlide() { if (idx>0) { if (!playingAll) stopAll(); idx--; showSlide(); } }
 function nextSlide() { if (idx<slides.length-1) { if (!playingAll) stopAll(); idx++; showSlide(); } }
+
+/* ── Download deck as PowerPoint (.pptx) for offline study ─────────────────── */
+async function downloadDeck() {
+  if (!slides.length) return;
+  const btn = document.getElementById('downloadBtn');
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' Preparing…';
+  try {
+    const r = await fetch('/api/slides/download', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({topic: currentTopic, slides})
+    });
+    if (!r.ok) throw new Error('export failed');
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = ((currentTopic || 'slides').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'') || 'slides') + '.pptx';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    alert('Could not prepare the download. Please try again.');
+  } finally {
+    btn.disabled = false; btn.innerHTML = orig;
+  }
+}
 
 /* ── Present mode ─────────────────────────────────────────────────────────── */
 function enterPresent() { document.getElementById('presentOverlay').classList.add('open'); showSlide(); }
