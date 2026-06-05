@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% block title %}Slides — Edge{% endblock %}
+
+{% block extra_style %}
+.page-hero {
+  background: linear-gradient(135deg, #6366F1 0%, #4338CA 100%);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.75rem;
+  display: flex; align-items: center; gap: 1rem;
+  box-shadow: 0 6px 0 #3730A3;
+  animation: fade-in .3s ease;
+}
+.page-hero .hero-emoji { display:flex; align-items:center; animation: float 2.5s ease-in-out infinite; }
+.page-hero-text h2 { font-family: var(--font-display); font-size: 1.5rem; color: #fff; margin-bottom: .2rem; }
+.page-hero-text p  { font-size: .9rem; font-weight: 600; color: rgba(255,255,255,.85); }
+
+.controls-row {
+  display: flex; gap: .65rem; align-items: center; flex-wrap: wrap;
+  margin-bottom: 1.5rem; background: var(--surface);
+  border: 2.5px solid var(--border); border-radius: var(--radius);
+  padding: .9rem 1.1rem; box-shadow: var(--shadow-sm);
+}
+.sel {
+  border: 2.5px solid var(--border); border-radius: 99px;
+  padding: .38rem 2.2rem .38rem .9rem; font-size: .87rem; font-weight: 700;
+  font-family: var(--font); background: var(--surface2); color: var(--text);
+  outline: none; appearance: none; -webkit-appearance: none;
+  background-image: var(--select-arrow); background-repeat: no-repeat;
+  background-position: right .75rem center; cursor: pointer;
+}
+.sel:focus { border-color: #6366F1; }
+.generate-row { display: flex; gap: .65rem; margin-bottom: 1.75rem; }
+.topic-input {
+  flex: 1; border: 2.5px solid var(--border); border-radius: 99px;
+  padding: .6rem 1.1rem; font-size: .95rem; font-weight: 700;
+  font-family: var(--font); background: var(--surface); color: var(--text); outline: none;
+}
+.topic-input:focus { border-color: #6366F1; box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+.btn-indigo {
+  padding: .55rem 1.4rem; background: #6366F1; color: #fff; border: none;
+  border-radius: 99px; font-size: .92rem; font-weight: 800; font-family: var(--font);
+  cursor: pointer; box-shadow: 0 4px 0 #4338CA; transition: background .15s, transform .1s;
+}
+.btn-indigo:hover { background: #4F46E5; transform: translateY(-1px); }
+.btn-indigo:active { transform: translateY(2px); box-shadow: 0 2px 0 #4338CA; }
+.btn-indigo:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Deck toolbar */
+.deck-toolbar { display: flex; align-items: center; justify-content: space-between; gap: .5rem; flex-wrap: wrap; margin-bottom: .85rem; }
+.deck-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.deck-actions .btn-outline, .deck-actions .btn-indigo { font-size: .82rem; padding: .4rem .9rem; display: inline-flex; align-items: center; gap: .35rem; }
+
+/* Slide card */
+.slide-card {
+  background: var(--surface); border: 2.5px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 1.5rem 1.6rem; min-height: 230px;
+  animation: pop-in .25s cubic-bezier(.34,1.56,.64,1);
+}
+.slide-title {
+  font-family: var(--font-display); font-size: 1.4rem; color: var(--primary);
+  margin: 0 0 1rem; padding-bottom: .6rem; border-bottom: 3px solid var(--primary-light);
+}
+.slide-bullets { list-style: none; padding: 0; margin: 0; }
+.slide-bullets li {
+  position: relative; padding: .3rem 0 .3rem 1.5rem; font-weight: 700;
+  font-size: 1.02rem; line-height: 1.5; color: var(--text);
+}
+.slide-bullets li::before {
+  content: ''; position: absolute; left: .2rem; top: .8rem;
+  width: 8px; height: 8px; border-radius: 50%; background: #6366F1;
+}
+
+/* Present (full-screen) mode */
+.present-overlay {
+  position: fixed; inset: 0; z-index: 90; background: var(--bg);
+  display: none; flex-direction: column; padding: 4vw 6vw;
+}
+.present-overlay.open { display: flex; animation: fade-in .2s ease; }
+.present-slide { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.present-slide .slide-title { font-size: clamp(1.8rem, 5vw, 3rem); }
+.present-slide .slide-bullets li { font-size: clamp(1.1rem, 3vw, 1.8rem); padding-left: 2rem; }
+.present-slide .slide-bullets li::before { width: 12px; height: 12px; top: 1.1rem; }
+.present-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: 1rem; }
+.present-bar .counter { font-weight: 800; color: var(--text-muted); }
+{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="hero-emoji"><svg class="icon icon-2xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg></div>
+  <div class="page-hero-text">
+    <h2>Lesson Slides!</h2>
+    <p>Turn any topic into a slide deck you can present and narrate — offline</p>
+  </div>
+</div>
+
+<div class="controls-row">
+  <select id="subjectSel" class="sel">
+    {% for s in subjects %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+  </select>
+  <select id="langSel" class="sel">
+    {% for l in languages %}<option value="{{ l }}">{{ l }}</option>{% endfor %}
+  </select>
+</div>
+
+<div class="generate-row">
+  <input id="topicInput" class="topic-input" type="text" placeholder="Topic (e.g. the water cycle, fractions…)">
+  <button class="btn-indigo" id="generateBtn" onclick="generateSlides()">
+    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg> Make Slides
+  </button>
+</div>
+
+<div id="topicSuggest" class="topic-suggest" style="display:none"></div>
+<div id="genError" class="gen-error" style="display:none"></div>
+
+<div id="deckArea" style="display:none">
+  <div class="grounding-row" id="groundingRow" style="display:none">
+    <span class="grounding-badge"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book-open"></use></svg> From your textbook</span>
+    <span class="src-chips" id="srcChips"></span>
+  </div>
+
+  <div class="deck-toolbar">
+    <span class="deck-counter" id="deckCounter">1 / 1</span>
+    <div class="deck-actions">
+      <button class="btn-outline" id="narrateBtn" onclick="narrateCurrent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-volume"></use></svg> Narrate</button>
+      <button class="btn-outline" id="playAllBtn" onclick="togglePlayAll()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-play"></use></svg> Play all</button>
+      <button class="btn-indigo" onclick="enterPresent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg> Present</button>
+    </div>
+  </div>
+
+  <div class="slide-card" id="slideCard">
+    <h3 class="slide-title" id="slideTitle">—</h3>
+    <ul class="slide-bullets" id="slideBullets"></ul>
+  </div>
+
+  <div class="deck-dots" id="deckDots"></div>
+  <div class="deck-nav" style="margin-top:1rem">
+    <button class="btn-outline" onclick="prevSlide()">‹ Prev</button>
+    <span class="deck-counter" id="deckCounter2">1 / 1</span>
+    <button class="btn-outline" onclick="nextSlide()">Next ›</button>
+  </div>
+</div>
+
+<!-- Present mode overlay -->
+<div class="present-overlay" id="presentOverlay">
+  <div class="present-slide">
+    <h3 class="slide-title" id="presentTitle">—</h3>
+    <ul class="slide-bullets" id="presentBullets"></ul>
+  </div>
+  <div class="present-bar">
+    <button class="btn-outline" onclick="exitPresent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-square"></use></svg> Exit</button>
+    <span class="counter" id="presentCounter">1 / 1</span>
+    <div style="display:flex;gap:.5rem">
+      <button class="btn-outline" onclick="narrateCurrent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-volume"></use></svg></button>
+      <button class="btn-outline" onclick="prevSlide()">‹</button>
+      <button class="btn-indigo" onclick="nextSlide()">›</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let slides = [], idx = 0, currentTopic = '', currentAudio = null, playingAll = false;
+const S = '/static/icons/sprite.svg';
+const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
+
+function getLang()    { return document.getElementById('langSel').value; }
+function getSubject() { return document.getElementById('subjectSel').value; }
+function escHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function prettySrc(src) { return String(src).split(/[\\/]/).pop().replace(/\.(pdf|txt|md)$/i,'').replace(/_/g,' '); }
+
+async function renderTopics() {
+  try {
+    const r = await fetch('/api/topics?subject=' + encodeURIComponent(getSubject()));
+    const d = await r.json();
+    const box = document.getElementById('topicSuggest');
+    if (!d.topics || !d.topics.length) { box.style.display='none'; return; }
+    box.innerHTML = '<span class="ts-label">Try</span>' +
+      d.topics.map(t => '<button class="topic-chip" type="button">' + escHtml(t) + '</button>').join('');
+    box.style.display = 'flex';
+    box.querySelectorAll('.topic-chip').forEach(b => b.onclick = () => {
+      document.getElementById('topicInput').value = b.textContent; generateSlides();
+    });
+  } catch(e) {}
+}
+
+function showGrounding(d) {
+  const row = document.getElementById('groundingRow');
+  const sources = Array.isArray(d.sources) ? d.sources : [];
+  if (!d.grounded || !sources.length) { row.style.display='none'; return; }
+  document.getElementById('srcChips').innerHTML = sources.map(s =>
+    '<span class="src-chip" title="'+escHtml(s.source)+'">'+ico('file-text')+
+    '<span class="src-name">'+escHtml(prettySrc(s.source))+'</span>'+
+    (s.page?'<span class="src-page">p.'+s.page+'</span>':'')+'</span>').join('');
+  row.style.display='flex';
+}
+
+function hideGenError(){ const b=document.getElementById('genError'); if(b) b.style.display='none'; }
+function showGenError(kind){
+  const box=document.getElementById('genError'); const offline=kind==='offline';
+  box.innerHTML = ico(offline?'wifi-off':'refresh') +
+    '<span>'+(offline?'The AI tutor is starting up. Please wait a few seconds and try again.'
+                     :'Could not make slides for that just now. Try again or a simpler topic.')+
+    '</span><button class="btn-retry-gen">'+(offline?'Try again':'Retry')+'</button>';
+  box.style.display='flex';
+  box.querySelector('.btn-retry-gen').onclick = () => { hideGenError(); generateSlides(); };
+}
+
+async function generateSlides() {
+  const topic = document.getElementById('topicInput').value.trim();
+  if (!topic) { alert('Please enter a topic!'); return; }
+  currentTopic = topic;
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' Generating…';
+  hideGenError();
+  try {
+    const r = await fetch('/api/slides/generate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({topic, language: getLang(), subject: getSubject()})
+    });
+    const d = await r.json().catch(() => ({}));
+    if (r.status === 503 || d.error === 'offline') { showGenError('offline'); return; }
+    slides = d.slides || [];
+    if (!slides.length || d.error === 'generation') { showGenError('generation'); return; }
+    idx = 0;
+    buildDots(); showSlide(); showGrounding(d);
+    document.getElementById('deckArea').style.display = 'block';
+    document.getElementById('deckArea').scrollIntoView({behavior:'smooth'});
+  } catch(e) { showGenError('offline'); }
+  finally { btn.disabled = false; btn.innerHTML = ico('monitor') + ' Make Slides'; }
+}
+
+function buildDots() {
+  const c = document.getElementById('deckDots'); c.innerHTML = '';
+  slides.forEach((_, i) => { const d = document.createElement('div'); d.className='deck-dot'; d.id='dot-'+i; c.appendChild(d); });
+}
+
+function renderInto(titleEl, bulletsEl, s) {
+  titleEl.textContent = s.title || '—';
+  bulletsEl.innerHTML = (s.bullets || []).map(b => '<li>' + escHtml(b) + '</li>').join('');
+}
+
+function showSlide() {
+  const s = slides[idx]; if (!s) return;
+  renderInto(document.getElementById('slideTitle'), document.getElementById('slideBullets'), s);
+  const label = (idx+1) + ' / ' + slides.length;
+  document.getElementById('deckCounter').textContent = label;
+  document.getElementById('deckCounter2').textContent = label;
+  document.querySelectorAll('.deck-dot').forEach((d,i) => d.classList.toggle('active', i===idx));
+  if (document.getElementById('presentOverlay').classList.contains('open')) {
+    renderInto(document.getElementById('presentTitle'), document.getElementById('presentBullets'), s);
+    document.getElementById('presentCounter').textContent = label;
+  }
+}
+
+function prevSlide() { if (idx>0) { idx--; showSlide(); } }
+function nextSlide() { if (idx<slides.length-1) { idx++; showSlide(); } }
+
+/* ── Present mode ─────────────────────────────────────────────────────────── */
+function enterPresent() { document.getElementById('presentOverlay').classList.add('open'); showSlide(); }
+function exitPresent()  { document.getElementById('presentOverlay').classList.remove('open'); stopAll(); }
+
+/* ── Narration (offline TTS) ──────────────────────────────────────────────── */
+function stopAudio() { if (currentAudio) { currentAudio.pause(); currentAudio = null; } }
+async function speak(text) {
+  if (!text || !text.trim()) return;
+  stopAudio();
+  try {
+    const r = await fetch('/api/voice/tts', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text, language: getLang()})
+    });
+    if (!r.ok) return;
+    const blob = await r.blob();
+    await new Promise(resolve => {
+      currentAudio = new Audio(URL.createObjectURL(blob));
+      currentAudio.onended = resolve; currentAudio.onerror = resolve;
+      currentAudio.play();
+    });
+  } catch(e) {}
+}
+function slideSpeech(s) { return (s.notes && s.notes.trim()) ? s.notes : (s.bullets || []).join('. '); }
+async function narrateCurrent() { await speak(slideSpeech(slides[idx])); }
+
+function setPlayAllBtn(playing) {
+  const b = document.getElementById('playAllBtn');
+  b.innerHTML = playing ? ico('square') + ' Stop' : ico('play') + ' Play all';
+}
+async function togglePlayAll() { playingAll ? stopAll() : playAll(); }
+function stopAll() { playingAll = false; stopAudio(); setPlayAllBtn(false); }
+async function playAll() {
+  playingAll = true; setPlayAllBtn(true);
+  for (let i = idx; i < slides.length && playingAll; i++) {
+    idx = i; showSlide();
+    await speak(slideSpeech(slides[i]));
+  }
+  stopAll();
+}
+
+/* Keyboard: arrows navigate, space next, Esc exits present */
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+  if (!slides.length) return;
+  if (e.key === 'ArrowLeft') prevSlide();
+  if (e.key === 'ArrowRight') nextSlide();
+  if (e.key === ' ') { e.preventDefault(); nextSlide(); }
+  if (e.key === 'Escape') exitPresent();
+});
+
+/* Touch swipe on the slide card */
+(function() {
+  let x0 = 0;
+  ['slideCard','presentOverlay'].forEach(id => {
+    const el = document.getElementById(id); if (!el) return;
+    el.addEventListener('touchstart', e => x0 = e.touches[0].clientX, {passive:true});
+    el.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - x0;
+      if (dx < -40) nextSlide(); else if (dx > 40) prevSlide();
+    }, {passive:true});
+  });
+})();
+
+(function() {
+  const saved = localStorage.getItem('edu_lang');
+  if (saved) [...document.getElementById('langSel').options].forEach(o => o.selected = (o.value === saved));
+})();
+document.getElementById('langSel').addEventListener('change', e => localStorage.setItem('edu_lang', e.target.value));
+document.getElementById('subjectSel').addEventListener('change', renderTopics);
+renderTopics();
+</script>
+{% endblock %}

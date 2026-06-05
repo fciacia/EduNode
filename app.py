@@ -247,6 +247,16 @@ def flashcard():
     )
 
 
+@app.get("/slides")
+def slides():
+    return render_template(
+        "slides.html",
+        region=cfg.HUB_REGION,
+        languages=cfg.HUB_LANGUAGES,
+        subjects=cfg.AVAILABLE_SUBJECTS,
+    )
+
+
 @app.get("/podcast")
 def podcast():
     return render_template(
@@ -574,6 +584,35 @@ def api_media(filename: str):
             abort(404)
         target = match
     return send_from_directory(str(MEDIA_DIR), target.name)
+
+
+# ---------------------------------------------------------------------------
+# API: slides (offline lesson deck generator)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/slides/generate")
+def api_slides_generate():
+    data     = request.get_json(silent=True) or {}
+    topic    = (data.get("topic")    or "").strip()
+    language = (data.get("language") or cfg.HUB_LANGUAGES[0]).strip()
+    subject  = (data.get("subject")  or "General").strip()
+
+    if not topic:
+        return jsonify({"error": "topic required"}), 400
+
+    from core.slide_engine import generate_slides
+    from core.llm_engine   import ollama_available
+
+    if not ollama_available():
+        return jsonify({"slides": [], "error": "offline"}), 503
+
+    rag_ctx, grounded, sources = _grounded_context(topic, subject)
+    slides = generate_slides(topic, language, rag_ctx)
+
+    payload = {"slides": slides, "grounded": grounded, "sources": sources}
+    if not slides:
+        payload["error"] = "generation"
+    return jsonify(payload)
 
 
 # ---------------------------------------------------------------------------
