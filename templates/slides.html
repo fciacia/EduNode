@@ -50,6 +50,7 @@
 .deck-toolbar { display: flex; align-items: center; justify-content: space-between; gap: .5rem; flex-wrap: wrap; margin-bottom: .85rem; }
 .deck-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 .deck-actions .btn-outline, .deck-actions .btn-indigo { font-size: .82rem; padding: .4rem .9rem; display: inline-flex; align-items: center; gap: .35rem; }
+.btn-outline.speaking { background: #6366F1; color: #fff; border-color: #6366F1; }
 
 /* Slide card — accent + media tile + faint slide number */
 .slide-card {
@@ -152,7 +153,7 @@
   <div class="deck-toolbar">
     <span class="deck-counter" id="deckCounter">1 / 1</span>
     <div class="deck-actions">
-      <button class="btn-outline" id="narrateBtn" onclick="narrateCurrent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-volume"></use></svg> Narrate</button>
+      <button class="btn-outline js-narrate" data-full id="narrateBtn" onclick="narrateCurrent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-volume"></use></svg> Narrate</button>
       <button class="btn-outline" id="playAllBtn" onclick="togglePlayAll()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-play"></use></svg> Play all</button>
       <button class="btn-indigo" onclick="enterPresent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg> Present</button>
     </div>
@@ -188,7 +189,7 @@
     <button class="btn-outline" onclick="exitPresent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-square"></use></svg> Exit</button>
     <span class="counter" id="presentCounter">1 / 1</span>
     <div style="display:flex;gap:.5rem">
-      <button class="btn-outline" onclick="narrateCurrent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-volume"></use></svg></button>
+      <button class="btn-outline js-narrate" onclick="narrateCurrent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-volume"></use></svg></button>
       <button class="btn-outline" onclick="prevSlide()">‹</button>
       <button class="btn-indigo" onclick="nextSlide()">›</button>
     </div>
@@ -198,7 +199,7 @@
 
 {% block extra_scripts %}
 <script>
-let slides = [], idx = 0, currentTopic = '', currentAudio = null, playingAll = false;
+let slides = [], idx = 0, currentTopic = '', currentAudio = null, playingAll = false, resolveSpeak = null;
 const S = '/static/icons/sprite.svg';
 const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
 
@@ -327,41 +328,60 @@ function showSlide() {
   }
 }
 
-function prevSlide() { if (idx>0) { idx--; showSlide(); } }
-function nextSlide() { if (idx<slides.length-1) { idx++; showSlide(); } }
+function prevSlide() { if (idx>0) { if (!playingAll) stopAll(); idx--; showSlide(); } }
+function nextSlide() { if (idx<slides.length-1) { if (!playingAll) stopAll(); idx++; showSlide(); } }
 
 /* ── Present mode ─────────────────────────────────────────────────────────── */
 function enterPresent() { document.getElementById('presentOverlay').classList.add('open'); showSlide(); }
 function exitPresent()  { document.getElementById('presentOverlay').classList.remove('open'); stopAll(); }
 
 /* ── Narration (offline TTS) ──────────────────────────────────────────────── */
-function stopAudio() { if (currentAudio) { currentAudio.pause(); currentAudio = null; } }
-async function speak(text) {
-  if (!text || !text.trim()) return;
+/* Stops any playback and resolves a pending speak() so awaiters (play-all)
+   unblock immediately — works whether audio is playing or still being fetched. */
+function stopAudio() {
+  if (currentAudio) { currentAudio.onended = null; currentAudio.onerror = null; currentAudio.pause(); currentAudio = null; }
+  if (resolveSpeak) { const r = resolveSpeak; resolveSpeak = null; r(); }
+}
+function speak(text) {
   stopAudio();
-  try {
-    const r = await fetch('/api/voice/tts', {
+  return new Promise(resolve => {
+    if (!text || !text.trim()) return resolve();
+    resolveSpeak = resolve;
+    fetch('/api/voice/tts', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({text, language: getLang()})
-    });
-    if (!r.ok) return;
-    const blob = await r.blob();
-    await new Promise(resolve => {
+    })
+    .then(r => r.ok ? r.blob() : Promise.reject())
+    .then(blob => {
+      if (resolveSpeak !== resolve) return;       // stopped while fetching
       currentAudio = new Audio(URL.createObjectURL(blob));
-      currentAudio.onended = resolve; currentAudio.onerror = resolve;
+      currentAudio.onended = currentAudio.onerror = () => { currentAudio = null; resolveSpeak = null; resolve(); };
       currentAudio.play();
-    });
-  } catch(e) {}
+    })
+    .catch(() => { if (resolveSpeak === resolve) { resolveSpeak = null; resolve(); } });
+  });
 }
 function slideSpeech(s) { return (s.notes && s.notes.trim()) ? s.notes : (s.bullets || []).join('. '); }
-async function narrateCurrent() { await speak(slideSpeech(slides[idx])); }
+
+function setNarrateState(on) {
+  document.querySelectorAll('.js-narrate').forEach(b => {
+    b.classList.toggle('speaking', on);
+    b.innerHTML = (on ? ico('square') : ico('volume')) + (b.hasAttribute('data-full') ? (on ? ' Stop' : ' Narrate') : '');
+  });
+}
+async function narrateCurrent() {
+  if (currentAudio || playingAll || resolveSpeak) { stopAll(); return; }  // toggle off
+  setNarrateState(true);
+  await speak(slideSpeech(slides[idx]));
+  setNarrateState(false);
+}
 
 function setPlayAllBtn(playing) {
   const b = document.getElementById('playAllBtn');
   b.innerHTML = playing ? ico('square') + ' Stop' : ico('play') + ' Play all';
 }
-async function togglePlayAll() { playingAll ? stopAll() : playAll(); }
-function stopAll() { playingAll = false; stopAudio(); setPlayAllBtn(false); }
+function togglePlayAll() { playingAll ? stopAll() : playAll(); }
+function stopAll() { playingAll = false; stopAudio(); setPlayAllBtn(false); setNarrateState(false); }
 async function playAll() {
   playingAll = true; setPlayAllBtn(true);
   for (let i = idx; i < slides.length && playingAll; i++) {
