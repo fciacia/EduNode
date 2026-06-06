@@ -50,12 +50,19 @@ def run_pipeline(query: str, language: str, student_id, subject: str = "General"
     history = get_history(conversation_id)
 
     # 3. Retrieve + RETRIEVAL GATE
-    #    Augment the retrieval query with the recent conversation so vague
-    #    follow-ups ("explain that more simply") still match the topic's chunks.
+    #    Gate on the question itself, so a clear in-curriculum question always
+    #    grounds. Also try a history-augmented query so vague follow-ups
+    #    ("explain that more simply") still match the topic — keep whichever
+    #    retrieves better. (History alone can otherwise drag a clear question
+    #    over the gate when earlier turns were about something else.)
     prior = " ".join(t["text"] for t in history if t.get("role") == "user")
-    retrieval_query = (prior + " " + query_en).strip() if prior else query_en
-    chunks = retrieve_with_citations(retrieval_query, n_results=3, subject=subject)
+    chunks = retrieve_with_citations(query_en, n_results=3, subject=subject)
     best_distance = min((c.distance for c in chunks), default=1.0)
+    if prior:
+        aug = retrieve_with_citations((prior + " " + query_en).strip(), n_results=3, subject=subject)
+        aug_best = min((c.distance for c in aug), default=1.0)
+        if aug_best < best_distance:
+            chunks, best_distance = aug, aug_best
     if not chunks or best_distance > RETRIEVAL_DISTANCE_GATE:
         log.info("Retrieval gate triggered (best_distance=%.3f) — controlled non-response.", best_distance)
         return {

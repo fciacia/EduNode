@@ -94,6 +94,28 @@ def test_retrieval_gate_blocks_generation(monkeypatch):
     assert "don't have" in result["answer"].lower() or "do not have" in result["answer"].lower()
 
 
+def test_clear_question_grounds_despite_offtopic_history(monkeypatch, temp_db):
+    # Off-topic history must not drag a clear, in-curriculum question over the
+    # gate: the bare question retrieves a close chunk even though the
+    # history-augmented query retrieves a far one.
+    import core.conversation as conv
+    conv.append_turn("c3", "user", "what is 12 times 8")
+
+    reason_called = []
+    _patch_all(monkeypatch, chunks=[], reason_called=reason_called)
+    close = [Chunk(text="The water cycle…", source="sci.txt", page=1, distance=0.4)]
+    far   = [Chunk(text="off topic",       source="x.txt",   page=1, distance=0.9)]
+    monkeypatch.setattr(
+        "core.rag_engine.retrieve_with_citations",
+        lambda q, n_results, subject: (far if "12 times 8" in q else close),
+    )
+
+    result = orch.run_pipeline("explain the water cycle", "English", student_id=1,
+                               subject="Science", conversation_id="c3")
+    assert reason_called == [True]                      # grounded, not blocked
+    assert result["citations"] == [{"source": "a.pdf", "page": 2}]
+
+
 def test_no_chunks_returns_non_response(monkeypatch):
     reason_called = []
     _patch_all(monkeypatch, chunks=[], reason_called=reason_called)
