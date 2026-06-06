@@ -847,6 +847,9 @@ def api_diagram():
     # No RAG context: diagrams come from the question's own numbers, and
     # retrieved prose tends to confuse the small model's structured output.
     spec = generate_diagram(question, "", language)
+    if spec and spec.get("type") == "image":
+        match = find_media(spec.get("query", ""))   # resolve to a real labelled picture
+        spec = {"type": "image", "file": match.name} if match else None
     payload = {"diagram": spec}
     if spec:
         content_cache.put("diagram", subject, language, "", question, payload)

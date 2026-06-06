@@ -65,6 +65,12 @@ def test_science_aliases_normalized():
     assert validate_diagram({"type": "lifecycle", "steps": ["a", "b", "c"]})["type"] == "cycle"
 
 
+def test_image_keeps_query_for_route_to_resolve():
+    assert validate_diagram({"type": "image", "query": "plant cell"})["query"] == "plant cell"
+    assert validate_diagram({"type": "image", "query": ""}) is None
+    assert validate_diagram({"type": "picture", "query": "animal cell"})["type"] == "image"
+
+
 def test_type_aliases_are_normalized():
     assert validate_diagram({"type": "triangle", "base": 3, "height": 4})["type"] == "right_triangle"
     assert validate_diagram({"type": "bar", "bars": [{"label": "A", "value": 2}]})["type"] == "bar_chart"

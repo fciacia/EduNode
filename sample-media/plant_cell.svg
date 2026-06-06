@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 240" font-family="Nunito, sans-serif" font-weight="700">
+  <!-- cell wall -->
+  <rect x="14" y="26" width="210" height="188" rx="26" fill="#E7F8F1" stroke="#10B981" stroke-width="6"/>
+  <!-- cell membrane -->
+  <rect x="22" y="34" width="194" height="172" rx="20" fill="#F4FBF8" stroke="#34D399" stroke-width="2"/>
+  <!-- vacuole -->
+  <rect x="46" y="78" width="150" height="96" rx="22" fill="#DBEAFE" stroke="#60A5FA" stroke-width="2"/>
+  <!-- nucleus -->
+  <circle cx="90" cy="70" r="22" fill="#C4B5FD" stroke="#7C3AED" stroke-width="2.5"/>
+  <circle cx="90" cy="70" r="7" fill="#7C3AED"/>
+  <!-- chloroplasts -->
+  <ellipse cx="160" cy="60" rx="16" ry="8" fill="#34D399" stroke="#059669" stroke-width="1.5" transform="rotate(-20 160 60)"/>
+  <ellipse cx="70" cy="185" rx="16" ry="8" fill="#34D399" stroke="#059669" stroke-width="1.5" transform="rotate(25 70 185)"/>
+  <ellipse cx="150" cy="190" rx="16" ry="8" fill="#34D399" stroke="#059669" stroke-width="1.5" transform="rotate(-15 150 190)"/>
+
+  <!-- leader lines -->
+  <g stroke="#6b7280" stroke-width="1.2">
+    <line x1="224" y1="34" x2="250" y2="28"/>
+    <line x1="216" y1="46" x2="250" y2="62"/>
+    <line x1="112" y1="70" x2="250" y2="96"/>
+    <line x1="160" y1="60" x2="250" y2="130"/>
+    <line x1="196" y1="126" x2="250" y2="164"/>
+  </g>
+  <!-- labels -->
+  <g font-size="11" fill="#1e1b2e">
+    <text x="254" y="32">Cell wall</text>
+    <text x="254" y="66">Cell membrane</text>
+    <text x="254" y="100">Nucleus</text>
+    <text x="254" y="134">Chloroplast</text>
+    <text x="254" y="168">Vacuole</text>
+  </g>
+</svg>

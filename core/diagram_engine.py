@@ -22,7 +22,7 @@ import re
 log = logging.getLogger(__name__)
 
 TYPES = ("number_line", "fraction_bar", "bar_chart", "rectangle", "right_triangle", "function_plot",
-         "cycle", "flow", "comparison")
+         "cycle", "flow", "comparison", "image")
 
 # Only digits, x, basic operators, parens, dot, caret, space — no identifiers
 # (so no function names / globals can be evaluated).
@@ -44,6 +44,7 @@ DIAGRAM_SCHEMA: dict = {
         "width": {"type": "number"}, "height": {"type": "number"}, "base": {"type": "number"},
         "unit": {"type": "string"},
         "expression": {"type": "string"}, "xmin": {"type": "number"}, "xmax": {"type": "number"},
+        "query": {"type": "string"},
         "steps": {"type": "array", "items": {"type": "object", "properties": {
             "label": {"type": "string"}}, "required": ["label"]}},
         "columns": {"type": "array", "items": {"type": "object", "properties": {
@@ -73,6 +74,7 @@ _ALIASES = {
     "process": "flow", "sequence": "flow", "chain": "flow", "foodchain": "flow", "steps": "flow",
     "lifecycle": "cycle", "loop": "cycle",
     "compare": "comparison", "comparison_table": "comparison", "table": "comparison", "columns": "comparison",
+    "picture": "image", "labelled": "image", "labeled": "image", "anatomy": "image", "parts": "image",
 }
 
 
@@ -175,6 +177,10 @@ def validate_diagram(spec) -> dict | None:
                 cols.append({"label": label, "items": items})
         return {"type": kind, "columns": cols} if len(cols) >= 2 else None
 
+    if kind == "image":
+        q = str(spec.get("query", "")).strip()[:60]
+        return {"type": "image", "query": q} if q else None
+
     return None
 
 
@@ -194,6 +200,8 @@ def generate_diagram(question: str, rag_context: str = "", language: str = "Engl
         "- cycle: steps:[{label}] — a repeating cycle (3-6 stages)\n"
         "- flow: steps:[{label}] — a process, sequence or chain (2-6 stages in order)\n"
         "- comparison: columns:[{label, items:[...]}] — compare 2-3 things\n"
+        "- image: query — keywords for a labelled picture (e.g. \"plant cell\"), "
+        "only for 'parts of' or 'label the' questions\n"
         "Use only facts that match the question. No text outside the JSON. "
         f"Write any text labels in {language}.\n"
         "Examples:\n"
@@ -205,6 +213,7 @@ def generate_diagram(question: str, rag_context: str = "", language: str = "Engl
         'Q: what is a food chain -> {"type":"flow","steps":[{"label":"Grass"},{"label":"Grasshopper"},{"label":"Frog"},{"label":"Snake"}]}\n'
         'Q: how does photosynthesis work -> {"type":"flow","steps":[{"label":"Sunlight + Water + CO2"},{"label":"Glucose + Oxygen"}]}\n'
         'Q: compare solids liquids and gases -> {"type":"comparison","columns":[{"label":"Solid","items":["Fixed shape","Packed tightly"]},{"label":"Liquid","items":["Takes container shape","Flows"]},{"label":"Gas","items":["Fills all space"]}]}\n'
+        'Q: what are the parts of a plant cell -> {"type":"image","query":"plant cell"}\n'
         'Q: what is your name -> {"type":"none"}'
     )
     ctx = f"Context:\n{rag_context}\n\n" if rag_context.strip() else ""

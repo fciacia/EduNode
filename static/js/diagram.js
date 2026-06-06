@@ -202,6 +202,8 @@
         case 'cycle':         return cycle(spec);
         case 'flow':          return flow(spec);
         case 'comparison':    return comparison(spec);
+        case 'image':         return spec.file
+          ? `<img src="/api/media/${encodeURIComponent(spec.file)}" alt="" style="max-width:100%;max-height:260px">` : '';
       }
     } catch (e) {}
     return '';
