@@ -303,6 +303,7 @@ function addBubble(text, who, skipSave) {
   const msg = document.createElement('div');
   msg.className = 'message';
   msg.textContent = text;
+  msg.dataset.text = text;          // clean answer text (a diagram may be appended later)
   wrap.appendChild(avatar);
   wrap.appendChild(msg);
   log.appendChild(wrap);
@@ -312,10 +313,15 @@ function addBubble(text, who, skipSave) {
 }
 
 function saveHistory() {
-  const bubbles = [...log.querySelectorAll('.bubble')].map(b => ({
-    who:  b.classList.contains('user') ? 'user' : 'bot',
-    text: b.querySelector('.message')?.textContent || ''
-  }));
+  const bubbles = [...log.querySelectorAll('.bubble')].map(b => {
+    const m = b.querySelector('.message');
+    const o = {
+      who:  b.classList.contains('user') ? 'user' : 'bot',
+      text: m?.dataset.text ?? m?.textContent ?? ''   // clean text (excludes diagram labels)
+    };
+    if (m?.dataset.diagram) o.diagram = m.dataset.diagram;  // persist the diagram spec
+    return o;
+  });
   try { localStorage.setItem(HISTORY_KEY(), JSON.stringify(bubbles.slice(-40))); } catch(e) {}
 }
 
@@ -325,9 +331,29 @@ function loadHistory() {
     if (!raw) return;
     const items = JSON.parse(raw);
     if (!items?.length) return;
-    items.forEach(item => addBubble(item.text, item.who, true));
+    items.forEach(item => {
+      const msg = addBubble(item.text, item.who, true);
+      if (item.diagram) msg.dataset.diagram = item.diagram;   // re-rendered once diagram.js loads
+    });
   } catch(e) {}
 }
+
+// Re-draw any saved diagrams (runs after the deferred renderer has loaded).
+function renderSavedDiagrams() {
+  if (!window.renderDiagram) return;
+  document.querySelectorAll('.message[data-diagram]').forEach(m => {
+    if (m.querySelector('.math-diagram')) return;             // already drawn
+    try {
+      const out = window.renderDiagram(JSON.parse(m.dataset.diagram));
+      if (!out) return;
+      const box = document.createElement('div');
+      box.className = 'math-diagram';
+      box.innerHTML = out;
+      m.appendChild(box);
+    } catch(e) {}
+  });
+}
+window.addEventListener('DOMContentLoaded', renderSavedDiagrams);
 
 function newChat() {
   if (!confirm('Start a new conversation? This will clear the current chat.')) return;
@@ -468,6 +494,8 @@ async function maybeDrawDiagram(msgEl, question) {
     box.className = 'math-diagram';
     box.innerHTML = out;
     msgEl.appendChild(box);
+    msgEl.dataset.diagram = JSON.stringify(d.diagram);   // persist so it survives reload
+    saveHistory();
     requestAnimationFrame(() => { log.scrollTop = log.scrollHeight; });
   } catch (e) {}
 }

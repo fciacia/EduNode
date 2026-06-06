@@ -85,6 +85,23 @@ def test_quiz_localizes_to_filipino(browser, base_url):
     assert page.inner_text('[data-i18n="quiz.title"]').strip() == "Hamon sa Quiz!"
 
 
+def test_chat_restores_saved_diagram_on_reload(browser, base_url):
+    # A bot bubble with a saved diagram spec must re-render its SVG on load.
+    import json
+    history = [{"who": "bot", "text": "Here is a number line.",
+                "diagram": json.dumps({"type": "number_line", "min": 0, "max": 10, "step": 1,
+                                       "points": [{"value": 7, "label": "7"}]})}]
+    ctx = browser.new_context()
+    ctx.add_init_script(
+        "localStorage.setItem('edge_onboarded','1');"
+        "localStorage.setItem('edu_chat__guest'," + repr(json.dumps(history)) + ");"
+    )
+    page = ctx.new_page()
+    page.goto(base_url + "/chat", wait_until="load")
+    page.wait_for_selector(".math-diagram svg", timeout=5000)   # diagram came back
+    assert page.locator(".math-diagram svg").count() == 1
+
+
 def test_language_switch_updates_live(browser, base_url):
     # Change the dropdown and confirm the hero re-localizes without a reload.
     page, _ = _new_page(browser)
