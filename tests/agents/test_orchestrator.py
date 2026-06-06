@@ -116,6 +116,24 @@ def test_clear_question_grounds_despite_offtopic_history(monkeypatch, temp_db):
     assert result["citations"] == [{"source": "a.pdf", "page": 2}]
 
 
+def test_subject_mismatch_falls_back_to_all_subjects(monkeypatch):
+    # Asking a science question while "Mathematics" is selected must still
+    # ground: the subject-filtered search misses, the all-subjects retry hits.
+    reason_called = []
+    _patch_all(monkeypatch, chunks=[], reason_called=reason_called)
+    miss = [Chunk(text="math stuff", source="m.txt", page=1, distance=0.9)]
+    hit  = [Chunk(text="Digestion…", source="sci.txt", page=1, distance=0.3)]
+    monkeypatch.setattr(
+        "core.rag_engine.retrieve_with_citations",
+        lambda q, n_results, subject: hit if subject in ("", "General") else miss,
+    )
+
+    result = orch.run_pipeline("How does digestion work?", "English", student_id=1,
+                               subject="Mathematics")
+    assert reason_called == [True]                      # grounded via fallback
+    assert result["citations"] == [{"source": "a.pdf", "page": 2}]
+
+
 def test_no_chunks_returns_non_response(monkeypatch):
     reason_called = []
     _patch_all(monkeypatch, chunks=[], reason_called=reason_called)

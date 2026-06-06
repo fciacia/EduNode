@@ -63,6 +63,14 @@ def run_pipeline(query: str, language: str, student_id, subject: str = "General"
         aug_best = min((c.distance for c in aug), default=1.0)
         if aug_best < best_distance:
             chunks, best_distance = aug, aug_best
+    # The subject picker hard-filters the curriculum. If nothing matches in the
+    # chosen subject, retry across ALL subjects so a science question asked while
+    # "Mathematics" is selected still finds its answer.
+    if best_distance > RETRIEVAL_DISTANCE_GATE and subject and subject not in ("", "General"):
+        anysub = retrieve_with_citations(query_en, n_results=3, subject="")
+        anysub_best = min((c.distance for c in anysub), default=1.0)
+        if anysub_best < best_distance:
+            chunks, best_distance = anysub, anysub_best
     if not chunks or best_distance > RETRIEVAL_DISTANCE_GATE:
         log.info("Retrieval gate triggered (best_distance=%.3f) — controlled non-response.", best_distance)
         return {
