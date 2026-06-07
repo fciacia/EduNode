@@ -283,6 +283,9 @@ const ico = (n, c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="$
 const MAX_CHARS = 2000;
 const HISTORY_KEY = () => 'edu_chat_' + (document.getElementById('studentName').value.trim() || '_guest');
 
+// Read-aloud playback state (for proper play/pause toggling).
+let ttsAudio = null, ttsBtn = null, ttsSeq = 0;
+
 function getLang()    { return document.getElementById('langSel').value; }
 function getSubject() { return document.getElementById('subjectSel').value; }
 function getName()    { return document.getElementById('studentName').value.trim() || 'Student'; }
@@ -457,25 +460,46 @@ function decorateAnswer(msgEl, d) {
   }
 }
 
+// Stop any current read-aloud and reset its button. Resolves the in-flight
+// fetch via ttsSeq so a click during "Loading…" is honoured too.
+function stopTTS() {
+  ttsSeq++;
+  if (ttsAudio) { ttsAudio.onended = null; ttsAudio.onerror = null; ttsAudio.pause(); ttsAudio = null; }
+  if (ttsBtn) {
+    ttsBtn.closest('.message')?.classList.remove('speaking');
+    ttsBtn.innerHTML = ico('volume') + ' Listen';
+    ttsBtn = null;
+  }
+}
+
 async function playTTS(text, btn) {
+  if (ttsBtn === btn) { stopTTS(); return; }   // clicking the active button pauses
+  stopTTS();                                    // otherwise stop whatever's playing first
   const msgEl = btn ? btn.closest('.message') : null;
+  const mySeq = ++ttsSeq;
+  ttsBtn = btn;
+  btn.innerHTML = ico('loader','icon-spin') + ' Loading…';
+  msgEl && msgEl.classList.add('speaking');
   try {
-    btn.innerHTML = ico('loader','icon-spin') + ' Loading…';
     const r = await fetch('/api/voice/tts', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({text, language: getLang()})
     });
     if (!r.ok) throw new Error();
     const blob = await r.blob();
+    if (mySeq !== ttsSeq) return;               // stopped/superseded while loading
     const audio = new Audio(URL.createObjectURL(blob));
-    btn.innerHTML = ico('pause') + ' Playing';
-    msgEl && msgEl.classList.add('speaking');
-    const done = () => { btn.innerHTML = ico('volume') + ' Listen'; msgEl && msgEl.classList.remove('speaking'); };
+    ttsAudio = audio;
+    btn.innerHTML = ico('pause') + ' Pause';
+    const done = () => {
+      if (ttsAudio === audio) { ttsAudio = null; ttsBtn = null; }
+      btn.innerHTML = ico('volume') + ' Listen';
+      msgEl && msgEl.classList.remove('speaking');
+    };
     audio.onended = done; audio.onerror = done;
     audio.play();
   } catch(e) {
-    btn.innerHTML = ico('volume') + ' Listen';
-    msgEl && msgEl.classList.remove('speaking');
+    if (mySeq === ttsSeq) stopTTS();
   }
 }
 
