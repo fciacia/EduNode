@@ -1,4 +1,5 @@
 """Tests for the admission-control request gate (concurrency safety)."""
+import pytest
 from core.request_queue import RequestGate
 
 
@@ -60,3 +61,24 @@ def test_chat_sheds_when_saturated(temp_db, monkeypatch):
     body = r.get_json()
     assert body["error"] == "busy"
     assert r.headers.get("Retry-After")
+
+
+@pytest.mark.parametrize("path, payload", [
+    ("/api/quiz/generate",     {"topic": "Fractions", "language": "English"}),
+    ("/api/slides/generate",   {"topic": "Fractions", "language": "English"}),
+    ("/api/podcast/generate",  {"topic": "Fractions", "language": "English"}),
+    ("/api/flashcard/generate",{"topic": "Fractions", "language": "English"}),
+    ("/api/diagram",           {"topic": "Fractions", "language": "English"}),
+])
+def test_generation_endpoints_shed_when_saturated(temp_db, monkeypatch, path, payload):
+    # Every LLM-heavy generation endpoint — not just chat — is admission-controlled.
+    import core.request_queue as rq
+    monkeypatch.setattr(rq, "gate", RequestGate(max_concurrency=1, default_timeout=0))
+    from app import app
+    client = app.test_client()
+
+    with rq.gate.slot() as held:
+        assert held is True
+        r = client.post(path, json=payload)
+    assert r.status_code == 503, path
+    assert r.get_json()["error"] == "busy"

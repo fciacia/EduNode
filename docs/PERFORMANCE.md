@@ -82,6 +82,24 @@ back the deployment claim.
   hub nothing for the common case. Minority languages with no phone voice (Iban,
   Cebuano, …) fall back to the hub's neural TTS.
 
+### Measured results (dev MacBook, phi3:mini, gate cap = 2)
+
+Run with `tools/load_test.py`, 6 requests per level, English chat:
+
+| Concurrency | Throughput (req/min) | p50 (s) | p95 (s) | Errors |
+|---|---|---|---|---|
+| 1 | 7.8 | 5.5 | 17.0 | 0 |
+| 3 | 11.4 | 10.1 | 20.7 | 0 |
+| 5 | 10.8 | 23.2 | 32.3 | 0 |
+
+**What this shows (exactly the predicted shape):** throughput plateaus around
+10–11 req/min — the single-stream phi3 rate — while p50 latency climbs roughly
+linearly with concurrency, because requests queue behind the gate's 2 inference
+slots. **Zero errors**: the admission gate makes excess requests *wait* rather than
+crash the node (timeout was 120 s). A Raspberry Pi 5 (CPU-only) will show higher
+absolute latencies, so re-run on the Pi to fill in the deployment table below; the
+*shape* (plateau + linear latency) will hold.
+
 ### Results table (fill in from a Pi run)
 
 | Concurrency | Throughput (req/min) | p50 (s) | p95 (s) | Errors | CPU% (max) | Mem% (max) |

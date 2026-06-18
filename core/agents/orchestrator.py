@@ -33,6 +33,11 @@ log = logging.getLogger(__name__)
 # Tune per deployment/model with tools/eval_rag.py.
 GROUNDED_GATE = float(os.getenv("EDGE_GROUNDED_GATE", "0.55"))
 SUPPLEMENTARY_GATE = float(os.getenv("EDGE_SUPPLEMENTARY_GATE", "0.85"))
+# Supplementary answers come from the model's general knowledge (ungrounded,
+# unverified) and carry some hallucination risk even when clearly labelled. A
+# strict deployment can disable the tier (EDGE_SUPPLEMENTARY_ENABLED=0) so a
+# near-miss falls straight to a controlled non-response instead.
+SUPPLEMENTARY_ENABLED = os.getenv("EDGE_SUPPLEMENTARY_ENABLED", "1") != "0"
 
 _NON_RESPONSE_EN = (
     "I don't have curriculum material on that topic yet. "
@@ -117,6 +122,9 @@ def run_pipeline(query: str, language: str, student_id, subject: str = "General"
         return _non_response(language)
 
     if best_distance > GROUNDED_GATE:
+        if not SUPPLEMENTARY_ENABLED:
+            log.info("Supplementary disabled — non-response (best_distance=%.3f).", best_distance)
+            return _non_response(language)
         # Supplementary tier: near miss — answer from general knowledge, labelled.
         log.info("Supplementary tier (best_distance=%.3f).", best_distance)
         supp_en = pedagogy.reason_supplementary(query_en, ctx, history)

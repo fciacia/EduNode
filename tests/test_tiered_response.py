@@ -72,6 +72,21 @@ def test_supplementary_tier(monkeypatch):
     assert out["citations"] == []                   # not grounded in curriculum
 
 
+def test_supplementary_can_be_disabled(monkeypatch):
+    _patch_common(monkeypatch)
+    monkeypatch.setattr(orch, "SUPPLEMENTARY_ENABLED", False)
+    import core.rag_engine as rag
+    near = (orch.GROUNDED_GATE + orch.SUPPLEMENTARY_GATE) / 2
+    monkeypatch.setattr(rag, "retrieve_with_citations",
+                        lambda q, n_results=3, subject=None: _chunks(near))
+    import core.agents.pedagogy as ped
+    monkeypatch.setattr(ped, "reason_supplementary",
+                        lambda *a, **k: "should not be called")
+
+    out = orch.run_pipeline("Why are rainbows curved?", "English", student_id=None)
+    assert out["tier"] == "none"            # falls through to controlled non-response
+
+
 def test_non_response_tier(monkeypatch):
     _patch_common(monkeypatch)
     import core.rag_engine as rag

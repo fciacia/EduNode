@@ -51,6 +51,11 @@ def test_apply_content_manifest_flags_tamper(tmp_path):
     report = sn.apply_content_manifest(usb, content_dir=content)
     assert report["ok"] is False
     assert "a.txt" in report["changed"]
+    # ENFORCED: the tampered file is quarantined out of the curriculum tree so it
+    # is never ingested.
+    assert "a.txt" in report["quarantined"]
+    assert not (content / "a.txt").exists()
+    assert (content.parent / "_quarantine" / "a.txt").exists()
 
 
 def test_export_dialect_logs_matches_schema(tmp_path, monkeypatch):

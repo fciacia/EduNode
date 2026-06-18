@@ -69,7 +69,21 @@
 
 {% block extra_scripts %}
 <script>
-const TOKEN = new URLSearchParams(location.search).get('token') || '';
+// Exchange any ?token= in the URL for an HttpOnly cookie, then strip it from the
+// URL so the admin secret isn't left in browser history or server logs.
+async function ensureAuth() {
+  const params = new URLSearchParams(location.search);
+  const urlToken = params.get('token') || '';
+  if (!urlToken) return;
+  try {
+    await fetch('/api/admin/login', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({token: urlToken}),
+    });
+  } catch (e) { /* fall back to cookie if already set */ }
+  params.delete('token');
+  history.replaceState({}, '', location.pathname + (params.toString() ? '?' + params : ''));
+}
 
 function pctClass(p) { return p < 50 ? 'pct-low' : (p < 80 ? 'pct-mid' : 'pct-ok'); }
 function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -89,7 +103,7 @@ function bars(rows, nameKey, valKey, target) {
 async function load() {
   let d;
   try {
-    const r = await fetch('/api/teacher/analytics?token=' + encodeURIComponent(TOKEN));
+    const r = await fetch('/api/teacher/analytics');
     if (!r.ok) throw new Error('Unauthorized (status ' + r.status + '). Open this page with ?token=YOUR_ADMIN_TOKEN');
     d = await r.json();
   } catch (e) {
@@ -132,7 +146,7 @@ async function submitFix(btn) {
   if (!corrected) { input.focus(); return; }
   btn.disabled = true;
   try {
-    const r = await fetch('/api/translation/correct?token=' + encodeURIComponent(TOKEN), {
+    const r = await fetch('/api/translation/correct', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         language: input.dataset.lang, original: input.dataset.orig, corrected,
@@ -146,6 +160,6 @@ async function submitFix(btn) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', load);
+document.addEventListener('DOMContentLoaded', () => ensureAuth().then(load));
 </script>
 {% endblock %}

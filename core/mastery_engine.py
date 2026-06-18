@@ -58,28 +58,33 @@ def concept_mastery(student_id: int | None) -> list[dict]:
         import core.progress_tracker as pt
         with pt._db() as conn:
             rows = conn.execute(
-                "SELECT topic,"
-                "       SUM(score)        AS got,"
-                "       SUM(total)        AS possible,"
-                "       COUNT(*)          AS attempts"
-                "  FROM quiz_results"
-                " WHERE student_id=? AND total>0"
-                " GROUP BY topic",
+                "SELECT topic, score, total FROM quiz_results"
+                " WHERE student_id=? AND total>0",
                 (student_id,),
             ).fetchall()
     except Exception as exc:  # noqa: BLE001
         log.warning("concept_mastery failed for student %s: %s", student_id, exc)
         return []
 
-    out = []
+    # Aggregate by NORMALISED topic so 'Fractions' and ' fractions ' are one
+    # concept; keep the first-seen original casing for display.
+    from core.progress_tracker import normalize_topic
+    buckets: dict[str, dict] = {}
     for r in rows:
-        possible = r["possible"] or 0
-        if possible == 0:
+        key = normalize_topic(r["topic"])
+        b = buckets.setdefault(key, {"display": r["topic"], "got": 0, "possible": 0, "attempts": 0})
+        b["got"] += r["score"]
+        b["possible"] += r["total"]
+        b["attempts"] += 1
+
+    out = []
+    for b in buckets.values():
+        if b["possible"] == 0:
             continue
-        avg_pct = round(r["got"] / possible * 100, 1)
+        avg_pct = round(b["got"] / b["possible"] * 100, 1)
         out.append({
-            "topic": r["topic"],
-            "attempts": r["attempts"],
+            "topic": b["display"],
+            "attempts": b["attempts"],
             "avg_pct": avg_pct,
             "level": _level(avg_pct),
         })

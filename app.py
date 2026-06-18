@@ -55,6 +55,12 @@ import config as cfg
 
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "changeme")
 AUDIO_DIR   = Path(os.getenv("AUDIO_DIR", "data/audio"))
+ADMIN_COOKIE = "edge_admin"
+
+if ADMIN_TOKEN == "changeme":
+    log.warning("SECURITY: ADMIN_TOKEN is the default 'changeme'. Set a strong "
+                "ADMIN_TOKEN in .env before deploying — teacher/admin routes are "
+                "otherwise trivially accessible.")
 
 
 # ---------------------------------------------------------------------------
@@ -69,6 +75,31 @@ def _token_fingerprint(token: str) -> str:
     return "tok:" + hashlib.sha256(token.encode()).hexdigest()[:8]
 
 
+def _busy_response():
+    """Uniform 503 shed when the hub is at its concurrency limit."""
+    resp = jsonify({
+        "error": "busy",
+        "response": "The hub is helping other students right now. "
+                    "Please wait a few seconds and try again.",
+    })
+    resp.status_code = 503
+    resp.headers["Retry-After"] = "10"
+    return resp
+
+
+def gated_inference(f):
+    """Decorator: run an LLM-heavy endpoint under the admission gate so a burst of
+    students can't exhaust the hub's memory; shed with 503 if the hub is saturated."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        from core.request_queue import gate
+        with gate.slot() as admitted:
+            if not admitted:
+                return _busy_response()
+            return f(*args, **kwargs)
+    return decorated
+
+
 def require_admin(f):
     """Decorator: require X-Admin-Token header or ?token= query param.
 
@@ -77,7 +108,11 @@ def require_admin(f):
     """
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.headers.get("X-Admin-Token") or request.args.get("token", "")
+        # Prefer header/cookie over the URL query so the secret isn't left in
+        # browser history or server access logs.
+        token = (request.headers.get("X-Admin-Token")
+                 or request.cookies.get(ADMIN_COOKIE)
+                 or request.args.get("token", ""))
         actor = _token_fingerprint(token)
         action = request.endpoint or request.path
         if not token or token != ADMIN_TOKEN:
@@ -355,6 +390,23 @@ def api_audit():
     return jsonify({"entries": get_audit_log()})
 
 
+@app.post("/api/admin/login")
+def api_admin_login():
+    """Exchange the admin token for an HttpOnly cookie so it stops riding in URLs
+    (out of browser history and access logs). JS can't read the cookie."""
+    from core.progress_tracker import log_audit
+    data = request.get_json(silent=True) or request.form
+    token = (data.get("token") or "").strip()
+    actor = _token_fingerprint(token)
+    if not token or token != ADMIN_TOKEN:
+        log_audit("admin_login", actor=actor, detail="/api/admin/login", outcome="denied")
+        return jsonify({"error": "invalid token"}), 403
+    resp = jsonify({"ok": True})
+    resp.set_cookie(ADMIN_COOKIE, token, httponly=True, samesite="Strict", max_age=43200)
+    log_audit("admin_login", actor=actor, detail="/api/admin/login", outcome="ok")
+    return resp
+
+
 @app.get("/share/<share_id>")
 def share_view(share_id: str):
     from core.p2p_share import get_shared_content
@@ -535,6 +587,7 @@ def api_voice_tts():
 # ---------------------------------------------------------------------------
 
 @app.post("/api/quiz/generate")
+@gated_inference
 def api_quiz_generate():
     data     = request.get_json(silent=True) or {}
     topic    = (data.get("topic")    or "").strip()
@@ -618,6 +671,7 @@ def api_quiz_submit():
 # ---------------------------------------------------------------------------
 
 @app.post("/api/podcast/generate")
+@gated_inference
 def api_podcast_generate():
     data     = request.get_json(silent=True) or {}
     topic    = (data.get("topic")    or "").strip()
@@ -741,6 +795,7 @@ def api_translation_corrections():
 # ---------------------------------------------------------------------------
 
 @app.post("/api/slides/generate")
+@gated_inference
 def api_slides_generate():
     data     = request.get_json(silent=True) or {}
     topic    = (data.get("topic")    or "").strip()
@@ -906,6 +961,7 @@ def api_recommendations_by_name(name: str):
 # ---------------------------------------------------------------------------
 
 @app.post("/api/flashcard/generate")
+@gated_inference
 def api_flashcard_generate():
     data     = request.get_json(silent=True) or {}
     topic    = (data.get("topic")    or "").strip()
@@ -940,6 +996,7 @@ def api_flashcard_generate():
 
 
 @app.post("/api/diagram")
+@gated_inference
 def api_diagram():
     """Return a validated maths-diagram spec for a question (or {diagram:null}).
     Best-effort + cached; the frontend renders the spec as exact SVG."""

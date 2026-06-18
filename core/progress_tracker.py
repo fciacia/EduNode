@@ -411,6 +411,54 @@ def log_dialect(
 # Audit log (data governance — Issue 8)
 # ---------------------------------------------------------------------------
 
+def normalize_topic(topic: str) -> str:
+    """Canonical key for a free-form quiz topic so 'Fractions', ' fractions ',
+    and 'Adding  fractions' don't fragment a student's mastery into separate
+    concepts. Collapses whitespace and lowercases for grouping (display keeps the
+    original casing the caller chooses)."""
+    return " ".join((topic or "").split()).lower()
+
+
+# ---------------------------------------------------------------------------
+# Retention & erasure (data governance — Issue 8)
+# ---------------------------------------------------------------------------
+
+_RETENTION_TABLES = [
+    ("sessions", "started_at"),
+    ("quiz_results", "taken_at"),
+    ("conversation_turns", "created_at"),
+    ("dialect_logs", "logged_at"),
+    ("audit_log", "logged_at"),
+]
+
+
+def purge_older_than(days: int) -> dict:
+    """Delete time-stamped records older than *days*. Returns rows removed per table.
+    Supports a term-based retention policy run during routine maintenance."""
+    from datetime import timedelta
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    removed: dict[str, int] = {}
+    with _db() as conn:
+        for table, col in _RETENTION_TABLES:
+            cur = conn.execute(f"DELETE FROM {table} WHERE {col} < ?", (cutoff,))
+            removed[table] = cur.rowcount
+    log.info("Retention purge (>%d days): %s", days, removed)
+    return removed
+
+
+def delete_student(student_id: int) -> dict:
+    """Right-to-erasure: remove a student and their personal records."""
+    removed: dict[str, int] = {}
+    with _db() as conn:
+        for table in ("quiz_results", "sessions", "badges", "review_items"):
+            cur = conn.execute(f"DELETE FROM {table} WHERE student_id=?", (student_id,))
+            removed[table] = cur.rowcount
+        cur = conn.execute("DELETE FROM students WHERE id=?", (student_id,))
+        removed["students"] = cur.rowcount
+    log.info("Deleted student %s: %s", student_id, removed)
+    return removed
+
+
 def log_audit(action: str, actor: str = "", detail: str = "", outcome: str = "ok") -> None:
     """Append an audit entry for a privileged action (admin/teacher access).
 

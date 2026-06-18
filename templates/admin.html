@@ -98,7 +98,21 @@
 
 {% block extra_scripts %}
 <script>
-const TOKEN = new URLSearchParams(location.search).get('token') || '';
+// Exchange any ?token= in the URL for an HttpOnly cookie, then strip it from the
+// URL so the admin secret isn't left in browser history or server logs.
+async function ensureAuth() {
+  const params = new URLSearchParams(location.search);
+  const urlToken = params.get('token') || '';
+  if (!urlToken) return;
+  try {
+    await fetch('/api/admin/login', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({token: urlToken}),
+    });
+  } catch (e) { /* fall back to cookie if already set */ }
+  params.delete('token');
+  history.replaceState({}, '', location.pathname + (params.toString() ? '?' + params : ''));
+}
 
 async function loadStatus() {
   try {
@@ -137,7 +151,7 @@ async function uploadFile() {
   const msg = document.getElementById('uploadMsg');
   msg.style.display = 'none';
   try {
-    const r = await fetch('/api/ingest?token=' + encodeURIComponent(TOKEN), {method:'POST', body: fd});
+    const r = await fetch('/api/ingest', {method:'POST', body: fd});
     const d = await r.json();
     msg.className = r.ok ? 'msg-box msg-ok' : 'msg-box msg-err';
     msg.textContent = r.ok ? d.message + ' — ' + d.chunks + ' chunks indexed.' : (d.error || 'Error');
@@ -157,7 +171,7 @@ async function addGlossary() {
   msg.style.display = 'none';
   if (!english || !native) { alert('Enter both the English word and the local word.'); return; }
   try {
-    const r = await fetch('/api/glossary/add?token=' + encodeURIComponent(TOKEN), {
+    const r = await fetch('/api/glossary/add', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({language, english, native})
     });
@@ -173,6 +187,6 @@ async function addGlossary() {
   }
 }
 
-loadStatus();
+ensureAuth().then(loadStatus);
 </script>
 {% endblock %}

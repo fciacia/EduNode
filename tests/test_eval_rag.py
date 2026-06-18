@@ -128,6 +128,34 @@ def test_asean_gold_set_tagged_by_country():
         assert "language" in it
 
 
+def test_llm_judge_parses_schema(monkeypatch):
+    monkeypatch.setattr("core.llm_engine._ollama_generate",
+                        lambda *a, **k: '{"correct": true}')
+    assert eval_rag.llm_judge("Q", "A") is True
+    monkeypatch.setattr("core.llm_engine._ollama_generate",
+                        lambda *a, **k: '{"correct": false}')
+    assert eval_rag.llm_judge("Q", "A") is False
+
+
+def test_llm_judge_unavailable_returns_none(monkeypatch):
+    monkeypatch.setattr("core.llm_engine._ollama_generate", lambda *a, **k: "")
+    assert eval_rag.llm_judge("Q", "A") is None
+
+
+def test_aggregate_includes_judge_accuracy():
+    rows = [
+        {"type": "in_curriculum", "tier": "grounded", "precision": 1.0,
+         "relevant_precision": 1.0, "hit": True, "keyword_recall": 1.0,
+         "judge_correct": True, "confidence": 0.9, "has_citation": True},
+        {"type": "in_curriculum", "tier": "grounded", "precision": 1.0,
+         "relevant_precision": 1.0, "hit": True, "keyword_recall": 1.0,
+         "judge_correct": False, "confidence": 0.5, "has_citation": True},
+    ]
+    s = eval_rag.aggregate(rows)
+    assert s["answer_accuracy_judged"] == 0.5
+    assert s["n_judged"] == 2
+
+
 def test_gold_set_is_valid():
     gold = json.loads(Path("data/eval/gold_set.json").read_text(encoding="utf-8"))
     assert gold["items"]

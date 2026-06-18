@@ -98,6 +98,24 @@ def apply_content_manifest(usb: Path, content_dir: Path = Path("data/curriculum"
 
     manifest = cm.load_manifest(content_dir) or {}
     report = cm.verify(content_dir, manifest)
+
+    # ENFORCE (not just warn): a checksum mismatch means the file does not match
+    # what the publisher signed, so quarantine it OUT of the curriculum tree before
+    # indexing. ingest_pdfs globs data/curriculum/** recursively, so the quarantine
+    # dir lives outside it (data/_quarantine) and tampered content is never trusted.
+    quarantined: list[str] = []
+    if report["changed"]:
+        qdir = content_dir.parent / "_quarantine"
+        qdir.mkdir(parents=True, exist_ok=True)
+        for name in report["changed"]:
+            src = content_dir / name
+            if src.exists():
+                shutil.move(str(src), str(qdir / name))
+                quarantined.append(name)
+        _log(f"  QUARANTINED {len(quarantined)} tampered file(s) (excluded from ingest): "
+             f"{quarantined}")
+    report["quarantined"] = quarantined
+
     if report["ok"]:
         _log(f"  Content verified: {len(report['verified'])} files OK.")
     else:

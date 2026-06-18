@@ -55,6 +55,22 @@ def test_recommendations_skip_mastered_and_limit(temp_db):
     assert "D" not in topics                            # mastered excluded
 
 
+def test_topic_normalization_merges_variants(temp_db):
+    sid = pt.get_or_create_student("Norm")
+    pt.log_quiz_result(sid, "Fractions", 2, 10)
+    pt.log_quiz_result(sid, " fractions ", 8, 10)     # same concept, different casing/space
+    pt.log_quiz_result(sid, "Adding  Fractions", 5, 10)  # different concept (extra word)
+
+    mastery = me.concept_mastery(sid)
+    topics = {m["topic"]: m for m in mastery}
+    # the two 'fractions' variants merge into one bucket
+    assert "Fractions" in topics
+    assert topics["Fractions"]["attempts"] == 2
+    assert topics["Fractions"]["avg_pct"] == 50.0          # (2+8)/(10+10)
+    # 'Adding Fractions' is a distinct concept
+    assert any("adding" in t.lower() for t in topics)
+
+
 def test_recommendations_api_by_name(temp_db):
     sid = pt.get_or_create_student("Evie")
     pt.log_quiz_result(sid, "Fractions", 1, 10)
