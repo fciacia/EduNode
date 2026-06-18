@@ -1,0 +1,338 @@
+{
+  "summary": {
+    "n_total": 20,
+    "n_in_curriculum": 16,
+    "n_off_curriculum": 4,
+    "retrieval_hit_rate": 1.0,
+    "retrieval_precision_at_k": 0.625,
+    "tier_distribution": {
+      "grounded": 17,
+      "supplementary": 1,
+      "none": 2
+    },
+    "non_response_rate_in_curriculum": 0.0,
+    "false_grounding_rate_off_curriculum": 0.0
+  },
+  "rows": [
+    {
+      "id": "math-01",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.187,
+      "precision": 0.6666666666666666,
+      "hit": true,
+      "retrieved_sources": [
+        "mathematics_core_lessons.txt",
+        "openstax_math_fractions.txt",
+        "mathematics_grade7.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "math-02",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.172,
+      "precision": 0.6666666666666666,
+      "hit": true,
+      "retrieved_sources": [
+        "mathematics_core_lessons.txt",
+        "mathematics_grade7.txt",
+        "openstax_math_fractions.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "math-03",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.196,
+      "precision": 1.0,
+      "hit": true,
+      "retrieved_sources": [
+        "mathematics_core_lessons.txt",
+        "mathematics_core_lessons.txt",
+        "openstax_math_fractions.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "math-04",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.191,
+      "precision": 0.6666666666666666,
+      "hit": true,
+      "retrieved_sources": [
+        "mathematics_core_lessons.txt",
+        "mathematics_core_lessons.txt",
+        "mathematics_grade7.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "math-05",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.301,
+      "precision": 0.3333333333333333,
+      "hit": true,
+      "retrieved_sources": [
+        "openstax_math_fractions.txt",
+        "mathematics_core_lessons.txt",
+        "mathematics_core_lessons.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "math-06",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.446,
+      "precision": 0.6666666666666666,
+      "hit": true,
+      "retrieved_sources": [
+        "mathematics_core_lessons.txt",
+        "mathematics_grade8.txt",
+        "mathematics_core_lessons.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "math-07",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.238,
+      "precision": 0.6666666666666666,
+      "hit": true,
+      "retrieved_sources": [
+        "mathematics_core_lessons.txt",
+        "mathematics_grade8.txt",
+        "mathematics_core_lessons.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "math-08",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.237,
+      "precision": 0.6666666666666666,
+      "hit": true,
+      "retrieved_sources": [
+        "mathematics_core_lessons.txt",
+        "mathematics_grade7.txt",
+        "openstax_math_fractions.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "sci-01",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.181,
+      "precision": 0.6666666666666666,
+      "hit": true,
+      "retrieved_sources": [
+        "science_grade7.txt",
+        "openstax_biology_photosynthesis.txt",
+        "science_core_lessons.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "sci-02",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.454,
+      "precision": 0.3333333333333333,
+      "hit": true,
+      "retrieved_sources": [
+        "science_core_lessons.txt",
+        "science_core_lessons.txt",
+        "openstax_biology_photosynthesis.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "sci-03",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.418,
+      "precision": 0.6666666666666666,
+      "hit": true,
+      "retrieved_sources": [
+        "science_core_lessons.txt",
+        "science_grade7.txt",
+        "openstax_biology_photosynthesis.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "sci-04",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.353,
+      "precision": 0.6666666666666666,
+      "hit": true,
+      "retrieved_sources": [
+        "science_core_lessons.txt",
+        "openstax_biology_photosynthesis.txt",
+        "science_core_lessons.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "sci-05",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.388,
+      "precision": 0.6666666666666666,
+      "hit": true,
+      "retrieved_sources": [
+        "science_core_lessons.txt",
+        "openstax_biology_photosynthesis.txt",
+        "science_core_lessons.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "sci-06",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.591,
+      "precision": 0.6666666666666666,
+      "hit": true,
+      "retrieved_sources": [
+        "science_core_lessons.txt",
+        "science_core_lessons.txt",
+        "science_grade7.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "sci-07",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.336,
+      "precision": 0.6666666666666666,
+      "hit": true,
+      "retrieved_sources": [
+        "science_core_lessons.txt",
+        "science_grade8.txt",
+        "science_core_lessons.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "sci-08",
+      "type": "in_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.277,
+      "precision": 0.3333333333333333,
+      "hit": true,
+      "retrieved_sources": [
+        "science_grade7.txt",
+        "openstax_biology_photosynthesis.txt",
+        "science_core_lessons.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "off-01",
+      "type": "off_curriculum",
+      "tier": "none",
+      "best_distance": 0.884,
+      "precision": null,
+      "hit": null,
+      "retrieved_sources": [
+        "science_core_lessons.txt",
+        "science_grade7.txt",
+        "science_core_lessons.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "off-02",
+      "type": "off_curriculum",
+      "tier": "grounded",
+      "best_distance": 0.59,
+      "precision": null,
+      "hit": null,
+      "retrieved_sources": [
+        "mathematics_core_lessons.txt",
+        "mathematics_core_lessons.txt",
+        "mathematics_core_lessons.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "off-03",
+      "type": "off_curriculum",
+      "tier": "none",
+      "best_distance": 0.899,
+      "precision": null,
+      "hit": null,
+      "retrieved_sources": [
+        "science_grade7.txt",
+        "science_core_lessons.txt",
+        "science_core_lessons.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    },
+    {
+      "id": "off-04",
+      "type": "off_curriculum",
+      "tier": "supplementary",
+      "best_distance": 0.702,
+      "precision": null,
+      "hit": null,
+      "retrieved_sources": [
+        "openstax_math_fractions.txt",
+        "mathematics_core_lessons.txt",
+        "mathematics_core_lessons.txt"
+      ],
+      "keyword_recall": null,
+      "confidence": null,
+      "has_citation": false
+    }
+  ]
+}
