@@ -97,8 +97,5 @@ training pipeline.
 
 ## Known follow-ups
 
-- `export_dialect_logs` in `sneakernet_sync.py` predates the current schema and
-  queries legacy column names; the telemetry bundle reads the correct columns and
-  supersedes it for flywheel data. Aligning the legacy export is a separate fix.
 - Cryptographic signatures per publisher (beyond checksums) are on the
   [CONTENT_GOVERNANCE.md](CONTENT_GOVERNANCE.md) roadmap.

@@ -190,7 +190,8 @@ def export_dialect_logs(usb: Path) -> int:
         con = sqlite3.connect(str(db_src))
         con.row_factory = sqlite3.Row
         cur = con.execute(
-            "SELECT id, language, text, created_at FROM dialect_logs ORDER BY id"
+            "SELECT id, language, raw_input, detected_dialect_variant, logged_at"
+            " FROM dialect_logs ORDER BY id"
         )
         rows = [dict(r) for r in cur.fetchall()]
         con.close()

@@ -53,6 +53,29 @@ def test_apply_content_manifest_flags_tamper(tmp_path):
     assert "a.txt" in report["changed"]
 
 
+def test_export_dialect_logs_matches_schema(tmp_path, monkeypatch):
+    # Guards against the legacy export query drifting from the dialect_logs schema.
+    # export_dialect_logs reads db/edunode.db relative to cwd, so build one there.
+    import core.progress_tracker as pt
+    work = tmp_path / "work"
+    db_path = work / "db" / "edunode.db"
+    db_path.parent.mkdir(parents=True)
+    monkeypatch.setattr(pt, "DB_PATH", db_path)
+    pt.init_db()
+    pt.log_dialect("Iban", "nama berita", "coastal")
+
+    monkeypatch.chdir(work)
+    monkeypatch.setattr(sn, "_stamp", lambda: "TEST")
+    usb = tmp_path / "usb"
+    n = sn.export_dialect_logs(usb)
+
+    assert n == 1
+    out = json.loads((usb / "exported_reports" / "dialect_logs_TEST.json").read_text(encoding="utf-8"))
+    assert out[0]["language"] == "Iban"
+    assert out[0]["raw_input"] == "nama berita"
+    assert out[0]["detected_dialect_variant"] == "coastal"
+
+
 def test_capture_telemetry_writes_bundle(temp_db, tmp_path, monkeypatch):
     import core.correction_store as cs
     import core.analytics_engine as an
