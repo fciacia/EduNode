@@ -68,6 +68,20 @@ python -m tools.load_test --url http://192.168.1.1:5000 --concurrency 50 --think
 CPU% and memory%. Run it **on the Pi target**, not a dev laptop, for figures that
 back the deployment claim.
 
+### Implemented mitigations for many concurrent students
+
+- **Admission-control queue** ([core/request_queue.py](../core/request_queue.py)):
+  a bounded gate caps simultaneous heavy inferences (`EDGE_MAX_CONCURRENCY`,
+  default 2). Excess requests wait up to `EDGE_QUEUE_TIMEOUT` seconds, then get a
+  graceful `503 busy` with `Retry-After` instead of pushing the node into
+  out-of-memory. Live `active`/`waiting`/`rejected` metrics are exposed on
+  `/api/status`. This bounds RAM regardless of how many students connect.
+- **Client-side TTS offload** ([templates/chat.html](../templates/chat.html)):
+  read-aloud uses the **phone's** on-device speech engine when it has a voice for
+  the language (English and major ASEAN languages), so text-to-speech costs the
+  hub nothing for the common case. Minority languages with no phone voice (Iban,
+  Cebuano, …) fall back to the hub's neural TTS.
+
 ### Results table (fill in from a Pi run)
 
 | Concurrency | Throughput (req/min) | p50 (s) | p95 (s) | Errors | CPU% (max) | Mem% (max) |

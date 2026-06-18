@@ -462,10 +462,34 @@ function decorateAnswer(msgEl, d) {
   }
 }
 
+// Hub language name -> BCP-47 prefix for the browser's on-device speech engine.
+// Listed languages are spoken on the phone (zero hub load); anything not here
+// (Iban, Cebuano, Sundanese, Hmong…) falls back to the hub's neural TTS.
+const BROWSER_TTS_LANG = {
+  'English':'en', 'Thai':'th', 'Vietnamese':'vi', 'Bahasa Indonesia':'id',
+  'Bahasa Melayu':'ms', 'Malay':'ms', 'Filipino':'fil', 'Tagalog':'fil',
+  'Khmer':'km', 'Lao':'lo', 'Burmese':'my', 'Mandarin':'zh', 'Chinese':'zh',
+};
+
+// Find an installed phone voice matching *code* (e.g. 'en'), or null.
+function pickBrowserVoice(code) {
+  if (!('speechSynthesis' in window) || !code) return null;
+  const voices = window.speechSynthesis.getVoices() || [];
+  return voices.find(v => (v.lang || '').toLowerCase().startsWith(code.toLowerCase())) || null;
+}
+
+// Voices often load asynchronously — nudge the browser to populate the list
+// early so the first "Listen" tap can already offload to the phone.
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
 // Stop any current read-aloud and reset its button. Resolves the in-flight
 // fetch via ttsSeq so a click during "Loading…" is honoured too.
 function stopTTS() {
   ttsSeq++;
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();   // stop phone TTS
   if (ttsAudio) { ttsAudio.onended = null; ttsAudio.onerror = null; ttsAudio.pause(); ttsAudio = null; }
   if (ttsBtn) {
     ttsBtn.closest('.message')?.classList.remove('speaking');
@@ -480,8 +504,22 @@ async function playTTS(text, btn) {
   const msgEl = btn ? btn.closest('.message') : null;
   const mySeq = ++ttsSeq;
   ttsBtn = btn;
-  btn.innerHTML = ico('loader','icon-spin') + ' Loading…';
   msgEl && msgEl.classList.add('speaking');
+
+  // Offload to the phone's speech engine when it has a voice for this language,
+  // sparing the hub a TTS inference. Minority languages fall through to /api/voice/tts.
+  const voice = pickBrowserVoice(BROWSER_TTS_LANG[getLang()]);
+  if (voice) {
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = voice; u.lang = voice.lang;
+    const done = () => { if (mySeq === ttsSeq) { ttsBtn = null; btn.innerHTML = ico('volume') + ' Listen'; msgEl && msgEl.classList.remove('speaking'); } };
+    u.onend = done; u.onerror = done;
+    btn.innerHTML = ico('pause') + ' Pause';
+    window.speechSynthesis.speak(u);
+    return;
+  }
+
+  btn.innerHTML = ico('loader','icon-spin') + ' Loading…';
   try {
     const r = await fetch('/api/voice/tts', {
       method: 'POST', headers: {'Content-Type':'application/json'},

@@ -410,6 +410,8 @@ def api_status():
     except Exception:
         doc_count = 0
 
+    from core.request_queue import gate
+
     return jsonify({
         "ollama":  ollama_ok,
         "tts":     PIPER_BIN.exists(),
@@ -418,6 +420,7 @@ def api_status():
         "model":   os.getenv("OLLAMA_MODEL", cfg.SLM_MODEL),
         "hub":     cfg.HUB_ID,
         "region":  cfg.HUB_REGION,
+        "queue":   gate.stats(),
     })
 
 
@@ -447,8 +450,22 @@ def api_chat():
     except Exception as exc:
         log.warning("Student resolution failed: %s", exc)
 
-    result = query_tutor(message, language, student_id=sid, subject=subject,
-                         conversation_id=conversation_id)
+    # Admission control: cap concurrent heavy inferences so a burst of students
+    # can't exhaust the hub's memory. Excess requests wait briefly, then get a
+    # graceful "busy" instead of crashing the node.
+    from core.request_queue import gate
+    with gate.slot() as admitted:
+        if not admitted:
+            resp = jsonify({
+                "error": "busy",
+                "response": "The hub is helping other students right now. "
+                            "Please wait a few seconds and ask again.",
+            })
+            resp.status_code = 503
+            resp.headers["Retry-After"] = "10"
+            return resp
+        result = query_tutor(message, language, student_id=sid, subject=subject,
+                             conversation_id=conversation_id)
 
     try:
         if sid is not None:

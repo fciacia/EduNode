@@ -70,6 +70,43 @@ def sync_curriculum(usb: Path) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
+# Step 1b — Deploy content updates: merge + verify the content manifest
+# ---------------------------------------------------------------------------
+
+def apply_content_manifest(usb: Path, content_dir: Path = Path("data/curriculum")) -> dict:
+    """Merge an incoming USB manifest into the local one and verify integrity.
+
+    Gives the decentralized-update model a trust layer: incoming curriculum is
+    version-merged (higher version wins, provenance preserved) and every file is
+    checksum-verified before it is trusted/indexed. Returns the verify report.
+    """
+    from tools import content_manifest as cm
+
+    content_dir = Path(content_dir)
+    incoming_path = usb / "new_curriculum" / cm.MANIFEST_NAME
+    local = cm.load_manifest(content_dir)
+
+    if incoming_path.exists():
+        incoming = json.loads(incoming_path.read_text(encoding="utf-8"))
+        merged = cm.merge_manifests(local, incoming) if local else incoming
+        cm.save_manifest(content_dir, merged)
+        _log(f"  Content manifest merged ({len(merged.get('files', {}))} files).")
+    elif local is None:
+        # No manifest anywhere yet — bootstrap one for the files we have.
+        cm.save_manifest(content_dir, cm.build_manifest(content_dir, publisher="local"))
+        _log("  Bootstrapped a local content manifest.")
+
+    manifest = cm.load_manifest(content_dir) or {}
+    report = cm.verify(content_dir, manifest)
+    if report["ok"]:
+        _log(f"  Content verified: {len(report['verified'])} files OK.")
+    else:
+        _log(f"  WARNING: content integrity issues — changed={report['changed']} "
+             f"missing={report['missing']}")
+    return report
+
+
+# ---------------------------------------------------------------------------
 # Step 2 — Re-index RAG
 # ---------------------------------------------------------------------------
 
@@ -168,6 +205,29 @@ def export_dialect_logs(usb: Path) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Step 6 — Capture flywheel telemetry bundle to USB
+# ---------------------------------------------------------------------------
+
+def capture_telemetry(usb: Path) -> int:
+    """Write the de-identified flywheel telemetry bundle to the USB drive.
+
+    This is how the ASEAN Dialect Flywheel gets its teacher-verified corrections,
+    flags, and dialect usage off a fully-offline hub: captured during routine USB
+    maintenance. Use an encrypted drive (see docs/SYNC_PROTOCOL.md).
+    """
+    try:
+        from core.telemetry_export import write_bundle
+        path = write_bundle(usb / "exported_reports")
+        env = json.loads(path.read_text(encoding="utf-8"))
+        n = env["telemetry"]["counts"]["corrections"]
+        _log(f"  Telemetry bundle captured → {path.name}")
+        return n
+    except Exception as exc:  # noqa: BLE001
+        _log(f"  WARNING: telemetry capture failed — {exc}")
+        return 0
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -196,6 +256,13 @@ def main() -> None:
     # Step 1
     copied = sync_curriculum(usb)
 
+    # Step 1b — deploy + verify content updates (versioned manifest)
+    content_ok = True
+    try:
+        content_ok = apply_content_manifest(usb)["ok"]
+    except Exception as exc:  # noqa: BLE001
+        _log(f"  WARNING: content manifest step failed — {exc}")
+
     # Step 2
     chunks = 0
     if not args.skip_ingest and copied:
@@ -212,14 +279,19 @@ def main() -> None:
     # Step 5
     dialect_count = export_dialect_logs(usb)
 
+    # Step 6 — flywheel telemetry bundle
+    corrections_captured = capture_telemetry(usb)
+
     # Summary
     print("=" * 50)
     _log("Sync complete. Summary:")
     _log(f"  New curriculum files copied : {len(copied)}")
+    _log(f"  Content integrity OK        : {content_ok}")
     _log(f"  RAG chunks after ingest     : {chunks}")
     _log(f"  Model update script ran     : {model_updated}")
     _log(f"  Progress DB exported        : {db_exported}")
     _log(f"  Dialect log entries exported: {dialect_count}")
+    _log(f"  Telemetry corrections caught: {corrections_captured}")
     print("=" * 50)
 
     if copied:
