@@ -34,6 +34,24 @@ def test_retrieval_metrics_off_curriculum_is_none():
     assert m["precision"] is None and m["hit"] is None
 
 
+def test_content_precision_counts_relevant_chunks():
+    texts = [
+        "A fraction shows a part of a whole.",      # contains 'part' + 'whole'
+        "The denominator is the bottom number.",    # contains neither keyword
+        "We take a part of the whole pizza.",       # contains 'part' + 'whole'
+    ]
+    p = eval_rag.content_precision(texts, ["part", "whole"])
+    assert abs(p - 2 / 3) < 1e-9
+
+
+def test_content_precision_off_curriculum_is_none():
+    assert eval_rag.content_precision(["anything"], []) is None
+
+
+def test_content_precision_no_chunks():
+    assert eval_rag.content_precision([], ["part"]) == 0.0
+
+
 def test_keyword_score_partial():
     s = eval_rag.keyword_score("Plants make food from sunlight", ["plants", "food", "moon"])
     assert s == {"matched": 2, "total": 3, "recall": 2 / 3}
@@ -45,15 +63,17 @@ def test_keyword_score_empty_keywords():
 
 def test_aggregate_retrieval_only():
     rows = [
-        {"type": "in_curriculum", "tier": "grounded", "precision": 1.0, "hit": True,
-         "keyword_recall": None, "has_citation": True},
-        {"type": "in_curriculum", "tier": "none", "precision": 0.0, "hit": False,
-         "keyword_recall": None, "has_citation": False},
-        {"type": "off_curriculum", "tier": "grounded", "precision": None, "hit": None,
-         "keyword_recall": None, "has_citation": True},
+        {"type": "in_curriculum", "tier": "grounded", "precision": 1.0,
+         "relevant_precision": 1.0, "hit": True, "keyword_recall": None, "has_citation": True},
+        {"type": "in_curriculum", "tier": "none", "precision": 0.0,
+         "relevant_precision": 0.5, "hit": False, "keyword_recall": None, "has_citation": False},
+        {"type": "off_curriculum", "tier": "grounded", "precision": None,
+         "relevant_precision": None, "hit": None, "keyword_recall": None, "has_citation": True},
     ]
     s = eval_rag.aggregate(rows)
     assert s["retrieval_hit_rate"] == 0.5
+    assert s["retrieval_source_precision_at_k"] == 0.5
+    assert s["retrieval_relevant_precision_at_k"] == 0.75      # (1.0 + 0.5) / 2
     assert s["tier_distribution"] == {"grounded": 2, "supplementary": 0, "none": 1}
     assert s["non_response_rate_in_curriculum"] == 0.5
     # one off-curriculum question grounded with a citation -> false grounding 100%

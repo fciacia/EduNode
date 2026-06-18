@@ -11,7 +11,12 @@ Metrics reported
 ----------------
 Retrieval (needs only the embedder, runs fully offline):
   - Retrieval hit-rate (recall@k): expected source appears in the top-k chunks
-  - Retrieval precision@k: share of top-k chunks from an expected source
+  - Retrieval precision@k (relevant): share of top-k chunks that actually contain
+    the answer's key facts. The meaningful precision number, because the same
+    concept is taught across several curriculum files.
+  - Retrieval precision@k (source): share of top-k chunks from a *labelled* file.
+    Reported for transparency, but understates quality when on-topic content lives
+    in sibling files the gold set didn't list.
   - Tier distribution: grounded / supplementary / non-response
   - Non-response rate on in-curriculum questions (should be low)
   - False-grounding rate on off-curriculum questions (should be ~0)
@@ -77,6 +82,29 @@ def retrieval_metrics(expected_sources: list[str], retrieved_sources: list[str])
     return {"precision": relevant / len(got), "hit": relevant > 0}
 
 
+def content_precision(retrieved_texts: list[str], keywords: list[str],
+                      min_hits: int = 1) -> float | None:
+    """Content-based precision@k: share of retrieved chunks that actually contain
+    the answer's key facts.
+
+    Filename-match precision penalises retrieving an on-topic chunk that happens to
+    live in a sibling curriculum file (the same concept is taught in several files),
+    so it understates retrieval quality. This judges each chunk by what it *says*:
+    a chunk counts as relevant if it contains at least *min_hits* of the expected
+    keywords. Returns None when there are no keywords (off-curriculum).
+    """
+    if not keywords:
+        return None
+    if not retrieved_texts:
+        return 0.0
+    kws = [k.lower() for k in keywords]
+    relevant = sum(
+        1 for t in retrieved_texts
+        if sum(1 for k in kws if k in (t or "").lower()) >= min_hits
+    )
+    return relevant / len(retrieved_texts)
+
+
 def keyword_score(answer: str, keywords: list[str]) -> dict:
     """Fraction of expected key facts present in the answer (case-insensitive)."""
     if not keywords:
@@ -98,6 +126,9 @@ def aggregate(rows: list[dict], keyword_threshold: float = 0.5) -> dict:
     # Retrieval (in-curriculum only)
     hit_rate = _mean([1.0 if r["hit"] else 0.0 for r in in_curr if r["hit"] is not None])
     precision = _mean([r["precision"] for r in in_curr if r["precision"] is not None])
+    rel_precision = _mean(
+        [r["relevant_precision"] for r in in_curr if r.get("relevant_precision") is not None]
+    )
 
     # Tiering
     tiers = [r["tier"] for r in rows]
@@ -112,7 +143,8 @@ def aggregate(rows: list[dict], keyword_threshold: float = 0.5) -> dict:
         "n_in_curriculum": len(in_curr),
         "n_off_curriculum": len(off_curr),
         "retrieval_hit_rate": hit_rate,
-        "retrieval_precision_at_k": precision,
+        "retrieval_relevant_precision_at_k": rel_precision,
+        "retrieval_source_precision_at_k": precision,
         "tier_distribution": tier_dist,
         "non_response_rate_in_curriculum": non_response_in,
         "false_grounding_rate_off_curriculum": false_ground_off,
@@ -143,6 +175,7 @@ def evaluate_item(item: dict, *, k: int, with_llm: bool, subject_filter: bool) -
     subject = item.get("subject", "General") if subject_filter else "General"
     chunks = retrieve_with_citations(item["question"], n_results=k, subject=subject)
     retrieved_sources = [c.source for c in chunks]
+    retrieved_texts = [c.text for c in chunks]
     best_distance = min((c.distance for c in chunks), default=1.0)
 
     rmetrics = retrieval_metrics(item.get("expected_sources", []), retrieved_sources)
@@ -152,6 +185,7 @@ def evaluate_item(item: dict, *, k: int, with_llm: bool, subject_filter: bool) -
         "tier": classify_tier(best_distance),
         "best_distance": round(best_distance, 3),
         "precision": rmetrics["precision"],
+        "relevant_precision": content_precision(retrieved_texts, item.get("answer_keywords", [])),
         "hit": rmetrics["hit"],
         "retrieved_sources": retrieved_sources,
         "keyword_recall": None,
@@ -223,7 +257,8 @@ def _print_summary(summary: dict, with_llm: bool) -> None:
         return "n/a" if v is None else f"{v * 100:.1f}%"
 
     print(f"  Retrieval hit-rate (recall@k):      {_pct(summary['retrieval_hit_rate'])}")
-    print(f"  Retrieval precision@k:              {_pct(summary['retrieval_precision_at_k'])}")
+    print(f"  Retrieval precision@k (relevant):   {_pct(summary['retrieval_relevant_precision_at_k'])}")
+    print(f"  Retrieval precision@k (source):     {_pct(summary['retrieval_source_precision_at_k'])}")
     td = summary["tier_distribution"]
     print(f"  Tier distribution:                  grounded={td['grounded']} "
           f"supplementary={td['supplementary']} none={td['none']}")
