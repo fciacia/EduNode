@@ -81,7 +81,7 @@ def test_verification_gate_threads_needs_review(monkeypatch):
 
 def test_retrieval_gate_blocks_generation(monkeypatch):
     reason_called = []
-    # Best distance 0.9 > 0.65 -> controlled non-response, reason() never called
+    # Best distance 0.9 > SUPPLEMENTARY_GATE (0.85) -> non-response, reason() never called
     chunks = [Chunk(text="weak match", source="a.pdf", page=1, distance=0.9)]
     _patch_all(monkeypatch, chunks=chunks, reason_called=reason_called)
 

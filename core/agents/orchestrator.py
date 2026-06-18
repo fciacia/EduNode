@@ -21,11 +21,18 @@ The retrieval distance of the best-matching curriculum chunk decides the tier:
 from __future__ import annotations
 
 import logging
+import os
 
 log = logging.getLogger(__name__)
 
-GROUNDED_GATE = 0.65        # best chunk distance at/below this -> grounded answer
-SUPPLEMENTARY_GATE = 0.85   # between the gates -> labelled general-knowledge answer
+# Best chunk distance at/below GROUNDED_GATE -> grounded (cited) answer; between
+# the gates -> labelled general-knowledge answer; above -> non-response.
+# The grounded gate is deliberately tight: an off-topic question that happens to
+# land lexically near the curriculum (e.g. a calculus question grazing the maths
+# pages) should fall to the supplementary tier, not be cited as curriculum-backed.
+# Tune per deployment/model with tools/eval_rag.py.
+GROUNDED_GATE = float(os.getenv("EDGE_GROUNDED_GATE", "0.55"))
+SUPPLEMENTARY_GATE = float(os.getenv("EDGE_SUPPLEMENTARY_GATE", "0.85"))
 
 _NON_RESPONSE_EN = (
     "I don't have curriculum material on that topic yet. "

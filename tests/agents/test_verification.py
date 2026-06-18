@@ -50,17 +50,38 @@ def test_no_chunks_zero_confidence(monkeypatch):
     assert result.citations == []
 
 
-def test_llm_check_lowers_confidence_of_unsupported_answer(monkeypatch):
-    # Embeddings look fine, but the LLM self-check says "not supported" -> review.
+def test_llm_check_penalises_but_does_not_collapse_strong_grounding(monkeypatch):
+    # A strongly-grounded answer (low distance, high similarity) that the cautious
+    # small-model self-check calls "weakly supported" is PENALISED but not collapsed
+    # to near-zero — strong embedding evidence still shows through.
     answer = "Plants make food from sunlight."
     chunk_text = "Photosynthesis lets plants make food from sunlight."
     vecs = {answer: [1.0, 0.0, 0.0], chunk_text: [0.96, 0.28, 0.0]}
     monkeypatch.setattr(ver, "_get_embedder", lambda: _fake_embedder(vecs))
-    monkeypatch.setattr(ver, "_llm_verify", lambda a, c: 0.2)    # model: weakly supported
 
     chunks = [Chunk(text=chunk_text, source="sci.pdf", page=4, distance=0.1)]
-    result = ver.score(answer, chunks)
-    assert result.confidence < 0.85          # blended down by the LLM check
+    monkeypatch.setattr(ver, "_llm_verify", lambda a, c: None)
+    clean = ver.score(answer, chunks).confidence
+
+    monkeypatch.setattr(ver, "_llm_verify", lambda a, c: 0.2)    # model: weakly supported
+    penalised = ver.score(answer, chunks)
+    assert penalised.confidence == round(clean * ver.UNSUPPORTED_PENALTY, 3)
+    assert penalised.confidence < clean          # penalty applied
+    assert penalised.confidence > clean * 0.5    # but not collapsed
+
+
+def test_llm_check_flags_borderline_answer(monkeypatch):
+    # A borderline-grounded answer pushed under the threshold by the LLM penalty
+    # is flagged for review.
+    answer = "Plants make food from sunlight."
+    chunk_text = "Photosynthesis lets plants make food from sunlight."
+    vecs = {answer: [1.0, 0.0, 0.0], chunk_text: [0.8, 0.6, 0.0]}   # cosine 0.8
+    monkeypatch.setattr(ver, "_get_embedder", lambda: _fake_embedder(vecs))
+    monkeypatch.setattr(ver, "_llm_verify", lambda a, c: 0.2)
+
+    chunks = [Chunk(text=chunk_text, source="sci.pdf", page=4, distance=0.4)]
+    result = ver.score(answer, chunks)          # embed ~0.7 -> *0.75 = ~0.525 < 0.55
+    assert result.confidence < ver.CONFIDENCE_THRESHOLD
     assert result.needs_review is True
 
 
