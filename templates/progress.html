@@ -72,6 +72,13 @@
   animation: fade-in .2s ease;
 }
 .badge-desc .icon { color: var(--accent); flex: 0 0 auto; }
+
+/* Adaptive recommendations */
+.rec-row { display: flex; align-items: flex-start; gap: .65rem; padding: .6rem 0; border-bottom: 1px solid var(--border); }
+.rec-row:last-child { border-bottom: none; }
+.rec-row .icon { color: #F59E0B; flex: 0 0 auto; margin-top: .15rem; }
+.rec-action { display: inline-block; margin-left: .5rem; padding: .1rem .55rem; border-radius: 99px; background: var(--surface2); font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--text-muted); }
+.rec-reason { font-size: .82rem; color: var(--text-muted); font-weight: 600; margin-top: .2rem; }
 {% endblock %}
 
 {% block content %}
@@ -96,6 +103,11 @@
     <div class="badge-desc" id="badgeDesc" style="display:none"></div>
   </div>
 
+  <div id="recommendWrap" style="display:none">
+    <p class="section-title"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-sparkles"></use></svg> Recommended next steps</p>
+    <div class="card" id="recommendList"></div>
+  </div>
+
   <p class="section-title"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-clipboard"></use></svg> Quiz History</p>
   <div class="card" style="padding:0;overflow:hidden" id="quizHistoryWrap">
     <div class="empty-state">No quizzes yet.</div>
@@ -115,7 +127,34 @@ async function loadProgress() {
     renderProgress(d);
     document.getElementById('progressResult').style.display = 'block';
     document.getElementById('progressResult').scrollIntoView({behavior:'smooth'});
+    loadRecommendations(name);
   } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function loadRecommendations(name) {
+  const wrap = document.getElementById('recommendWrap');
+  const list = document.getElementById('recommendList');
+  try {
+    const r = await fetch(`/api/recommendations/by-name/${encodeURIComponent(name)}`);
+    if (!r.ok) { wrap.style.display = 'none'; return; }
+    const d = await r.json();
+    const recs = d.recommendations || [];
+    if (!recs.length) { wrap.style.display = 'none'; return; }
+    const S = '/static/icons/sprite.svg';
+    const ico = (n) => `<svg class="icon" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
+    list.innerHTML = recs.map(rec => {
+      const icon = rec.level === 'struggling' ? 'zap' : 'brain';
+      return `<div class="rec-row">
+        ${ico(icon)}
+        <div>
+          <strong>${escHtml(rec.topic)}</strong>
+          <span class="rec-action">${escHtml(rec.action)}</span>
+          <div class="rec-reason">${escHtml(rec.reason)} (avg ${rec.avg_pct}%)</div>
+        </div>
+      </div>`;
+    }).join('');
+    wrap.style.display = 'block';
+  } catch(e) { wrap.style.display = 'none'; }
 }
 
 function renderProgress(d) {

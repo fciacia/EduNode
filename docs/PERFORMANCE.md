@@ -44,3 +44,44 @@ slower per token, so treat latencies as a **lower bound** for the Pi.
   embedder + NLLB + one or two voices).
 - Consider a smaller quantized phi3 and `ggml-base` (not larger) Whisper to stay
   in budget.
+
+## Concurrency & load testing
+
+The "up to 50 students per hub" figure describes **connected** students, not 50
+*simultaneous* model inferences. Ollama serves one generation at a time, so
+concurrent chat requests queue. The honest model of classroom use is **bursty**:
+students read an answer, think, and type — so the steady-state concurrency of
+*in-flight inferences* is far below the headcount.
+
+### How to measure it
+
+```bash
+# On the hub (or a laptop on the same network), drive concurrent traffic:
+python -m tools.load_test --url http://192.168.1.1:5000 --sweep 1,5,10,25,50
+
+# Bursty (realistic) classroom: stagger requests with think-time
+python -m tools.load_test --url http://192.168.1.1:5000 --concurrency 50 --think-time 8
+```
+
+`tools/load_test.py` reports, per concurrency level: requests, errors, throughput
+(req/min), latency **p50 / p95 / p99 / max**, and — when `psutil` is installed —
+CPU% and memory%. Run it **on the Pi target**, not a dev laptop, for figures that
+back the deployment claim.
+
+### Results table (fill in from a Pi run)
+
+| Concurrency | Throughput (req/min) | p50 (s) | p95 (s) | Errors | CPU% (max) | Mem% (max) |
+|---|---|---|---|---|---|---|
+| 1 | _measure_ | _measure_ | _measure_ | _measure_ | _measure_ | _measure_ |
+| 5 | _measure_ | _measure_ | _measure_ | _measure_ | _measure_ | _measure_ |
+| 10 | _measure_ | _measure_ | _measure_ | _measure_ | _measure_ | _measure_ |
+| 25 | _measure_ | _measure_ | _measure_ | _measure_ | _measure_ | _measure_ |
+| 50 (all-at-once) | _measure_ | _measure_ | _measure_ | _measure_ | _measure_ | _measure_ |
+| 50 (think-time 8s) | _measure_ | _measure_ | _measure_ | _measure_ | _measure_ | _measure_ |
+
+**Expected shape of the result:** throughput plateaus near the single-stream token
+rate (≈1 inference at a time), so p95 latency climbs roughly linearly with the
+number of *simultaneously waiting* requests. The all-at-once row is the worst case;
+the think-time row reflects real classroom pacing and is the number to deploy
+against. If the all-at-once p95 is unacceptable, the mitigation is a request queue
+with a "you're number N in line" message rather than more hardware.

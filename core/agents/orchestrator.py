@@ -3,6 +3,20 @@ core/agents/orchestrator.py
 ===========================
 Sequences the four-agent pipeline and owns the confidence gates:
   Translation -> Context -> Retrieval(gate) -> Pedagogy -> Verification(gate) -> Translation
+
+Tiered response strategy
+------------------------
+The retrieval distance of the best-matching curriculum chunk decides the tier:
+
+  best_distance <= GROUNDED_GATE                      -> "grounded"
+      Answer strictly from the curriculum, verified and cited.
+  GROUNDED_GATE < best_distance <= SUPPLEMENTARY_GATE -> "supplementary"
+      The curriculum doesn't cover it, but it's a near miss. Answer from the
+      model's general knowledge, clearly labelled as NOT from the textbook and
+      flagged for teacher review. Reduces "I don't know" frustration without
+      pretending general knowledge is curriculum-grounded.
+  best_distance > SUPPLEMENTARY_GATE                  -> "none"
+      Too far off-topic — return a controlled non-response.
 """
 from __future__ import annotations
 
@@ -10,11 +24,18 @@ import logging
 
 log = logging.getLogger(__name__)
 
-RETRIEVAL_DISTANCE_GATE = 0.65   # best chunk distance above this -> non-response
+GROUNDED_GATE = 0.65        # best chunk distance at/below this -> grounded answer
+SUPPLEMENTARY_GATE = 0.85   # between the gates -> labelled general-knowledge answer
 
 _NON_RESPONSE_EN = (
     "I don't have curriculum material on that topic yet. "
     "Please ask your teacher, or try rephrasing your question."
+)
+
+# Prepended (in English, before translation) to general-knowledge answers so the
+# student always knows the reply is not drawn from their textbook.
+_SUPPLEMENTARY_LABEL_EN = (
+    "Note: this is not in your textbook — here is a general explanation:\n\n"
 )
 
 
@@ -28,11 +49,22 @@ def _translate_out(answer: str, language: str) -> str:
     return to_native(answer, language)
 
 
+def _non_response(language: str) -> dict:
+    return {
+        "answer": _translate_out(_NON_RESPONSE_EN, language),
+        "confidence": 0.0,
+        "citations": [],
+        "needs_review": True,
+        "tier": "none",
+        "language": language,
+    }
+
+
 def run_pipeline(query: str, language: str, student_id, subject: str = "General",
                  conversation_id: str | None = None) -> dict:
     """
     Run the full agentic pipeline.
-    Returns {answer, confidence, citations, needs_review, language}.
+    Returns {answer, confidence, citations, needs_review, tier, language}.
 
     *conversation_id* enables conversational memory: recent English turns are
     fed to the pedagogy agent so follow-up questions are answered in context.
@@ -49,7 +81,7 @@ def run_pipeline(query: str, language: str, student_id, subject: str = "General"
     ctx = context_agent.build(student_id)
     history = get_history(conversation_id)
 
-    # 3. Retrieve + RETRIEVAL GATE
+    # 3. Retrieve + measure best distance
     #    Gate on the question itself, so a clear in-curriculum question always
     #    grounds. Also try a history-augmented query so vague follow-ups
     #    ("explain that more simply") still match the topic — keep whichever
@@ -66,31 +98,39 @@ def run_pipeline(query: str, language: str, student_id, subject: str = "General"
     # The subject picker hard-filters the curriculum. If nothing matches in the
     # chosen subject, retry across ALL subjects so a science question asked while
     # "Mathematics" is selected still finds its answer.
-    if best_distance > RETRIEVAL_DISTANCE_GATE and subject and subject not in ("", "General"):
+    if best_distance > GROUNDED_GATE and subject and subject not in ("", "General"):
         anysub = retrieve_with_citations(query_en, n_results=3, subject="")
         anysub_best = min((c.distance for c in anysub), default=1.0)
         if anysub_best < best_distance:
             chunks, best_distance = anysub, anysub_best
-    if not chunks or best_distance > RETRIEVAL_DISTANCE_GATE:
-        log.info("Retrieval gate triggered (best_distance=%.3f) — controlled non-response.", best_distance)
+
+    # 3b. TIER SELECTION
+    if not chunks or best_distance > SUPPLEMENTARY_GATE:
+        log.info("Non-response tier (best_distance=%.3f).", best_distance)
+        return _non_response(language)
+
+    if best_distance > GROUNDED_GATE:
+        # Supplementary tier: near miss — answer from general knowledge, labelled.
+        log.info("Supplementary tier (best_distance=%.3f).", best_distance)
+        supp_en = pedagogy.reason_supplementary(query_en, ctx, history)
+        if not supp_en:
+            return _non_response(language)
+        answer_native = _translate_out(_SUPPLEMENTARY_LABEL_EN + supp_en, language)
+        append_turn(conversation_id, "user", query_en)
+        append_turn(conversation_id, "assistant", supp_en)
         return {
-            "answer": _translate_out(_NON_RESPONSE_EN, language),
-            "confidence": 0.0,
-            "citations": [],
-            "needs_review": True,
+            "answer": answer_native,
+            "confidence": 0.0,          # not curriculum-verified
+            "citations": [],            # not grounded in the curriculum
+            "needs_review": True,       # flag supplementary answers for teachers
+            "tier": "supplementary",
             "language": language,
         }
 
-    # 4. Reason (Phi-3) — with conversational history for follow-ups
+    # 4. Grounded tier — reason (Phi-3) with conversational history for follow-ups
     answer_en = pedagogy.reason(query_en, ctx, chunks, history)
     if not answer_en:
-        return {
-            "answer": _translate_out(_NON_RESPONSE_EN, language),
-            "confidence": 0.0,
-            "citations": [],
-            "needs_review": True,
-            "language": language,
-        }
+        return _non_response(language)
 
     # 5. Verify + VERIFICATION GATE
     #    If the embedder is unavailable (e.g. first-run download fails on an
@@ -117,5 +157,6 @@ def run_pipeline(query: str, language: str, student_id, subject: str = "General"
         "confidence": confidence,
         "citations": citations,
         "needs_review": needs_review,
+        "tier": "grounded",
         "language": language,
     }

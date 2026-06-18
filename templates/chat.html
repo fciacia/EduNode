@@ -418,13 +418,15 @@ function decorateAnswer(msgEl, d) {
   const wrap = msgEl.closest('.bubble');
   const cites = Array.isArray(d.citations) ? d.citations : [];
   const verified = !d.needs_review;
-  const noCurriculum = conf === 0 && cites.length === 0;
+  const supplementary = d.tier === 'supplementary';
+  const noCurriculum = conf === 0 && cites.length === 0 && !supplementary;
 
   // Bubble accent + badge kind
   let kind, icon, label, showPct;
-  if (verified)          { kind = 'verified'; icon = 'check-circle'; label = 'Verified';            showPct = true; }
-  else if (noCurriculum) { kind = 'none';     icon = 'book-open';    label = 'Not in my books yet';  showPct = false; }
-  else                   { kind = 'review';   icon = 'lightbulb';    label = 'Check with teacher';   showPct = true; }
+  if (verified)           { kind = 'verified'; icon = 'check-circle'; label = 'Verified';            showPct = true; }
+  else if (supplementary) { kind = 'review';   icon = 'lightbulb';    label = 'General knowledge';   showPct = false; }
+  else if (noCurriculum)  { kind = 'none';     icon = 'book-open';    label = 'Not in my books yet';  showPct = false; }
+  else                    { kind = 'review';   icon = 'lightbulb';    label = 'Check with teacher';   showPct = true; }
   wrap.classList.add('is-' + kind);
 
   const meta = document.createElement('div');

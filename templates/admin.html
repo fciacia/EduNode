@@ -28,8 +28,16 @@
 {% block content %}
 <div class="admin-header">
   <h2>Admin Panel</h2>
+  <a id="dashLink" class="hub-badge" style="text-decoration:none">📊 Teacher Dashboard</a>
   <span class="hub-badge">{{ hub_id }}</span>
 </div>
+<script>
+  // Carry the admin token through to the teacher dashboard link.
+  (function(){
+    var t = new URLSearchParams(location.search).get('token') || '';
+    document.getElementById('dashLink').href = '/teacher?token=' + encodeURIComponent(t);
+  })();
+</script>
 
 <!-- Status -->
 <div class="section">

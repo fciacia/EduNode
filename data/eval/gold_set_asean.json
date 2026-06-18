@@ -1,0 +1,41 @@
+{
+  "_meta": {
+    "description": "Cross-country fairness/bias evaluation set (Issue 9). Each item is tagged with 'country' and 'language' so tools/eval_rag.py --group-by country can compare accuracy, retrieval, and non-response across ASEAN contexts. The questions below probe the SAME core concepts (fraction, photosynthesis, cell) phrased with locally familiar framing; run them against each country's ingested curriculum to surface hidden bias. Add real ministry-curriculum-derived items per country as they are loaded.",
+    "version": 1,
+    "note": "Retrieval/answer scores are only meaningful once the matching country's curriculum is present in data/curriculum/. Until then this file documents the methodology and the harness wiring."
+  },
+  "items": [
+    {"id": "my-sci-01", "country": "Malaysia", "language": "English", "subject": "Science",
+     "type": "in_curriculum", "question": "How do plants make their own food?",
+     "expected_sources": ["science_core_lessons.txt", "openstax_biology_photosynthesis.txt"],
+     "answer_keywords": ["sunlight", "food", "plants"]},
+    {"id": "my-math-01", "country": "Malaysia", "language": "English", "subject": "Mathematics",
+     "type": "in_curriculum", "question": "What is a fraction?",
+     "expected_sources": ["openstax_math_fractions.txt", "mathematics_core_lessons.txt"],
+     "answer_keywords": ["part", "whole"]},
+    {"id": "ph-sci-01", "country": "Philippines", "language": "English", "subject": "Science",
+     "type": "in_curriculum", "question": "Why are plant leaves green in colour?",
+     "expected_sources": ["openstax_biology_photosynthesis.txt"],
+     "answer_keywords": ["chlorophyll", "green"]},
+    {"id": "ph-math-01", "country": "Philippines", "language": "English", "subject": "Mathematics",
+     "type": "in_curriculum", "question": "What is place value in a number?",
+     "expected_sources": ["mathematics_core_lessons.txt"],
+     "answer_keywords": ["digit", "place"]},
+    {"id": "id-sci-01", "country": "Indonesia", "language": "English", "subject": "Science",
+     "type": "in_curriculum", "question": "What is the smallest building block of living things?",
+     "expected_sources": ["science_core_lessons.txt"],
+     "answer_keywords": ["cell"]},
+    {"id": "id-math-01", "country": "Indonesia", "language": "English", "subject": "Mathematics",
+     "type": "in_curriculum", "question": "What are equivalent fractions?",
+     "expected_sources": ["openstax_math_fractions.txt", "mathematics_core_lessons.txt"],
+     "answer_keywords": ["same", "value"]},
+    {"id": "vn-sci-01", "country": "Vietnam", "language": "English", "subject": "Science",
+     "type": "in_curriculum", "question": "What process breaks down glucose to release energy?",
+     "expected_sources": ["science_core_lessons.txt"],
+     "answer_keywords": ["respiration", "energy"]},
+    {"id": "vn-math-01", "country": "Vietnam", "language": "English", "subject": "Mathematics",
+     "type": "in_curriculum", "question": "How do you write three quarters as a decimal?",
+     "expected_sources": ["mathematics_core_lessons.txt"],
+     "answer_keywords": ["decimal"]}
+  ]
+}

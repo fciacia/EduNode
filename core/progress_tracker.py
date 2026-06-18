@@ -139,6 +139,16 @@ CREATE TABLE IF NOT EXISTS conversation_turns (
     created_at      TEXT    NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_conversation ON conversation_turns(conversation_id, id);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    action    TEXT    NOT NULL,
+    actor     TEXT    NOT NULL DEFAULT '',
+    detail    TEXT    NOT NULL DEFAULT '',
+    outcome   TEXT    NOT NULL DEFAULT 'ok',
+    logged_at TEXT    NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_audit_time ON audit_log(logged_at);
 """
 
 
@@ -395,3 +405,36 @@ def log_dialect(
             " VALUES (?,?,?,?)",
             (language, raw_input, dialect_variant, _now()),
         )
+
+
+# ---------------------------------------------------------------------------
+# Audit log (data governance — Issue 8)
+# ---------------------------------------------------------------------------
+
+def log_audit(action: str, actor: str = "", detail: str = "", outcome: str = "ok") -> None:
+    """Append an audit entry for a privileged action (admin/teacher access).
+
+    Best-effort: never raise into the request path, so an audit-table problem
+    can't take down an otherwise-valid action.
+    """
+    try:
+        with _db() as conn:
+            conn.execute(
+                "INSERT INTO audit_log (action, actor, detail, outcome, logged_at)"
+                " VALUES (?,?,?,?,?)",
+                (str(action)[:120], str(actor)[:120], str(detail)[:500],
+                 str(outcome)[:20], _now()),
+            )
+    except Exception as exc:  # noqa: BLE001
+        log.warning("Audit log write failed (%s): %s", action, exc)
+
+
+def get_audit_log(limit: int = 100) -> list[dict]:
+    """Return the most recent audit entries (newest first)."""
+    with _db() as conn:
+        rows = conn.execute(
+            "SELECT action, actor, detail, outcome, logged_at"
+            "  FROM audit_log ORDER BY id DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+    return [dict(r) for r in rows]

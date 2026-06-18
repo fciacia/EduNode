@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Teacher Dashboard — Edge{% endblock %}
+
+{% block extra_style %}
+.dash-header { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.5rem; }
+.dash-header h2 { font-size: 1.1rem; color: var(--primary); margin: 0; flex: 1; }
+.hub-badge { padding: .25rem .75rem; background: #e8f0fe; color: var(--primary); border-radius: 12px; font-size: .8rem; font-weight: 700; text-transform: uppercase; }
+.section { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.25rem; margin-bottom: 1.5rem; }
+.section h3 { font-size: .95rem; font-weight: 700; color: #444; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: .5rem; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .75rem; }
+.kpi { background: #f8f9fa; border-radius: 8px; padding: .9rem 1rem; }
+.kpi .num { font-size: 1.6rem; font-weight: 800; color: var(--primary); line-height: 1; }
+.kpi .lbl { color: #777; font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-top: .35rem; }
+.tbl { width: 100%; border-collapse: collapse; font-size: .87rem; }
+.tbl th { background: #f1f3f4; padding: .45rem .75rem; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid var(--border); }
+.tbl td { padding: .45rem .75rem; border-bottom: 1px solid var(--border); }
+.pct-chip { padding: .1rem .5rem; border-radius: 99px; font-weight: 800; font-size: .78rem; }
+.pct-low { background: #fce8e6; color: #c62828; }
+.pct-mid { background: #fef7e0; color: #b06000; }
+.pct-ok  { background: #e6f4ea; color: #1e8e3e; }
+.bar-row { display: flex; align-items: center; gap: .6rem; margin: .35rem 0; font-size: .85rem; }
+.bar-row .name { width: 130px; flex: 0 0 auto; font-weight: 600; color: #444; }
+.bar-track { flex: 1; background: #eef1f4; border-radius: 99px; height: 14px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--primary); border-radius: 99px; }
+.bar-row .val { width: 36px; text-align: right; font-weight: 700; color: #555; }
+.flag { padding: .55rem .75rem; border-bottom: 1px solid var(--border); font-size: .85rem; }
+.flag .lang { font-weight: 700; color: var(--primary); }
+.flag .note { color: #555; }
+.flag .ts { color: #999; font-size: .75rem; }
+.fix-row { display: flex; gap: .4rem; margin-top: .45rem; flex-wrap: wrap; }
+.fix-row input { flex: 1; min-width: 180px; border: 1px solid var(--border); border-radius: 8px; padding: .35rem .6rem; font-size: .82rem; }
+.fix-row button { padding: .35rem .9rem; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: .82rem; font-weight: 700; cursor: pointer; }
+.fix-done { color: #1e8e3e; font-weight: 700; font-size: .8rem; }
+.empty { color: #999; font-size: .85rem; padding: .5rem 0; }
+{% endblock %}
+
+{% block content %}
+<div class="dash-header">
+  <h2>Teacher Dashboard</h2>
+  <span class="hub-badge">{{ hub_id }}</span>
+</div>
+
+<div class="section">
+  <h3>Class Overview</h3>
+  <div class="kpi-grid" id="kpiGrid"><div class="empty">Loading…</div></div>
+</div>
+
+<div class="section">
+  <h3>Most-Missed Concepts</h3>
+  <div id="missedWrap"><div class="empty">Loading…</div></div>
+</div>
+
+<div class="section">
+  <h3>AI Usage by Subject</h3>
+  <div id="subjectWrap"><div class="empty">Loading…</div></div>
+</div>
+
+<div class="section">
+  <h3>Daily Activity</h3>
+  <div id="dayWrap"><div class="empty">Loading…</div></div>
+</div>
+
+<div class="section">
+  <h3>Flagged Translations / Answers</h3>
+  <p style="color:#777;font-size:.83rem;margin:-.5rem 0 .8rem">Reports students/teachers raised — review and correct to improve the local language.</p>
+  <div id="flagsWrap"><div class="empty">Loading…</div></div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const TOKEN = new URLSearchParams(location.search).get('token') || '';
+
+function pctClass(p) { return p < 50 ? 'pct-low' : (p < 80 ? 'pct-mid' : 'pct-ok'); }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function bars(rows, nameKey, valKey, target) {
+  const el = document.getElementById(target);
+  if (!rows.length) { el.innerHTML = '<div class="empty">No data yet.</div>'; return; }
+  const max = Math.max(...rows.map(r => r[valKey]), 1);
+  el.innerHTML = rows.map(r => `
+    <div class="bar-row">
+      <span class="name">${esc(r[nameKey])}</span>
+      <span class="bar-track"><span class="bar-fill" style="width:${Math.round(r[valKey]/max*100)}%"></span></span>
+      <span class="val">${r[valKey]}</span>
+    </div>`).join('');
+}
+
+async function load() {
+  let d;
+  try {
+    const r = await fetch('/api/teacher/analytics?token=' + encodeURIComponent(TOKEN));
+    if (!r.ok) throw new Error('Unauthorized (status ' + r.status + '). Open this page with ?token=YOUR_ADMIN_TOKEN');
+    d = await r.json();
+  } catch (e) {
+    document.getElementById('kpiGrid').innerHTML = '<div class="empty">' + esc(e.message) + '</div>';
+    return;
+  }
+
+  const o = d.overview || {};
+  const avg = o.class_avg_pct == null ? '—' : o.class_avg_pct + '%';
+  document.getElementById('kpiGrid').innerHTML = [
+    ['Students', o.students], ['Sessions', o.sessions], ['Quiz attempts', o.quiz_attempts],
+    ['Class average', avg], ['Active today', o.active_today],
+  ].map(([lbl, num]) => `<div class="kpi"><div class="num">${num ?? 0}</div><div class="lbl">${lbl}</div></div>`).join('');
+
+  const missed = d.most_missed || [];
+  document.getElementById('missedWrap').innerHTML = missed.length
+    ? `<table class="tbl"><thead><tr><th>Concept</th><th>Class avg</th><th>Students</th><th>Attempts</th></tr></thead><tbody>${
+        missed.map(m => `<tr><td>${esc(m.topic)}</td><td><span class="pct-chip ${pctClass(m.avg_pct)}">${m.avg_pct}%</span></td><td>${m.students}</td><td>${m.attempts}</td></tr>`).join('')
+      }</tbody></table>`
+    : '<div class="empty">No quiz data yet.</div>';
+
+  bars(d.by_subject || [], 'subject', 'sessions', 'subjectWrap');
+  bars(d.by_day || [], 'day', 'sessions', 'dayWrap');
+
+  const flags = d.flags || [];
+  document.getElementById('flagsWrap').innerHTML = flags.length
+    ? flags.map((f, i) => `<div class="flag" data-i="${i}">
+        <span class="lang">${esc(f.language)}</span> — <span class="note">${esc(f.note || f.shown || '(no note)')}</span> <span class="ts">${esc(f.ts || '')}</span>
+        <div class="fix-row">
+          <input data-lang="${esc(f.language)}" data-orig="${esc(f.shown || '')}" placeholder="Correct wording in ${esc(f.language)}…">
+          <button onclick="submitFix(this)">Save correction</button>
+        </div>
+      </div>`).join('')
+    : '<div class="empty">No flags raised. 🎉</div>';
+}
+
+async function submitFix(btn) {
+  const input = btn.parentElement.querySelector('input');
+  const corrected = input.value.trim();
+  if (!corrected) { input.focus(); return; }
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/translation/correct?token=' + encodeURIComponent(TOKEN), {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        language: input.dataset.lang, original: input.dataset.orig, corrected,
+      }),
+    });
+    if (!r.ok) throw new Error('save failed');
+    btn.parentElement.innerHTML = '<span class="fix-done">✓ Saved — will improve future translations.</span>';
+  } catch (e) {
+    btn.disabled = false;
+    alert('Could not save correction: ' + e.message);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', load);
+</script>
+{% endblock %}

@@ -61,13 +61,37 @@ AUDIO_DIR   = Path(os.getenv("AUDIO_DIR", "data/audio"))
 # Auth helper
 # ---------------------------------------------------------------------------
 
+def _token_fingerprint(token: str) -> str:
+    """Short, non-reversible fingerprint of a token for audit logs (never store raw)."""
+    import hashlib
+    if not token:
+        return "anonymous"
+    return "tok:" + hashlib.sha256(token.encode()).hexdigest()[:8]
+
+
 def require_admin(f):
-    """Decorator: require X-Admin-Token header or ?token= query param."""
+    """Decorator: require X-Admin-Token header or ?token= query param.
+
+    Every privileged access — granted or denied — is written to the audit log
+    (data governance, Issue 8) with a token fingerprint rather than the raw token.
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         token = request.headers.get("X-Admin-Token") or request.args.get("token", "")
+        actor = _token_fingerprint(token)
+        action = request.endpoint or request.path
         if not token or token != ADMIN_TOKEN:
+            try:
+                from core.progress_tracker import log_audit
+                log_audit(action, actor=actor, detail=request.path, outcome="denied")
+            except Exception:  # noqa: BLE001
+                pass
             abort(403)
+        try:
+            from core.progress_tracker import log_audit
+            log_audit(action, actor=actor, detail=request.path, outcome="ok")
+        except Exception:  # noqa: BLE001
+            pass
         return f(*args, **kwargs)
     return decorated
 
@@ -310,6 +334,27 @@ def admin():
     )
 
 
+@app.get("/teacher")
+@require_admin
+def teacher_dashboard():
+    return render_template("teacher.html", hub_id=cfg.HUB_ID, region=cfg.HUB_REGION)
+
+
+@app.get("/api/teacher/analytics")
+@require_admin
+def api_teacher_analytics():
+    from core.analytics_engine import dashboard
+    return jsonify(dashboard())
+
+
+@app.get("/api/audit")
+@require_admin
+def api_audit():
+    """Return recent privileged-access audit entries (data governance)."""
+    from core.progress_tracker import get_audit_log
+    return jsonify({"entries": get_audit_log()})
+
+
 @app.get("/share/<share_id>")
 def share_view(share_id: str):
     from core.p2p_share import get_shared_content
@@ -417,6 +462,7 @@ def api_chat():
         "response":     result["answer"],
         "confidence":   result["confidence"],
         "needs_review": result["needs_review"],
+        "tier":         result.get("tier", "grounded"),
         "citations":    result["citations"],
         "language":     result["language"],
         "student_id":   sid,
@@ -643,6 +689,36 @@ def api_translation_report():
     return jsonify({"ok": True})
 
 
+@app.post("/api/translation/correct")
+@require_admin
+def api_translation_correct():
+    """Teacher submits a verified correction for a flagged translation.
+    Stored as supervised data for fine-tuning future translation models."""
+    from core.correction_store import save_correction
+    data = request.get_json(silent=True) or request.form
+    try:
+        entry = save_correction(
+            language=(data.get("language") or ""),
+            original=(data.get("original") or ""),
+            corrected=(data.get("corrected") or ""),
+            english=(data.get("english") or ""),
+            note=(data.get("note") or ""),
+            by=(data.get("by") or "teacher"),
+        )
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    return jsonify({"ok": True, "entry": entry})
+
+
+@app.get("/api/translation/corrections")
+@require_admin
+def api_translation_corrections():
+    from core.correction_store import list_corrections, count
+    language = (request.args.get("language") or "").strip() or None
+    return jsonify({"corrections": list_corrections(language=language),
+                    "count": count(language=language)})
+
+
 # ---------------------------------------------------------------------------
 # API: slides (offline lesson deck generator)
 # ---------------------------------------------------------------------------
@@ -783,6 +859,29 @@ def api_progress_by_name(name: str):
     if student_id is None:
         return jsonify({"error": "Student not found"}), 404
     return jsonify(get_progress(student_id))
+
+
+@app.get("/api/recommendations/<int:student_id>")
+def api_recommendations(student_id: int):
+    """Adaptive learning pathway: per-concept mastery + remedial next steps."""
+    from core.mastery_engine import concept_mastery, recommendations
+    return jsonify({
+        "mastery": concept_mastery(student_id),
+        "recommendations": recommendations(student_id),
+    })
+
+
+@app.get("/api/recommendations/by-name/<name>")
+def api_recommendations_by_name(name: str):
+    from core.progress_tracker import find_student_by_name
+    from core.mastery_engine import concept_mastery, recommendations
+    student_id = find_student_by_name(name)
+    if student_id is None:
+        return jsonify({"error": "Student not found"}), 404
+    return jsonify({
+        "mastery": concept_mastery(student_id),
+        "recommendations": recommendations(student_id),
+    })
 
 
 # ---------------------------------------------------------------------------
