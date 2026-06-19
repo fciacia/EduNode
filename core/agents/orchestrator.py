@@ -102,6 +102,16 @@ def run_pipeline(query: str, language: str, student_id, subject: str = "General"
     prior = " ".join(t["text"] for t in history if t.get("role") == "user")
     chunks = retrieve_with_citations(query_en, n_results=3, subject=subject)
     best_distance = min((c.distance for c in chunks), default=1.0)
+    # Cross-lingual retrieval: the embedder is multilingual, so retrieving on the
+    # student's ORIGINAL question avoids the translation noise that otherwise
+    # degrades retrieval for non-English languages (measured: Thai/Vietnamese
+    # grounding dropped to ~50% when retrieving on the translated query). Keep
+    # whichever query grounds better. English is pass-through, so skip it.
+    if language and language.lower() != "english" and query.strip() and query.strip() != query_en.strip():
+        native = retrieve_with_citations(query, n_results=3, subject=subject)
+        native_best = min((c.distance for c in native), default=1.0)
+        if native_best < best_distance:
+            chunks, best_distance = native, native_best
     if prior:
         aug = retrieve_with_citations((prior + " " + query_en).strip(), n_results=3, subject=subject)
         aug_best = min((c.distance for c in aug), default=1.0)

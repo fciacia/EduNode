@@ -45,7 +45,10 @@ def summarize_language(rows: list[dict]) -> dict:
     answered = sum(1 for r in rows if r["tier"] != "none")
     none = sum(1 for r in rows if r["tier"] == "none")
     hits = [r["hit"] for r in rows if r.get("hit") is not None]
-    return {
+    # old (translated-only) grounding, when the row carries it, for before/after
+    grounded_tr = sum(1 for r in rows if r.get("tier_translated") == "grounded")
+    has_tr = any("tier_translated" in r for r in rows)
+    out = {
         "n": n,
         "grounded_rate": round(grounded / n, 3),
         "answered_rate": round(answered / n, 3),
@@ -53,6 +56,9 @@ def summarize_language(rows: list[dict]) -> dict:
         "retrieval_hit_rate": round(sum(hits) / len(hits), 3) if hits else None,
         "mean_distance": round(sum(r["best_distance"] for r in rows) / n, 3),
     }
+    if has_tr:
+        out["grounded_rate_translated"] = round(grounded_tr / n, 3)
+    return out
 
 
 def fairness_gaps(per_language: dict, baseline: str = "English") -> dict:
@@ -68,24 +74,50 @@ def fairness_gaps(per_language: dict, baseline: str = "English") -> dict:
 
 
 def evaluate_language(questions: list[dict], language: str, k: int = 3) -> list[dict]:
-    """Run the round-trip translation + retrieval for one language (needs models)."""
+    """Retrieve per question two ways (needs models):
+
+      * translated-only  — retrieve on the back-translated English query (the old
+        behaviour: query translation degrades retrieval for non-English)
+      * cross-lingual    — best of the native-language query and the translated one
+        (the fix: the multilingual embedder grounds the native query directly)
+
+    The 'tier' field reflects the cross-lingual (live) behaviour; 'tier_translated'
+    preserves the old behaviour so a run shows the before/after.
+    """
     from core.agents.translation import to_english, to_native
     from core.rag_engine import retrieve_with_citations
 
+    subject_for = lambda q: q.get("subject", "General")
     rows = []
     for q in questions:
         q_en = q["question"]
         q_native = to_native(q_en, language)          # English -> passthrough
-        q_back = to_english(q_native, language)        # what the pipeline retrieves on
-        chunks = retrieve_with_citations(q_back, n_results=k,
-                                         subject=q.get("subject", "General"))
-        best = min((c.distance for c in chunks), default=1.0)
+        q_back = to_english(q_native, language)        # translated round-trip
+
+        translated = retrieve_with_citations(q_back, n_results=k, subject=subject_for(q))
+        d_translated = min((c.distance for c in translated), default=1.0)
+
+        # cross-lingual: also retrieve on the native query, keep the better grounding
+        if language.lower() != "english" and q_native.strip() != q_back.strip():
+            native = retrieve_with_citations(q_native, n_results=k, subject=subject_for(q))
+            d_native = min((c.distance for c in native), default=1.0)
+        else:
+            native, d_native = translated, d_translated
+
+        if d_native < d_translated:
+            best_chunks, best = native, d_native
+        else:
+            best_chunks, best = translated, d_translated
+
         exp = {s.lower() for s in q.get("expected_sources", [])}
-        hit = (any(c.source.lower() in exp for c in chunks) if exp else None)
+        hit = (any(c.source.lower() in exp for c in best_chunks) if exp else None)
         rows.append({
-            "language": language, "id": q["id"], "tier": classify_tier(best),
-            "best_distance": round(best, 3), "hit": hit,
-            "q_native": q_native, "q_back": q_back,
+            "language": language, "id": q["id"],
+            "tier": classify_tier(best),                       # cross-lingual (fix)
+            "tier_translated": classify_tier(d_translated),    # old behaviour
+            "best_distance": round(best, 3),
+            "best_distance_translated": round(d_translated, 3),
+            "hit": hit,
         })
     return rows
 
@@ -121,13 +153,16 @@ def main(argv: list[str] | None = None) -> int:
 
     out = run(args.gold, args.languages, k=args.k, limit=args.limit)
 
+    def _p(v):
+        return "n/a" if v is None else f"{v * 100:.0f}%"
+
     print("\n=== Language fairness (same questions, varied language) ===")
-    print(f"  {'language':<16} {'grounded':>8} {'answered':>8} {'non-resp':>8} {'hit':>6} {'dist':>6}")
+    print(f"  grounded% — translated-only (old) -> cross-lingual (fix)\n")
+    print(f"  {'language':<16} {'old':>5} {'fix':>5} {'answered':>8} {'non-resp':>8} {'dist':>6}")
     for lang, s in out["per_language"].items():
-        def _p(v):
-            return "n/a" if v is None else f"{v * 100:.0f}%"
-        print(f"  {lang:<16} {_p(s.get('grounded_rate')):>8} {_p(s.get('answered_rate')):>8} "
-              f"{_p(s.get('non_response_rate')):>8} {_p(s.get('retrieval_hit_rate')):>6} "
+        old = _p(s.get("grounded_rate_translated", s.get("grounded_rate")))
+        print(f"  {lang:<16} {old:>5} {_p(s.get('grounded_rate')):>5} "
+              f"{_p(s.get('answered_rate')):>8} {_p(s.get('non_response_rate')):>8} "
               f"{s.get('mean_distance', 'n/a'):>6}")
     if out["fairness_gaps"]:
         print("\n  Grounding gap vs English (bias signal, higher = worse):")

@@ -17,6 +17,17 @@ def test_summarize_language_rates():
     assert s["retrieval_hit_rate"] == 0.5     # 2/4
 
 
+def test_summarize_reports_before_and_after():
+    # rows carry both the old (translated-only) tier and the cross-lingual tier
+    rows = [
+        {"tier": "grounded", "tier_translated": "supplementary", "best_distance": 0.4, "hit": True},
+        {"tier": "grounded", "tier_translated": "grounded", "best_distance": 0.3, "hit": True},
+    ]
+    s = lf.summarize_language(rows)
+    assert s["grounded_rate"] == 1.0                  # cross-lingual fix
+    assert s["grounded_rate_translated"] == 0.5       # old behaviour
+
+
 def test_summarize_empty():
     assert lf.summarize_language([]) == {"n": 0}
 

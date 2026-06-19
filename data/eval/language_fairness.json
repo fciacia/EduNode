@@ -6,7 +6,8 @@
       "answered_rate": 1.0,
       "non_response_rate": 0.0,
       "retrieval_hit_rate": 1.0,
-      "mean_distance": 0.246
+      "mean_distance": 0.246,
+      "grounded_rate_translated": 1.0
     },
     "Bahasa Melayu": {
       "n": 8,
@@ -14,399 +15,403 @@
       "answered_rate": 1.0,
       "non_response_rate": 0.0,
       "retrieval_hit_rate": 1.0,
-      "mean_distance": 0.365
+      "mean_distance": 0.365,
+      "grounded_rate_translated": 0.75
     },
     "Thai": {
       "n": 8,
-      "grounded_rate": 0.5,
+      "grounded_rate": 0.625,
       "answered_rate": 1.0,
       "non_response_rate": 0.0,
       "retrieval_hit_rate": 1.0,
-      "mean_distance": 0.506
+      "mean_distance": 0.478,
+      "grounded_rate_translated": 0.5
     },
     "Vietnamese": {
       "n": 8,
-      "grounded_rate": 0.5,
+      "grounded_rate": 0.625,
       "answered_rate": 1.0,
       "non_response_rate": 0.0,
       "retrieval_hit_rate": 1.0,
-      "mean_distance": 0.472
+      "mean_distance": 0.448,
+      "grounded_rate_translated": 0.5
     },
     "Iban": {
       "n": 8,
-      "grounded_rate": 0.875,
+      "grounded_rate": 1.0,
       "answered_rate": 1.0,
       "non_response_rate": 0.0,
       "retrieval_hit_rate": 1.0,
-      "mean_distance": 0.359
+      "mean_distance": 0.37,
+      "grounded_rate_translated": 1.0
     }
   },
   "fairness_gaps": {
     "Bahasa Melayu": 0.25,
-    "Thai": 0.5,
-    "Vietnamese": 0.5,
-    "Iban": 0.125
+    "Thai": 0.375,
+    "Vietnamese": 0.375,
+    "Iban": 0.0
   },
   "rows": [
     {
       "language": "English",
       "id": "math-01",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.187,
-      "hit": true,
-      "q_native": "What is a fraction?",
-      "q_back": "What is a fraction?"
+      "best_distance_translated": 0.187,
+      "hit": true
     },
     {
       "language": "English",
       "id": "math-02",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.172,
-      "hit": true,
-      "q_native": "What does the denominator of a fraction tell you?",
-      "q_back": "What does the denominator of a fraction tell you?"
+      "best_distance_translated": 0.172,
+      "hit": true
     },
     {
       "language": "English",
       "id": "math-03",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.196,
-      "hit": true,
-      "q_native": "What is a proper fraction?",
-      "q_back": "What is a proper fraction?"
+      "best_distance_translated": 0.196,
+      "hit": true
     },
     {
       "language": "English",
       "id": "math-04",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.191,
-      "hit": true,
-      "q_native": "What are equivalent fractions?",
-      "q_back": "What are equivalent fractions?"
+      "best_distance_translated": 0.191,
+      "hit": true
     },
     {
       "language": "English",
       "id": "math-05",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.301,
-      "hit": true,
-      "q_native": "What is a mixed number?",
-      "q_back": "What is a mixed number?"
+      "best_distance_translated": 0.301,
+      "hit": true
     },
     {
       "language": "English",
       "id": "math-06",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.446,
-      "hit": true,
-      "q_native": "What is place value?",
-      "q_back": "What is place value?"
+      "best_distance_translated": 0.446,
+      "hit": true
     },
     {
       "language": "English",
       "id": "math-07",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.238,
-      "hit": true,
-      "q_native": "What is a decimal?",
-      "q_back": "What is a decimal?"
+      "best_distance_translated": 0.238,
+      "hit": true
     },
     {
       "language": "English",
       "id": "math-08",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.237,
-      "hit": true,
-      "q_native": "How do you add two fractions with different denominators?",
-      "q_back": "How do you add two fractions with different denominators?"
+      "best_distance_translated": 0.237,
+      "hit": true
     },
     {
       "language": "Bahasa Melayu",
       "id": "math-01",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.192,
-      "hit": true,
-      "q_native": "Apakah pecahan?",
-      "q_back": "What's the fraction?"
+      "best_distance_translated": 0.192,
+      "hit": true
     },
     {
       "language": "Bahasa Melayu",
       "id": "math-02",
       "tier": "supplementary",
+      "tier_translated": "supplementary",
       "best_distance": 0.747,
-      "hit": true,
-      "q_native": "Apa yang dikatakan oleh penyebut pecahan?",
-      "q_back": "What did the splitter say?"
+      "best_distance_translated": 0.747,
+      "hit": true
     },
     {
       "language": "Bahasa Melayu",
       "id": "math-03",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.199,
-      "hit": true,
-      "q_native": "Apakah pecahan yang betul?",
-      "q_back": "What's the right fraction?"
+      "best_distance_translated": 0.199,
+      "hit": true
     },
     {
       "language": "Bahasa Melayu",
       "id": "math-04",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.223,
-      "hit": true,
-      "q_native": "Apakah pecahan yang setara?",
-      "q_back": "What is the equal fraction?"
+      "best_distance_translated": 0.223,
+      "hit": true
     },
     {
       "language": "Bahasa Melayu",
       "id": "math-05",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.319,
-      "hit": true,
-      "q_native": "Apakah nombor bercampur?",
-      "q_back": "What's the mixed number?"
+      "best_distance_translated": 0.319,
+      "hit": true
     },
     {
       "language": "Bahasa Melayu",
       "id": "math-06",
       "tier": "supplementary",
+      "tier_translated": "supplementary",
       "best_distance": 0.571,
-      "hit": true,
-      "q_native": "Apakah nilai tempat?",
-      "q_back": "What's the value of the place?"
+      "best_distance_translated": 0.571,
+      "hit": true
     },
     {
       "language": "Bahasa Melayu",
       "id": "math-07",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.238,
-      "hit": true,
-      "q_native": "Apakah bilangan desimal?",
-      "q_back": "What is a decimal number?"
+      "best_distance_translated": 0.238,
+      "hit": true
     },
     {
       "language": "Bahasa Melayu",
       "id": "math-08",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.43,
-      "hit": true,
-      "q_native": "Bagaimana anda menambah dua pecahan dengan penjenamaan yang berbeza?",
-      "q_back": "How do you add two fractions with different branding?"
+      "best_distance_translated": 0.43,
+      "hit": true
     },
     {
       "language": "Thai",
       "id": "math-01",
-      "tier": "supplementary",
-      "best_distance": 0.57,
-      "hit": true,
-      "q_native": "ส่วนส่วนคืออะไร?",
-      "q_back": "What part?"
+      "tier": "grounded",
+      "tier_translated": "supplementary",
+      "best_distance": 0.53,
+      "best_distance_translated": 0.57,
+      "hit": true
     },
     {
       "language": "Thai",
       "id": "math-02",
       "tier": "supplementary",
-      "best_distance": 0.721,
-      "hit": true,
-      "q_native": "ตัวเรียกส่วนบอกอะไรคุณ?",
-      "q_back": "What did the partitioner tell you?"
+      "tier_translated": "supplementary",
+      "best_distance": 0.634,
+      "best_distance_translated": 0.721,
+      "hit": true
     },
     {
       "language": "Thai",
       "id": "math-03",
       "tier": "supplementary",
-      "best_distance": 0.707,
-      "hit": true,
-      "q_native": "ส่วนส่วนที่เหมาะสมคืออะไร?",
-      "q_back": "What's the right part?"
+      "tier_translated": "supplementary",
+      "best_distance": 0.616,
+      "best_distance_translated": 0.707,
+      "hit": true
     },
     {
       "language": "Thai",
       "id": "math-04",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.371,
-      "hit": true,
-      "q_native": "ส่วนส่วนที่เทียบเท่าคืออะไร?",
-      "q_back": "What's the equal part?"
+      "best_distance_translated": 0.371,
+      "hit": true
     },
     {
       "language": "Thai",
       "id": "math-05",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.319,
-      "hit": true,
-      "q_native": "ตัวเลขผสมคืออะไร?",
-      "q_back": "What's the mixed number?"
+      "best_distance_translated": 0.319,
+      "hit": true
     },
     {
       "language": "Thai",
       "id": "math-06",
       "tier": "supplementary",
+      "tier_translated": "supplementary",
       "best_distance": 0.571,
-      "hit": true,
-      "q_native": "ความคุ้มค่าของสถานที่คืออะไร?",
-      "q_back": "What's the value of the place?"
+      "best_distance_translated": 0.571,
+      "hit": true
     },
     {
       "language": "Thai",
       "id": "math-07",
       "tier": "grounded",
-      "best_distance": 0.52,
-      "hit": true,
-      "q_native": "ตัวเลขสิบ คืออะไร",
-      "q_back": "What is the number ten?"
+      "tier_translated": "grounded",
+      "best_distance": 0.518,
+      "best_distance_translated": 0.52,
+      "hit": true
     },
     {
       "language": "Thai",
       "id": "math-08",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.268,
-      "hit": true,
-      "q_native": "วิธีการที่คุณเพิ่มสองเศษหักที่มีตัวแทนที่แตกต่างกัน",
-      "q_back": "How do you add two fractions with different representations?"
+      "best_distance_translated": 0.268,
+      "hit": true
     },
     {
       "language": "Vietnamese",
       "id": "math-01",
-      "tier": "supplementary",
-      "best_distance": 0.565,
-      "hit": true,
-      "q_native": "Một phần nhỏ là gì?",
-      "q_back": "What's a small part?"
+      "tier": "grounded",
+      "tier_translated": "supplementary",
+      "best_distance": 0.475,
+      "best_distance_translated": 0.565,
+      "hit": true
     },
     {
       "language": "Vietnamese",
       "id": "math-02",
       "tier": "supplementary",
-      "best_distance": 0.671,
-      "hit": true,
-      "q_native": "Tên gọi của một phần nhỏ cho bạn biết gì?",
-      "q_back": "What do you know about the name of the little piece?"
+      "tier_translated": "supplementary",
+      "best_distance": 0.648,
+      "best_distance_translated": 0.671,
+      "hit": true
     },
     {
       "language": "Vietnamese",
       "id": "math-03",
       "tier": "grounded",
-      "best_distance": 0.543,
-      "hit": true,
-      "q_native": "Một phần chính xác là gì?",
-      "q_back": "What's the exact part?"
+      "tier_translated": "grounded",
+      "best_distance": 0.463,
+      "best_distance_translated": 0.543,
+      "hit": true
     },
     {
       "language": "Vietnamese",
       "id": "math-04",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.187,
-      "hit": true,
-      "q_native": "Các phân số tương đương là gì?",
-      "q_back": "What are the equivalent fractions?"
+      "best_distance_translated": 0.187,
+      "hit": true
     },
     {
       "language": "Vietnamese",
       "id": "math-05",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.301,
-      "hit": true,
-      "q_native": "Một con số hỗn hợp là gì?",
-      "q_back": "What is a mixed number?"
+      "best_distance_translated": 0.301,
+      "hit": true
     },
     {
       "language": "Vietnamese",
       "id": "math-06",
       "tier": "supplementary",
+      "tier_translated": "supplementary",
       "best_distance": 0.571,
-      "hit": true,
-      "q_native": "Giá trị chỗ là gì?",
-      "q_back": "What's the value of the place?"
+      "best_distance_translated": 0.571,
+      "hit": true
     },
     {
       "language": "Vietnamese",
       "id": "math-07",
       "tier": "grounded",
+      "tier_translated": "grounded",
       "best_distance": 0.282,
-      "hit": true,
-      "q_native": "Một số thập phân là gì?",
-      "q_back": "What are some decimal places?"
+      "best_distance_translated": 0.282,
+      "hit": true
     },
     {
       "language": "Vietnamese",
       "id": "math-08",
       "tier": "supplementary",
+      "tier_translated": "supplementary",
       "best_distance": 0.659,
-      "hit": true,
-      "q_native": "Làm thế nào để bạn thêm hai phần nhỏ với các tên gọi khác nhau?",
-      "q_back": "How do you add two smaller parts with different names?"
+      "best_distance_translated": 0.659,
+      "hit": true
     },
     {
       "language": "Iban",
       "id": "math-01",
       "tier": "grounded",
-      "best_distance": 0.313,
-      "hit": true,
-      "q_native": "[English] What is a fraction?\n[Iban] Semula ada aplikasi yang mengajari bahasa Iban sejak semalam hingga tangkan selesai? Semua pertanyaan itu dapat dijawab dengan jawaban sesuai. Fraction, atau pembagian bilun tergantung satu angka lainnya, sering digunakan unteneri-unit dalam memperbaharui kebutuhan mereka hingga menjadi idup yang lebih aktif.",
-      "q_back": "[English] What is a fraction?\n[Iban] Semula ada aplikasi yang mengajari bahasa Iban sejak semalam hingga tangkan selesai? Semua pertanyaan itu dapat dijawab dengan jawaban sesuai. Fraction, atau pembagian bilun tergantung satu angka lainnya, sering digunakan unteneri-unit dalam memperbaharui kebutuhan mereka hingga menjadi idup yang lebih aktif."
+      "tier_translated": "grounded",
+      "best_distance": 0.22,
+      "best_distance_translated": 0.22,
+      "hit": true
     },
     {
       "language": "Iban",
       "id": "math-02",
       "tier": "grounded",
-      "best_distance": 0.376,
-      "hit": true,
-      "q_native": "[English] What does the denominator of a fraction tell you?\n[Iban] Ba ada apakah dik tulis di bawahan kemudian?\n\n(Note: The Iban language has different dialects, and this translation is based on one common form. There might be variations in other dialects.)",
-      "q_back": "[English] What does the denominator of a fraction tell you?\n[Iban] Ba ada apakah dik tulis di bawahan kemudian?\n\n(Note: The Iban language has different dialects, and this translation is based on one common form. There might be variations in other dialects.)"
+      "tier_translated": "grounded",
+      "best_distance": 0.274,
+      "best_distance_translated": 0.274,
+      "hit": true
     },
     {
       "language": "Iban",
       "id": "math-03",
       "tier": "grounded",
-      "best_distance": 0.303,
-      "hit": true,
-      "q_native": "[English] What is a proper fraction?\n[Iban] Semula yang jelu semua kemampuan unteneri pada fraktur pertama dengan angka di bawah dua sisi dan jumlahnya disini adalah kisaran antara satu ataupun lima, seperti contoh 1/2.",
-      "q_back": "[English] What is a proper fraction?\n[Iban] Semula yang jelu semua kemampuan unteneri pada fraktur pertama dengan angka di bawah dua sisi dan jumlahnya disini adalah kisaran antara satu ataupun lima, seperti contoh 1/2."
+      "tier_translated": "grounded",
+      "best_distance": 0.532,
+      "best_distance_translated": 0.532,
+      "hit": true
     },
     {
       "language": "Iban",
       "id": "math-04",
       "tier": "grounded",
-      "best_distance": 0.245,
-      "hit": true,
-      "q_native": "[English] What are equivalent fractions?\n[Iban] Semula kemudahan yang sama?",
-      "q_back": "[English] What are equivalent fractions?\n[Iban] Semula kemudahan yang sama?"
+      "tier_translated": "grounded",
+      "best_distance": 0.313,
+      "best_distance_translated": 0.313,
+      "hit": true
     },
     {
       "language": "Iban",
       "id": "math-05",
       "tier": "grounded",
-      "best_distance": 0.468,
-      "hit": true,
-      "q_native": "[English] What is a mixed number?\n[Iban] Bawang ada apa pemakaian rumah kayu yang menganak paling banyak lumur dan satu lumur dalam satu?\n\n(Note: The translation provided here uses Iban words and phrases that are culturally relevant to the concept of mixed numbers, but since \"mixed number\" is a mathematical term not traditionally used in this context within an Austronesian language like Iban, it's been creatively adapted. In reality, there might be no direct translation for 'mixed number,' and instead one would explain its meaning or use the concept as needed.)",
-      "q_back": "[English] What is a mixed number?\n[Iban] Bawang ada apa pemakaian rumah kayu yang menganak paling banyak lumur dan satu lumur dalam satu?\n\n(Note: The translation provided here uses Iban words and phrases that are culturally relevant to the concept of mixed numbers, but since \"mixed number\" is a mathematical term not traditionally used in this context within an Austronesian language like Iban, it's been creatively adapted. In reality, there might be no direct translation for 'mixed number,' and instead one would explain its meaning or use the concept as needed.)"
+      "tier_translated": "grounded",
+      "best_distance": 0.522,
+      "best_distance_translated": 0.522,
+      "hit": true
     },
     {
       "language": "Iban",
       "id": "math-06",
-      "tier": "supplementary",
-      "best_distance": 0.561,
-      "hit": true,
-      "q_native": "[English] What is place value?\n[Iban] Bawang ipa alai?",
-      "q_back": "[English] What is place value?\n[Iban] Bawang ipa alai?"
+      "tier": "grounded",
+      "tier_translated": "grounded",
+      "best_distance": 0.48,
+      "best_distance_translated": 0.48,
+      "hit": true
     },
     {
       "language": "Iban",
       "id": "math-07",
       "tier": "grounded",
-      "best_distance": 0.279,
-      "hit": true,
-      "q_native": "[English] What is a decimal?\n[Iban] Semalam semuanya angka yang terpasang di seberapa bagian bilun jitu sampai dua kali satu atau enggak ada kejilat. Semua ini merupakkana mengetahui perjalanan pemula Anda dalam mempelajari matematika.",
-      "q_back": "[English] What is a decimal?\n[Iban] Semalam semuanya angka yang terpasang di seberapa bagian bilun jitu sampai dua kali satu atau enggak ada kejilat. Semua ini merupakkana mengetahui perjalanan pemula Anda dalam mempelajari matematika."
+      "tier_translated": "grounded",
+      "best_distance": 0.315,
+      "best_distance_translated": 0.315,
+      "hit": true
     },
     {
       "language": "Iban",
       "id": "math-08",
       "tier": "grounded",
-      "best_distance": 0.328,
-      "hit": true,
-      "q_native": "[English] How do you add two fractions with different denominators?\n[Iban] Kata kami bagaimana cari dua fraction dengan pembentukan yang berbeda di atas enggau dikati?",
-      "q_back": "[English] How do you add two fractions with different denominators?\n[Iban] Kata kami bagaimana cari dua fraction dengan pembentukan yang berbeda di atas enggau dikati?"
+      "tier_translated": "grounded",
+      "best_distance": 0.304,
+      "best_distance_translated": 0.304,
+      "hit": true
     }
   ]
 }
