@@ -20,6 +20,20 @@ def test_chrf_empty_handling():
     assert et.chrf("abc", "") == 0.0
 
 
+def test_native_segment_strips_bilingual_wrapper():
+    # The bridge returns "[English] x\n[Iban] y" for display; score only the translation.
+    out = et.native_segment("[English] dog\n[Iban] Uduk", "Iban")
+    assert out == "Uduk"
+    # plain output (no wrapper) is returned as-is
+    assert et.native_segment("uduk", "Iban") == "uduk"
+
+
+def test_native_segment_changes_chrf():
+    # Scoring the wrapper tanks chrF; scoring the segment reflects the real translation.
+    raw = "[English] dog\n[Iban] uduk"
+    assert et.chrf(raw, "uduk") < et.chrf(et.native_segment(raw, "Iban"), "uduk")
+
+
 def test_evaluate_aggregates_per_language():
     refs = [
         {"language": "Iban", "source_en": "my house", "reference": "rumah aku"},

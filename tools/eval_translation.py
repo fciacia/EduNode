@@ -105,12 +105,25 @@ def load_references(gold_path: Path | None = None,
     return refs
 
 
+def native_segment(text: str, language: str) -> str:
+    """Extract just the translation from a bilingual bridge output.
+
+    The bridge returns "[English] <en>\\n[<Language>] <native>" for display; we must
+    score the *translation*, not the display wrapper, or chrF measures formatting.
+    """
+    marker = f"[{language}]"
+    if marker in text:
+        return text.split(marker, 1)[1].strip()
+    return text.strip()
+
+
 def evaluate(references: list[dict], translate_fn) -> dict:
     """Score each reference's language output with chrF; aggregate per language."""
     per_lang: dict[str, list[float]] = {}
     rows = []
     for ref in references:
-        hyp = translate_fn(ref["source_en"], ref["language"])
+        raw = translate_fn(ref["source_en"], ref["language"])
+        hyp = native_segment(raw, ref["language"])
         score = chrf(hyp, ref["reference"])
         rows.append({**ref, "hypothesis": hyp, "chrf": score})
         per_lang.setdefault(ref["language"], []).append(score)
