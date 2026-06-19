@@ -75,6 +75,34 @@ def _token_fingerprint(token: str) -> str:
     return "tok:" + hashlib.sha256(token.encode()).hexdigest()[:8]
 
 
+def _resolve_actor(token: str) -> str:
+    """Map a token to a named identity for the audit log: a registered teacher's
+    name, the built-in 'admin', or an anonymised fingerprint as a fallback."""
+    if not token:
+        return "anonymous"
+    try:
+        from core.progress_tracker import find_teacher_by_token
+        t = find_teacher_by_token(token)
+        if t:
+            return t["name"]
+    except Exception:  # noqa: BLE001
+        pass
+    if token == ADMIN_TOKEN:
+        return "admin"
+    return _token_fingerprint(token)
+
+
+def _is_valid_token(token: str) -> bool:
+    """A token is valid if it's the admin token or a registered teacher token."""
+    if token and token == ADMIN_TOKEN:
+        return True
+    try:
+        from core.progress_tracker import find_teacher_by_token
+        return find_teacher_by_token(token) is not None
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def _busy_response():
     """Uniform 503 shed when the hub is at its concurrency limit."""
     resp = jsonify({
@@ -113,9 +141,9 @@ def require_admin(f):
         token = (request.headers.get("X-Admin-Token")
                  or request.cookies.get(ADMIN_COOKIE)
                  or request.args.get("token", ""))
-        actor = _token_fingerprint(token)
+        actor = _resolve_actor(token)
         action = request.endpoint or request.path
-        if not token or token != ADMIN_TOKEN:
+        if not _is_valid_token(token):
             try:
                 from core.progress_tracker import log_audit
                 log_audit(action, actor=actor, detail=request.path, outcome="denied")
@@ -397,14 +425,47 @@ def api_admin_login():
     from core.progress_tracker import log_audit
     data = request.get_json(silent=True) or request.form
     token = (data.get("token") or "").strip()
-    actor = _token_fingerprint(token)
-    if not token or token != ADMIN_TOKEN:
+    actor = _resolve_actor(token)
+    if not _is_valid_token(token):
         log_audit("admin_login", actor=actor, detail="/api/admin/login", outcome="denied")
         return jsonify({"error": "invalid token"}), 403
-    resp = jsonify({"ok": True})
+    resp = jsonify({"ok": True, "actor": actor})
     resp.set_cookie(ADMIN_COOKIE, token, httponly=True, samesite="Strict", max_age=43200)
     log_audit("admin_login", actor=actor, detail="/api/admin/login", outcome="ok")
     return resp
+
+
+@app.post("/api/admin/teachers")
+@require_admin
+def api_register_teacher():
+    """Register a named teacher identity (admin only) so the audit log attributes
+    actions to a person, not a shared token."""
+    from core.progress_tracker import register_teacher
+    data = request.get_json(silent=True) or {}
+    name  = (data.get("name") or "").strip()
+    token = (data.get("token") or "").strip()
+    role  = (data.get("role") or "teacher").strip()
+    if not name or not token:
+        return jsonify({"error": "name and token required"}), 400
+    tid = register_teacher(name, token, role)
+    return jsonify({"ok": True, "id": tid, "name": name, "role": role})
+
+
+@app.post("/api/consent")
+@require_admin
+def api_record_consent():
+    """Record parental/guardian consent for a student (teacher/admin only).
+    The consenting act happens off-system; this stores who confirmed it and when."""
+    from core.progress_tracker import record_consent, get_consent
+    token = (request.headers.get("X-Admin-Token")
+             or request.cookies.get(ADMIN_COOKIE) or request.args.get("token", ""))
+    data = request.get_json(silent=True) or {}
+    sid = data.get("student_id")
+    if not sid:
+        return jsonify({"error": "student_id required"}), 400
+    granted = bool(data.get("granted", True))
+    record_consent(int(sid), granted, recorded_by=_resolve_actor(token))
+    return jsonify({"ok": True, "consent": get_consent(int(sid))})
 
 
 @app.get("/share/<share_id>")

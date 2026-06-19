@@ -176,6 +176,23 @@ def run_model_update(usb: Path) -> bool:
 # Step 4 — Export progress DB to USB
 # ---------------------------------------------------------------------------
 
+def _maybe_encrypt(path: Path) -> Path:
+    """Encrypt an exported file in place when EDGE_BACKUP_PASSPHRASE is set, so PII
+    leaving the hub on a USB drive is unreadable without the passphrase (Issue 8).
+    Returns the path actually written (``.enc`` when encrypted)."""
+    from core.crypto import backup_passphrase, encrypt_file
+    passphrase = backup_passphrase()
+    if not passphrase:
+        _log(f"  WARNING: {path.name} written UNENCRYPTED "
+             "(set EDGE_BACKUP_PASSPHRASE to encrypt USB exports).")
+        return path
+    enc = path.with_suffix(path.suffix + ".enc")
+    encrypt_file(path, enc, passphrase)
+    path.unlink()
+    _log(f"  Encrypted → {enc.name}")
+    return enc
+
+
 def export_progress_db(usb: Path) -> bool:
     db_src = Path("db/edunode.db")
     if not db_src.exists():
@@ -187,6 +204,7 @@ def export_progress_db(usb: Path) -> bool:
 
     dst = export_dir / f"progress_{_stamp()}.db"
     shutil.copy2(db_src, dst)
+    _maybe_encrypt(dst)
     _log(f"  Progress DB exported → {dst.name}")
     return True
 
@@ -219,6 +237,7 @@ def export_dialect_logs(usb: Path) -> int:
 
     dst = export_dir / f"dialect_logs_{_stamp()}.json"
     dst.write_text(json.dumps(rows, indent=2, ensure_ascii=False))
+    _maybe_encrypt(dst)
     _log(f"  Dialect logs exported → {dst.name} ({len(rows)} entries)")
     return len(rows)
 

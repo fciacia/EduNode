@@ -149,14 +149,94 @@ CREATE TABLE IF NOT EXISTS audit_log (
     logged_at TEXT    NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_audit_time ON audit_log(logged_at);
+
+CREATE TABLE IF NOT EXISTS teachers (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT    NOT NULL,
+    token      TEXT    NOT NULL UNIQUE,
+    role       TEXT    NOT NULL DEFAULT 'teacher',
+    created_at TEXT    NOT NULL
+);
 """
+
+# Columns added after v1 — applied by _migrate() so existing hub DBs upgrade in place.
+_MIGRATIONS = [
+    ("students", "consent_status", "TEXT NOT NULL DEFAULT 'pending'"),
+    ("students", "consent_by",     "TEXT NOT NULL DEFAULT ''"),
+    ("students", "consent_at",     "TEXT NOT NULL DEFAULT ''"),
+]
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    for table, column, decl in _MIGRATIONS:
+        cols = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+        if column not in cols:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
 
 
 def init_db() -> None:
-    """Create all tables. Idempotent — safe to call on every app startup."""
+    """Create all tables and apply migrations. Idempotent — safe on every startup."""
     with _db() as conn:
         conn.executescript(_SCHEMA)
+        _migrate(conn)
     log.info("Database initialised at '%s'.", DB_PATH)
+
+
+# ---------------------------------------------------------------------------
+# Teachers (named identities — audit attributes to a person, not a shared token)
+# ---------------------------------------------------------------------------
+
+def register_teacher(name: str, token: str, role: str = "teacher") -> int:
+    """Create/update a named teacher account keyed by their access token."""
+    with _db() as conn:
+        cur = conn.execute(
+            "INSERT INTO teachers (name, token, role, created_at) VALUES (?,?,?,?)"
+            " ON CONFLICT(token) DO UPDATE SET name=excluded.name, role=excluded.role",
+            (name.strip(), token, role, _now()),
+        )
+        row = conn.execute("SELECT id FROM teachers WHERE token=?", (token,)).fetchone()
+        return row["id"] if row else cur.lastrowid
+
+
+def find_teacher_by_token(token: str) -> dict | None:
+    """Return {name, role} for a token, or None. Used to attribute audit entries."""
+    if not token:
+        return None
+    with _db() as conn:
+        row = conn.execute(
+            "SELECT name, role FROM teachers WHERE token=? LIMIT 1", (token,)
+        ).fetchone()
+        return dict(row) if row else None
+
+
+# ---------------------------------------------------------------------------
+# Parental consent (data governance — Issue 8)
+# ---------------------------------------------------------------------------
+
+def record_consent(student_id: int, granted: bool, recorded_by: str = "") -> None:
+    """Record that parental/guardian consent was obtained (or denied) for a student.
+
+    The consent itself is a real-world act (a parent signs a form); this stores the
+    auditable record of who confirmed it and when."""
+    with _db() as conn:
+        conn.execute(
+            "UPDATE students SET consent_status=?, consent_by=?, consent_at=? WHERE id=?",
+            ("granted" if granted else "denied", recorded_by.strip(), _now(), student_id),
+        )
+    log_audit("record_consent", actor=recorded_by,
+              detail=f"student={student_id} granted={granted}")
+
+
+def get_consent(student_id: int) -> dict:
+    """Return {status, by, at} for a student's consent record."""
+    with _db() as conn:
+        row = conn.execute(
+            "SELECT consent_status, consent_by, consent_at FROM students WHERE id=?",
+            (student_id,),
+        ).fetchone()
+    if not row:
+        return {"status": "unknown", "by": "", "at": ""}
+    return {"status": row["consent_status"], "by": row["consent_by"], "at": row["consent_at"]}
 
 
 # ---------------------------------------------------------------------------
