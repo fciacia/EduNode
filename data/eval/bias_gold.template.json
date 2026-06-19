@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "description": "TEMPLATE for the cross-ASEAN bias gold set (Issue 9). Copy to data/eval/bias_gold.json and replace the example items with REAL questions grounded in REAL per-country curricula (see data/eval/bias/README.md). Do not fabricate ministry content. Ask the SAME question in each country's set so accuracy is comparable; tag every item with country + language; set expected_sources to that country's ingested filename(s).",
+    "run": "python -m tools.eval_rag --gold data/eval/bias_gold.json --group-by country --with-llm"
+  },
+  "items": [
+    {"id": "TEMPLATE-my-sci-01", "country": "Malaysia", "language": "English",
+     "subject": "Science", "type": "in_curriculum",
+     "question": "What is photosynthesis?",
+     "expected_sources": ["my_science_kssr.txt"],
+     "answer_keywords": ["sunlight", "plants", "food"]},
+    {"id": "TEMPLATE-ph-sci-01", "country": "Philippines", "language": "English",
+     "subject": "Science", "type": "in_curriculum",
+     "question": "What is photosynthesis?",
+     "expected_sources": ["ph_science_deped.txt"],
+     "answer_keywords": ["sunlight", "plants", "food"]},
+    {"id": "TEMPLATE-my-math-01", "country": "Malaysia", "language": "Bahasa Melayu",
+     "subject": "Mathematics", "type": "in_curriculum",
+     "question": "What is a fraction?",
+     "expected_sources": ["my_math_kssr.txt"],
+     "answer_keywords": ["part", "whole"]},
+    {"id": "TEMPLATE-ph-math-01", "country": "Philippines", "language": "Filipino",
+     "subject": "Mathematics", "type": "in_curriculum",
+     "question": "What is a fraction?",
+     "expected_sources": ["ph_math_deped.txt"],
+     "answer_keywords": ["part", "whole"]}
+  ]
+}

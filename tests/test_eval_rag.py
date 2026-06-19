@@ -156,6 +156,30 @@ def test_aggregate_includes_judge_accuracy():
     assert s["n_judged"] == 2
 
 
+def test_group_summaries_splits_by_country():
+    rows = [
+        {"type": "in_curriculum", "tier": "grounded", "precision": 1.0,
+         "relevant_precision": 1.0, "hit": True, "keyword_recall": None,
+         "has_citation": True, "country": "Malaysia"},
+        {"type": "in_curriculum", "tier": "none", "precision": 0.0,
+         "relevant_precision": 0.0, "hit": False, "keyword_recall": None,
+         "has_citation": False, "country": "Philippines"},
+    ]
+    groups = eval_rag.group_summaries(rows, "country")
+    assert set(groups) == {"Malaysia", "Philippines"}
+    assert groups["Malaysia"]["retrieval_hit_rate"] == 1.0
+    assert groups["Philippines"]["non_response_rate_in_curriculum"] == 1.0
+
+
+def test_bias_gold_template_schema():
+    gold = json.loads(Path("data/eval/bias_gold.template.json").read_text(encoding="utf-8"))
+    assert gold["items"]
+    for it in gold["items"]:
+        assert it["country"] and it["language"]        # required for --group-by
+        assert it["type"] in ("in_curriculum", "off_curriculum")
+        assert it["question"].strip()
+
+
 def test_gold_set_is_valid():
     gold = json.loads(Path("data/eval/gold_set.json").read_text(encoding="utf-8"))
     assert gold["items"]
