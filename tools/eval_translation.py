@@ -67,9 +67,32 @@ def chrf(hypothesis: str, reference: str, max_n: int = 6, beta: float = 2.0) -> 
 # Reference loading + scoring
 # ---------------------------------------------------------------------------
 
-def load_references(gold_path: Path | None = None) -> list[dict]:
-    """References as [{language, source_en, reference}]. From a gold file if given,
-    otherwise from teacher-verified corrections (which carry english + corrected)."""
+def load_references_from_sheet(sheet_path: Path) -> list[dict]:
+    """Read a filled reference-collection sheet (tools/make_translation_sheet.py).
+
+    Columns: id, source_en, then one column per language. Produces a reference for
+    every non-empty language cell.
+    """
+    import csv
+    refs = []
+    with Path(sheet_path).open(encoding="utf-8", newline="") as fh:
+        reader = csv.DictReader(fh)
+        langs = [c for c in (reader.fieldnames or []) if c not in ("id", "source_en")]
+        for row in reader:
+            src = (row.get("source_en") or "").strip()
+            for lang in langs:
+                ref = (row.get(lang) or "").strip()
+                if src and ref:
+                    refs.append({"language": lang, "source_en": src, "reference": ref})
+    return refs
+
+
+def load_references(gold_path: Path | None = None,
+                    sheet_path: Path | None = None) -> list[dict]:
+    """References as [{language, source_en, reference}]. From a filled speaker sheet
+    if given, else a gold file, else teacher-verified corrections."""
+    if sheet_path:
+        return load_references_from_sheet(sheet_path)
     if gold_path:
         data = json.loads(Path(gold_path).read_text(encoding="utf-8"))
         return data["items"] if isinstance(data, dict) else data
@@ -107,10 +130,12 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Measure translation quality (chrF).")
     p.add_argument("--gold", type=Path, default=None,
                    help="reference JSON; default: teacher-verified corrections")
+    p.add_argument("--sheet", type=Path, default=None,
+                   help="filled reference-collection CSV (tools/make_translation_sheet.py)")
     p.add_argument("--report", type=Path, default=None)
     args = p.parse_args(argv)
 
-    refs = load_references(args.gold)
+    refs = load_references(args.gold, sheet_path=args.sheet)
     if not refs:
         print("No references yet. Add teacher corrections (dashboard) or pass --gold.")
         return 0

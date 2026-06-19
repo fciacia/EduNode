@@ -1,0 +1,489 @@
+{
+  "_meta": {
+    "description": "Real English-Iban reference pairs from VynerCK/Iban-language-data (HF dataset, animal+object vocab). Used to measure Iban translation quality (chrF) — Issue 4.",
+    "source": "https://huggingface.co/datasets/VynerCK/Iban-language-data",
+    "n": 80
+  },
+  "items": [
+    {
+      "language": "Iban",
+      "source_en": "dog",
+      "reference": "uduk",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "cat",
+      "reference": "mayau",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "bird",
+      "reference": "burung",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "tiger",
+      "reference": "rimau",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "elephant",
+      "reference": "gajah",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "cow",
+      "reference": "lembu",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "goat",
+      "reference": "kambing",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "chicken",
+      "reference": "manok",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "fish",
+      "reference": "ikan",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "monkey",
+      "reference": "monyit",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "horse",
+      "reference": "kuda",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "deer",
+      "reference": "rusa",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "buffalo",
+      "reference": "kerbau",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "duck",
+      "reference": "itik",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "sheep",
+      "reference": "biri-biri",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "rabbit",
+      "reference": "arnab",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "snake",
+      "reference": "ular",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "crocodile",
+      "reference": "buaya",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "frog",
+      "reference": "katak",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "turtle",
+      "reference": "kura-kura",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "lizard",
+      "reference": "biawak",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "ant",
+      "reference": "semut",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "bee",
+      "reference": "lebah",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "butterfly",
+      "reference": "rama-rama",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "spider",
+      "reference": "labah-labah",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "rat",
+      "reference": "cit",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "bat",
+      "reference": "kelawar",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "owl",
+      "reference": "burung antu",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "parrot",
+      "reference": "burung kakak tua",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "squirrel",
+      "reference": "tupai",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "porcupine",
+      "reference": "landak",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "pangolin",
+      "reference": "tenggiling",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "crab",
+      "reference": "ketam",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "shrimp",
+      "reference": "udang",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "octopus",
+      "reference": "suntong",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "whale",
+      "reference": "paus",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "dolphin",
+      "reference": "ikan lumba-lumba",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "shark",
+      "reference": "ikan yu",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "starfish",
+      "reference": "ikan bintang",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "seahorse",
+      "reference": "kuda laut",
+      "category": "animal"
+    },
+    {
+      "language": "Iban",
+      "source_en": "house",
+      "reference": "rumah",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "car",
+      "reference": "kereta",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "bicycle",
+      "reference": "basikal",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "motorcycle",
+      "reference": "motosikal",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "boat",
+      "reference": "perahu",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "airplane",
+      "reference": "bilun",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "train",
+      "reference": "kereta api",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "chair",
+      "reference": "bangku",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "table",
+      "reference": "meja",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "bed",
+      "reference": "katil",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "door",
+      "reference": "pintu",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "window",
+      "reference": "ceremin",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "lamp",
+      "reference": "lampu",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "fan",
+      "reference": "kipas",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "book",
+      "reference": "bup",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "pen",
+      "reference": "pen",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "pencil",
+      "reference": "pensil",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "phone",
+      "reference": "telefon",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "computer",
+      "reference": "komputer",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "television",
+      "reference": "tv",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "radio",
+      "reference": "radio",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "clock",
+      "reference": "jam",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "watch",
+      "reference": "jam lengan",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "bag",
+      "reference": "beg",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "clothes",
+      "reference": "baju",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "shoes",
+      "reference": "kasut",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "hat",
+      "reference": "tupi",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "glasses",
+      "reference": "ceremin mata",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "spoon",
+      "reference": "sudu",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "fork",
+      "reference": "garpu",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "knife",
+      "reference": "dukuk",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "plate",
+      "reference": "pingai",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "bowl",
+      "reference": "mangkuk",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "cup",
+      "reference": "cawan",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "bottle",
+      "reference": "botol",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "key",
+      "reference": "kunci",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "lock",
+      "reference": "mangga",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "mirror",
+      "reference": "ceremin",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "toothbrush",
+      "reference": "berus ngelik",
+      "category": "object"
+    },
+    {
+      "language": "Iban",
+      "source_en": "towel",
+      "reference": "kain tuala",
+      "category": "object"
+    }
+  ]
+}
