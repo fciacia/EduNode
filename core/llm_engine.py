@@ -90,6 +90,7 @@ def _ollama_generate(
     max_tokens: int = MAX_TOKENS,
     system: str = "",
     schema: dict | None = None,
+    model: str | None = None,
 ) -> str:
     """
     POST to Ollama /api/generate.
@@ -106,7 +107,7 @@ def _ollama_generate(
         return ""
 
     payload: dict[str, Any] = {
-        "model":  _resolve_ollama_model(),
+        "model":  model or _resolve_ollama_model(),
         "prompt": prompt,
         "stream": False,
         "options": {

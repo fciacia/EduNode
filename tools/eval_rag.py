@@ -121,13 +121,18 @@ _JUDGE_SCHEMA = {
 }
 
 
-def llm_judge(question: str, answer: str, reference_keywords: list[str] | None = None) -> bool | None:
+def llm_judge(question: str, answer: str, reference_keywords: list[str] | None = None,
+              model: str | None = None) -> bool | None:
     """LLM-as-judge: does *answer* correctly and factually answer *question*?
 
     Keyword matching can't tell a correct answer from one that merely name-drops the
     keywords, nor credit a correct answer that uses synonyms. This asks the model to
     judge correctness directly. Returns True/False, or None if the model is
     unavailable. Needs Ollama (only called in --with-llm --judge mode).
+
+    Pass *model* to judge with a DIFFERENT model than the one that generated the
+    answer (cross-model judging) — a model grading its own output is biased, so a
+    separate judge is a more credible accuracy signal.
     """
     from core.llm_engine import _ollama_generate
     hint = ""
@@ -140,7 +145,7 @@ def llm_judge(question: str, answer: str, reference_keywords: list[str] | None =
     raw = _ollama_generate(
         prompt, temperature=0.0, max_tokens=20,
         system="You grade student-tutor answers. Be strict but fair. Reply only with the JSON.",
-        schema=_JUDGE_SCHEMA,
+        schema=_JUDGE_SCHEMA, model=model,
     )
     if not raw:
         return None
@@ -212,7 +217,7 @@ def aggregate(rows: list[dict], keyword_threshold: float = 0.5) -> dict:
 # ---------------------------------------------------------------------------
 
 def evaluate_item(item: dict, *, k: int, with_llm: bool, subject_filter: bool,
-                  judge: bool = False) -> dict:
+                  judge: bool = False, judge_model: str | None = None) -> dict:
     """Run retrieval (and optionally the full pipeline) for one gold item."""
     from core.rag_engine import retrieve_with_citations
 
@@ -249,7 +254,8 @@ def evaluate_item(item: dict, *, k: int, with_llm: bool, subject_filter: bool,
             row["keyword_recall"] = ks["recall"]
             if judge:
                 row["judge_correct"] = llm_judge(
-                    item["question"], result.get("answer", ""), item.get("answer_keywords"))
+                    item["question"], result.get("answer", ""), item.get("answer_keywords"),
+                    model=judge_model)
     return row
 
 
@@ -268,12 +274,14 @@ def group_summaries(rows: list[dict], key: str, keyword_threshold: float = 0.5) 
 
 
 def run(gold_path: Path, *, k: int, with_llm: bool, subject_filter: bool,
-        keyword_threshold: float, group_by: str | None = None, judge: bool = False) -> dict:
+        keyword_threshold: float, group_by: str | None = None, judge: bool = False,
+        judge_model: str | None = None) -> dict:
     gold = json.loads(gold_path.read_text(encoding="utf-8"))
     items = gold["items"]
     rows = []
     for it in items:
-        row = evaluate_item(it, k=k, with_llm=with_llm, subject_filter=subject_filter, judge=judge)
+        row = evaluate_item(it, k=k, with_llm=with_llm, subject_filter=subject_filter,
+                            judge=judge, judge_model=judge_model)
         # carry any grouping attributes (country, language, ...) onto the row
         for attr in ("country", "language", "subject", "grade"):
             if attr in it:
@@ -331,6 +339,8 @@ def main(argv: list[str] | None = None) -> int:
                    help="also run the SLM (needs Ollama) for answer-quality metrics")
     p.add_argument("--judge", action="store_true",
                    help="use the LLM as a correctness judge (needs --with-llm)")
+    p.add_argument("--judge-model", default=None,
+                   help="model for the judge (cross-model judging, e.g. llama3.2:3b-instruct-q4_K_M)")
     p.add_argument("--no-subject-filter", action="store_true",
                    help="retrieve across all subjects (ignore the question's subject)")
     p.add_argument("--keyword-threshold", type=float, default=0.5,
@@ -347,7 +357,7 @@ def main(argv: list[str] | None = None) -> int:
     out = run(args.gold, k=args.k, with_llm=args.with_llm,
               subject_filter=not args.no_subject_filter,
               keyword_threshold=args.keyword_threshold,
-              group_by=args.group_by, judge=args.judge)
+              group_by=args.group_by, judge=args.judge, judge_model=args.judge_model)
     _print_summary(out["summary"], args.with_llm)
 
     if "groups" in out:
