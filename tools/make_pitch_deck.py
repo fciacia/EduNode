@@ -278,21 +278,27 @@ def s_data(prs):
 def s_ethics(prs):
     s = prs.slides.add_slide(prs.slide_layouts[6]); _bg(s, WHITE)
     _header(s, "AI Ethics & Responsibility", "Bias: measured, then mitigated")
-    _chart(s, Inches(0.6), Inches(1.8), Inches(6.6), Inches(4.7),
+    # hero callout: the headline fact
+    band = _rect(s, Inches(0.7), Inches(1.6), Inches(12.0), Inches(0.85), PANEL2)
+    bf = _txt(s, Inches(0.95), Inches(1.66), Inches(11.6), Inches(0.7), MSO_ANCHOR.MIDDLE)
+    _line(bf.paragraphs[0],
+          "✓  100% of questions answered in EVERY language tested — 0% non-response. "
+          "No student is ever left without an answer.", 15, GREEN, bold=True)
+    _chart(s, Inches(0.6), Inches(2.65), Inches(6.6), Inches(3.9),
            ["English", "B. Melayu", "Thai", "Viet", "Iban"],
            [("Before fix", (100, 75, 50, 50, 88)), ("After cross-lingual", (100, 75, 62, 62, 100))],
-           title="Grounding rate by language (same question)")
-    _bullets(s, Inches(7.4), Inches(1.9), Inches(5.4), Inches(3.4), [
-        "Same question, varied language → English 100% vs Thai 50% grounding = measured bias",
+           title="Curriculum-grounding rate by language")
+    _bullets(s, Inches(7.4), Inches(2.7), Inches(5.4), Inches(2.4), [
+        "Same question, varied language: a measured bias (English 100% vs Thai 50% grounding)",
         "Root cause: query translation degraded retrieval",
-        "Fix: cross-lingual retrieval → Thai/Viet 62%, Iban fully closed; 0% non-response",
-    ], size=14)
-    pr = _rect(s, Inches(7.4), Inches(5.4), Inches(5.4), Inches(1.1), PANEL2)
+        "Fix: cross-lingual retrieval → Thai/Viet 62%, Iban fully closed",
+    ], size=13)
+    pr = _rect(s, Inches(7.4), Inches(5.0), Inches(5.4), Inches(1.5), PANEL)
     tf = pr.text_frame; tf.margin_top = Inches(0.14); tf.margin_left = Inches(0.18)
-    _line(tf.paragraphs[0], "Privacy & governance", 13, GREEN, bold=True, space_after=3)
+    _line(tf.paragraphs[0], "Privacy & governance", 13, PURPLE, bold=True, space_after=3)
     _line(tf.add_paragraph(),
-          "RBAC + per-teacher audit · encryption (LUKS + USB) · parental consent · retention & erasure",
-          12, DARK)
+          "RBAC + per-teacher audit log · encryption (LUKS + encrypted USB) · parental consent record · "
+          "retention purge & right-to-erasure", 12, DARK)
 
 
 def s_demo(prs):
