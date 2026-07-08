@@ -2,24 +2,79 @@
 {% block title %}Edge{% endblock %}
 
 {% block extra_style %}
-/* ── Hero ── */
-.hero {
-  text-align: center;
-  padding: 2rem 1rem 1.25rem;
-  animation: fade-in .4s ease;
+/* ── Hero card — bold banner with mascot + personalized CTA ── */
+.hero-card {
+  background: linear-gradient(120deg, #4C1D95 0%, #7C3AED 55%, #2563EB 100%);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  box-shadow: var(--shadow);
+  animation: fade-in .45s ease .1s both;
+  overflow: hidden;
+  position: relative;
 }
 
+.hero-card-text { flex: 1; min-width: 0; }
+
+.hero-card-eyebrow {
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.7);
+  margin-bottom: .35rem;
+}
+
+.hero-card-title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: #fff;
+  margin-bottom: .4rem;
+  line-height: 1.25;
+}
+
+.hero-card-body {
+  font-size: .86rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.85);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  max-width: 34ch;
+}
+
+.hero-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  background: #fff;
+  color: var(--primary-dark);
+  border: none;
+  border-radius: 99px;
+  padding: .55rem 1.3rem;
+  font-family: var(--font);
+  font-size: .9rem;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition: transform .15s, box-shadow .15s;
+}
+.hero-card-cta:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+
 .hero-blob {
-  width: 110px;
-  height: 110px;
-  background: linear-gradient(135deg, #A78BFA, #7C3AED);
+  width: 108px;
+  height: 108px;
+  background: rgba(255,255,255,.14);
   border-radius: 60% 40% 55% 45% / 50% 55% 45% 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto .85rem;
   font-size: 3.2rem;
-  box-shadow: 0 8px 0 #5B21B6, 0 16px 32px rgba(124,58,237,.3);
+  color: #fff;
+  flex-shrink: 0;
   animation: blob-float 4s ease-in-out infinite;
   cursor: default;
 }
@@ -30,135 +85,55 @@
   66%      { transform: translateY(-4px) rotate(-1deg); border-radius: 45% 55% 60% 40% / 45% 55% 45% 55%; }
 }
 
-.hero-title {
-  font-family: var(--font-display);
-  font-size: 2.9rem;
-  color: var(--primary);
-  margin-bottom: .2rem;
-  text-shadow: 0 4px 0 rgba(124,58,237,.18);
-  line-height: 1.1;
-}
-
-.hero-sub {
-  font-size: .98rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  margin-bottom: .9rem;
-}
-
-.hero-meta {
-  display: flex;
-  gap: .5rem;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 1.5rem;
-}
-
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: .3rem;
-  background: var(--surface);
-  border: 2.5px solid var(--border);
-  border-radius: 99px;
-  padding: .28rem .8rem;
-  font-size: .78rem;
-  font-weight: 800;
-  color: var(--primary);
-  box-shadow: 0 3px 0 var(--border);
-}
-
-.tour-btn {
-  cursor: pointer;
-  font-family: var(--font);
-  background: var(--primary);
-  border: 2.5px solid var(--primary-dark);
-  color: #fff;
-  box-shadow: 0 3px 0 var(--primary-dark);
-  transition: transform .15s, box-shadow .15s;
-}
-.tour-btn:hover  { transform: translateY(-2px); box-shadow: 0 5px 0 var(--primary-dark); }
-.tour-btn:active { transform: translateY(1px);  box-shadow: 0 2px 0 var(--primary-dark); }
-
-/* ── Motivation banner ── */
-.motivation-banner {
-  background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
-  border-radius: 20px;
-  padding: 1.1rem 1.25rem;
-  margin-bottom: 1.5rem;
-  display: flex;
-  gap: .85rem;
-  align-items: center;
-  box-shadow: 0 7px 0 #3B1388, 0 14px 30px rgba(124,58,237,.28);
-  animation: fade-in .45s ease .1s both;
-}
-
-.motivation-icon { font-size: 2.2rem; flex-shrink: 0; }
-
-.motivation-text h3 {
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  color: #fff;
-  margin-bottom: .25rem;
-}
-
-.motivation-text p {
-  font-size: .84rem;
-  font-weight: 600;
-  color: rgba(255,255,255,.85);
-  line-height: 1.55;
+@media (max-width: 560px) {
+  .hero-card { flex-direction: column; text-align: center; }
+  .hero-card-body { max-width: none; }
 }
 
 /* ── Language row ── */
 .lang-row {
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-  margin-bottom: 1.6rem;
-  overflow: hidden;
+  margin-bottom: 1.75rem;
 }
 
 .lang-row label {
-  font-size: .9rem;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .72rem;
   font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
   color: var(--text-muted);
-  white-space: nowrap;
-  flex-shrink: 0;
+  margin-bottom: .65rem;
 }
 
 /* ── Language chip pills ── */
 .lang-chips {
   display: flex;
-  gap: .4rem;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding-bottom: 2px;
+  flex-wrap: wrap;
+  gap: .5rem;
 }
-.lang-chips::-webkit-scrollbar { display: none; }
 
 .lang-chip {
   white-space: nowrap;
-  border: 2.5px solid var(--border);
-  border-radius: 99px;
-  padding: .32rem .8rem;
-  font-size: .8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: .45rem 1rem;
+  font-size: .84rem;
   font-weight: 700;
   background: var(--surface);
   color: var(--text-muted);
   cursor: pointer;
-  box-shadow: 0 3px 0 var(--border);
-  transition: background .14s, color .14s, border-color .14s, box-shadow .14s, transform .12s;
-  flex-shrink: 0;
+  transition: background .14s, color .14s, border-color .14s, transform .12s;
   font-family: var(--font);
 }
 .lang-chip:hover { border-color: var(--primary); color: var(--primary); }
-.lang-chip:active { transform: scale(.94); }
+.lang-chip:active { transform: scale(.97); }
 .lang-chip.active {
-  background: var(--primary);
-  color: #fff;
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  color: var(--primary);
   border-color: var(--primary);
-  box-shadow: 0 3px 0 var(--primary-dark);
+  font-weight: 800;
 }
 
 /* ── Section labels ── */
@@ -172,62 +147,81 @@
   text-align: center;
 }
 
-/* ── CLAY subject cards ── */
+/* ── Subject cards (horizontal rows, Duolingo "collections" style) ── */
 .subject-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: .85rem;
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
   margin-bottom: 1.75rem;
 }
 
-@media (min-width: 520px) {
-  .subject-grid { grid-template-columns: repeat(3, 1fr); }
-}
-
 .subject-card {
-  border-radius: 22px;
-  padding: 1.35rem 1rem 1.15rem;
-  text-align: center;
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 1.1rem 1.75rem 1.1rem 2.25rem;
+  min-height: 84px;
+  text-align: left;
   text-decoration: none;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: .5rem;
-  border: 3px solid rgba(255,255,255,.45);
-  transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
+  justify-content: space-between;
+  gap: 1.25rem;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s ease, border-color .15s;
   animation: pop-in .3s ease both;
 }
 
-.subject-card:nth-child(1) { background: linear-gradient(145deg,#8B5CF6,#6D28D9); box-shadow: 0 7px 0 #4C1D95, 0 14px 28px rgba(109,40,217,.3); animation-delay:.05s }
-.subject-card:nth-child(2) { background: linear-gradient(145deg,#3B82F6,#1D4ED8); box-shadow: 0 7px 0 #1E3A8A, 0 14px 28px rgba(29,78,216,.3);  animation-delay:.10s }
-.subject-card:nth-child(3) { background: linear-gradient(145deg,#10B981,#059669); box-shadow: 0 7px 0 #064E3B, 0 14px 28px rgba(5,150,105,.3);   animation-delay:.15s }
-.subject-card:nth-child(4) { background: linear-gradient(145deg,#F59E0B,#D97706); box-shadow: 0 7px 0 #92400E, 0 14px 28px rgba(217,119,6,.3);   animation-delay:.20s }
-.subject-card:nth-child(5) { background: linear-gradient(145deg,#EC4899,#DB2777); box-shadow: 0 7px 0 #831843, 0 14px 28px rgba(219,39,119,.3);  animation-delay:.25s }
+.subject-card:nth-child(1) { --card-accent: #6D28D9; animation-delay:.05s }
+.subject-card:nth-child(2) { --card-accent: #1D4ED8; animation-delay:.10s }
+.subject-card:nth-child(3) { --card-accent: #059669; animation-delay:.15s }
+.subject-card:nth-child(4) { --card-accent: #D97706; animation-delay:.20s }
+.subject-card:nth-child(5) { --card-accent: #DB2777; animation-delay:.25s }
 
-.subject-card:hover  { transform: translateY(-5px) scale(1.03); }
-.subject-card:active { transform: translateY(2px) scale(.97); }
+.subject-card:hover  { transform: translateY(-2px); border-color: var(--card-accent); }
+.subject-card:active { transform: translateY(0); }
 
-.subject-card:nth-child(1):hover { box-shadow: 0 12px 0 #4C1D95, 0 20px 36px rgba(109,40,217,.4); }
-.subject-card:nth-child(2):hover { box-shadow: 0 12px 0 #1E3A8A, 0 20px 36px rgba(29,78,216,.4);  }
-.subject-card:nth-child(3):hover { box-shadow: 0 12px 0 #064E3B, 0 20px 36px rgba(5,150,105,.4);  }
-.subject-card:nth-child(4):hover { box-shadow: 0 12px 0 #92400E, 0 20px 36px rgba(217,119,6,.4);  }
-.subject-card:nth-child(5):hover { box-shadow: 0 12px 0 #831843, 0 20px 36px rgba(219,39,119,.4); }
-
-.subject-card .icon {
-  font-size: 2.7rem;
-  display: block;
-  filter: drop-shadow(0 3px 6px rgba(0,0,0,.2));
-}
+.subject-card-text { flex: 1; min-width: 0; }
 
 .subject-card .name {
-  font-family: var(--font-display);
-  font-size: .92rem;
-  color: #fff;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 1rem;
+  color: #374151;
   line-height: 1.3;
-  text-shadow: 0 1px 4px rgba(0,0,0,.25);
+  display: block;
+  margin-bottom: .3rem;
+}
+[data-theme="dark"] .subject-card .name { color: #D1D5DB; }
+
+.subject-card .desc {
+  font-size: .8rem;
+  font-weight: 600;
+  color: #6B7280;
+  line-height: 1.4;
+}
+[data-theme="dark"] .subject-card .desc { color: #9CA3AF; }
+
+.subject-card .icon-wrap {
+  width: 6rem;
+  height: 6rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  margin-right: -.5rem;
 }
 
-/* ── Activity 2×2 clay grid ── */
+.subject-card .icon {
+  width: 5.5rem;
+  height: 5.5rem;
+  color: var(--card-accent);
+}
+
+/* ── Activity grid (flat) ── */
 .activities-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -236,51 +230,59 @@
 }
 
 .activity-card {
+  background: var(--surface);
   border-radius: 20px;
-  padding: 1.1rem .9rem;
+  padding: 1.25rem 1.3rem;
+  min-height: 88px;
   text-decoration: none;
   display: flex;
   align-items: center;
-  gap: .7rem;
-  border: 3px solid rgba(255,255,255,.4);
-  transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  transition: transform .15s ease, border-color .15s;
   animation: pop-in .35s ease both;
 }
 
-.activity-card:nth-child(1) { background: linear-gradient(145deg,#EF4444,#DC2626); box-shadow: 0 6px 0 #991B1B; animation-delay:.05s }
-.activity-card:nth-child(2) { background: linear-gradient(145deg,#3B82F6,#2563EB); box-shadow: 0 6px 0 #1E3A8A; animation-delay:.10s }
-.activity-card:nth-child(3) { background: linear-gradient(145deg,#F59E0B,#D97706); box-shadow: 0 6px 0 #92400E; animation-delay:.15s }
-.activity-card:nth-child(4) { background: linear-gradient(145deg,#10B981,#059669); box-shadow: 0 6px 0 #064E3B; animation-delay:.20s }
+.activity-card:nth-child(1) { --card-accent: #DC2626; animation-delay:.05s }
+.activity-card:nth-child(2) { --card-accent: #2563EB; animation-delay:.10s }
+.activity-card:nth-child(3) { --card-accent: #D97706; animation-delay:.15s }
+.activity-card:nth-child(4) { --card-accent: #059669; animation-delay:.20s }
 
-.activity-card:hover  { transform: translateY(-3px) scale(1.02); }
-.activity-card:active { transform: translateY(2px); }
+.activity-card:hover  { transform: translateY(-2px); border-color: var(--card-accent); }
+.activity-card:active { transform: translateY(0); }
 
-.activity-card:nth-child(1):hover { box-shadow: 0 10px 0 #991B1B; }
-.activity-card:nth-child(2):hover { box-shadow: 0 10px 0 #1E3A8A; }
-.activity-card:nth-child(3):hover { box-shadow: 0 10px 0 #92400E; }
-.activity-card:nth-child(4):hover { box-shadow: 0 10px 0 #064E3B; }
+.act-icon-wrap {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--card-accent) 16%, transparent);
+}
 
 .act-icon {
-  width: 2rem;
-  height: 2rem;
+  width: 1.7rem;
+  height: 1.7rem;
   flex-shrink: 0;
+  color: var(--card-accent);
 }
 
 .act-info { flex: 1; min-width: 0; }
 
 .act-name {
   font-family: var(--font-display);
-  font-size: .95rem;
-  color: #fff;
+  font-size: 1.05rem;
+  color: var(--text);
   display: block;
-  text-shadow: 0 1px 3px rgba(0,0,0,.2);
   line-height: 1.2;
 }
 
 .act-desc {
-  font-size: .72rem;
+  font-size: .8rem;
   font-weight: 600;
-  color: rgba(255,255,255,.78);
+  color: var(--text-muted);
   margin-top: .15rem;
   white-space: nowrap;
   overflow: hidden;
@@ -289,55 +291,31 @@
 {% endblock %}
 
 {% block content %}
-<div class="hero">
+<div class="hero-card reveal" id="heroCard">
+  <div class="hero-card-text">
+    <p class="hero-card-eyebrow">Edge Tutor</p>
+    <h2 class="hero-card-title" id="heroCardTitle">Hey there, learner!</h2>
+    <p class="hero-card-body" id="heroCardBody">Pick a subject below to start chatting with your AI tutor — ask questions, take quizzes, study flashcards, or listen to a podcast.</p>
+    <a href="/chat" class="hero-card-cta" id="heroCardCta">
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-message-square"></use></svg> Start learning
+    </a>
+  </div>
   <div class="hero-blob">
     <svg class="icon icon-3xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-bot"></use></svg>
   </div>
-  <h1 class="hero-title">Edge</h1>
-  <p class="hero-sub" data-i18n="home.subtitle">Your offline AI learning buddy</p>
-  <div class="hero-meta">
-    <button class="hero-badge tour-btn" onclick="replayTour()">
-      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-map"></use></svg> How to use
-    </button>
-  </div>
-
-  <div class="quick-ask">
-    <input type="text" id="quickAskInput" placeholder="Ask me anything…" autocomplete="off"
-           onkeydown="if(event.key==='Enter') quickAsk()">
-    <button onclick="quickAsk()">
-      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-send"></use></svg> Ask
-    </button>
-  </div>
 </div>
 
-<div class="stats-strip">
-  <span class="stat-pill">
-    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book"></use></svg>
-    {{ subjects|length }} Subjects
-  </span>
-  <span class="stat-pill">
-    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-rocket"></use></svg>
-    4 Activities
-  </span>
-  <span class="stat-pill">
-    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-wifi-off"></use></svg>
-    100% Offline
-  </span>
-</div>
-
-<div class="motivation-banner reveal">
-  <div class="motivation-icon">
-    <svg class="icon icon-xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-hand"></use></svg>
-  </div>
-  <div class="motivation-text">
-    <h3 data-i18n="home.guide.title">Hey there, learner!</h3>
-    <p data-i18n="home.guide.body">Pick a subject below to start chatting with your AI tutor. You can ask questions, take quizzes, study with flashcards, or even listen to a fun podcast!</p>
-  </div>
+<div class="quick-ask">
+  <input type="text" id="quickAskInput" placeholder="Ask me anything…" autocomplete="off"
+         onkeydown="if(event.key==='Enter') quickAsk()">
+  <button onclick="quickAsk()">
+    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-send"></use></svg> Ask
+  </button>
 </div>
 
 <div class="lang-row">
   <label data-i18n="home.lang.label">
-    <svg class="icon icon-sm" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-globe"></use></svg>
+    <svg class="icon icon-sm" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-globe"></use></svg> Language
   </label>
   <div class="lang-chips" id="langChips">
     {% for lang in languages %}
@@ -352,11 +330,23 @@
 </p>
 
 <div class="subject-grid" id="subject-grid">
-  {% set icon_map = {"Mathematics": "calculator", "Science": "flask", "English Language": "book-open", "Environmental Studies": "leaf", "Digital Literacy": "monitor"} %}
+  {% set icon_map = {"Mathematics": "math", "Science": "science", "English Language": "english", "Environmental Studies": "environment", "Digital Literacy": "digital"} %}
+  {% set desc_map = {
+    "Mathematics": "Numbers, fractions, geometry and more",
+    "Science": "Explore how the world works",
+    "English Language": "Reading, writing and vocabulary",
+    "Environmental Studies": "Nature, climate and our planet",
+    "Digital Literacy": "Computers, internet and safety"
+  } %}
   {% for subject in subjects %}
   <a href="/chat?subject={{ subject | urlencode }}" class="subject-card reveal" onclick="attachLang(this)">
-    <svg class="icon icon-2xl" aria-hidden="true" style="display:block;margin:0 auto;filter:drop-shadow(0 3px 6px rgba(0,0,0,.2))"><use href="/static/icons/sprite.svg#icon-{{ icon_map.get(subject, 'book') }}"></use></svg>
-    <span class="name" data-i18n="subject.{{ subject }}">{{ subject }}</span>
+    <div class="subject-card-text">
+      <span class="name" data-i18n="subject.{{ subject }}">{{ subject }}</span>
+      <p class="desc">{{ desc_map.get(subject, "Learn something new today") }}</p>
+    </div>
+    <span class="icon-wrap">
+      <img class="icon icon-emoji" src="/static/icons/color/{{ icon_map.get(subject, 'english') }}.svg" alt="" aria-hidden="true">
+    </span>
   </a>
   {% endfor %}
 </div>
@@ -368,28 +358,28 @@
 
 <div class="activities-grid" id="activities-grid">
   <a href="/quiz" class="activity-card reveal" id="act-quiz">
-    <svg class="icon act-icon" aria-hidden="true" style="filter:drop-shadow(0 2px 5px rgba(0,0,0,.2))"><use href="/static/icons/sprite.svg#icon-brain"></use></svg>
+    <span class="act-icon-wrap"><svg class="icon act-icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-brain"></use></svg></span>
     <div class="act-info">
       <span class="act-name" data-i18n="home.quiz">Take a Quiz</span>
       <span class="act-desc">Test your knowledge!</span>
     </div>
   </a>
   <a href="/flashcard" class="activity-card reveal" id="act-flashcard">
-    <svg class="icon act-icon" aria-hidden="true" style="filter:drop-shadow(0 2px 5px rgba(0,0,0,.2))"><use href="/static/icons/sprite.svg#icon-layers"></use></svg>
+    <span class="act-icon-wrap"><svg class="icon act-icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-layers"></use></svg></span>
     <div class="act-info">
       <span class="act-name" data-i18n="home.flashcard">Flashcards</span>
       <span class="act-desc">Study key words!</span>
     </div>
   </a>
   <a href="/podcast" class="activity-card reveal" id="act-podcast">
-    <svg class="icon act-icon" aria-hidden="true" style="filter:drop-shadow(0 2px 5px rgba(0,0,0,.2))"><use href="/static/icons/sprite.svg#icon-headphones"></use></svg>
+    <span class="act-icon-wrap"><svg class="icon act-icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-headphones"></use></svg></span>
     <div class="act-info">
       <span class="act-name" data-i18n="home.podcast">Podcast</span>
       <span class="act-desc">Listen &amp; learn!</span>
     </div>
   </a>
   <a href="/progress" class="activity-card reveal" id="act-progress">
-    <svg class="icon act-icon" aria-hidden="true" style="filter:drop-shadow(0 2px 5px rgba(0,0,0,.2))"><use href="/static/icons/sprite.svg#icon-trophy"></use></svg>
+    <span class="act-icon-wrap"><svg class="icon act-icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-trophy"></use></svg></span>
     <div class="act-info">
       <span class="act-name" data-i18n="home.progress">My Progress</span>
       <span class="act-desc">See your stars!</span>
@@ -400,11 +390,6 @@
 
 {% block extra_scripts %}
 <script>
-  function replayTour() {
-    sessionStorage.removeItem('edu_tour_done');
-    if (window.EduOnboarding) window.EduOnboarding.startTour();
-  }
-
   function saveLang(val) {
     if (window.EduI18n) window.EduI18n.setLang(val);
     else localStorage.setItem('edu_lang', val);
@@ -422,16 +407,32 @@
     window.location.href = '/chat?q=' + encodeURIComponent(q) + '&lang=' + encodeURIComponent(lang);
   }
 
-  /* 3D tilt on subject cards */
-  document.querySelectorAll('.subject-card').forEach(function(card) {
-    card.addEventListener('mousemove', function(e) {
-      var r = card.getBoundingClientRect();
-      var x = (e.clientX - r.left) / r.width  - 0.5;
-      var y = (e.clientY - r.top)  / r.height - 0.5;
-      card.style.transform = 'translateY(-5px) scale(1.03) rotateX(' + (-y * 10) + 'deg) rotateY(' + (x * 10) + 'deg)';
-    });
-    card.addEventListener('mouseleave', function() { card.style.transform = ''; });
-  });
+  /* Personalize the hero card from real progress data — falls back to the
+     generic welcome copy already in the markup if there's no student yet. */
+  (function personalizeHero() {
+    var name = localStorage.getItem('edu_student_name');
+    if (!name) return;
+    fetch('/api/progress/by-name/' + encodeURIComponent(name))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) return;
+        var quizzes = d.quiz_results || [];
+        var title = document.getElementById('heroCardTitle');
+        var body = document.getElementById('heroCardBody');
+        var cta = document.getElementById('heroCardCta');
+        if (quizzes.length) {
+          var last = quizzes[0];
+          title.textContent = 'Welcome back, ' + name + '!';
+          body.textContent = 'Last time you studied ' + last.topic + '. Keep your streak going with another round.';
+          cta.href = '/quiz';
+          cta.lastChild.textContent = ' Continue learning';
+        } else {
+          title.textContent = 'Ready when you are, ' + name + '!';
+          body.textContent = 'Start your first quiz or chat session to begin building your progress.';
+        }
+      })
+      .catch(function () {});
+  })();
 
   /* Scroll-reveal */
   var revealObs = new IntersectionObserver(function(entries) {

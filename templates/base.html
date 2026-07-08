@@ -33,35 +33,41 @@
 
 <nav class="nav">
   <div class="nav-inner">
-    <a href="/" class="nav-brand">
-      <svg class="icon icon-md" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-star"></use></svg>
-      Edge
-    </a>
-    <span id="nav-level-badge" class="nav-level-badge"></span>
-    <div class="nav-links">
-      <a href="/chat"      class="nav-link {% if request.path == '/chat'      %}active{% endif %}"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-message-square"></use></svg> Chat</a>
-      <a href="/quiz"      class="nav-link {% if request.path == '/quiz'      %}active{% endif %}" data-i18n="nav.quiz"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-brain"></use></svg> Quiz</a>
-      <a href="/flashcard" class="nav-link {% if request.path == '/flashcard' %}active{% endif %}" data-i18n="nav.cards"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-layers"></use></svg> Cards</a>
-      <a href="/slides"    class="nav-link {% if request.path == '/slides'    %}active{% endif %}" data-i18n="nav.slides"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg> Slides</a>
-      <a href="/podcast"   class="nav-link {% if request.path == '/podcast'   %}active{% endif %}" data-i18n="nav.podcast"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-headphones"></use></svg> Podcast</a>
-      <a href="/progress"  class="nav-link {% if request.path == '/progress'  %}active{% endif %}" data-i18n="nav.progress"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-trophy"></use></svg> Progress</a>
+    <a href="/" class="nav-brand">Edge</a>
+    <span id="nav-level-badge" class="nav-progress-pill"></span>
+    <div class="nav-links nav-links--main">
+      <a href="/chat"      class="nav-link {% if request.path == '/chat'      %}active{% endif %}"><img class="icon icon-emoji" src="/static/icons/color/chat.svg" alt="" aria-hidden="true"> Chat</a>
+      <a href="/quiz"      class="nav-link {% if request.path == '/quiz'      %}active{% endif %}" data-i18n="nav.quiz"><img class="icon icon-emoji" src="/static/icons/color/quiz.svg" alt="" aria-hidden="true"> Quiz</a>
+      <a href="/flashcard" class="nav-link {% if request.path == '/flashcard' %}active{% endif %}" data-i18n="nav.cards"><img class="icon icon-emoji" src="/static/icons/color/cards.svg" alt="" aria-hidden="true"> Cards</a>
+      <a href="/slides"    class="nav-link {% if request.path == '/slides'    %}active{% endif %}" data-i18n="nav.slides"><img class="icon icon-emoji" src="/static/icons/color/slides.svg" alt="" aria-hidden="true"> Slides</a>
+      <a href="/podcast"   class="nav-link {% if request.path == '/podcast'   %}active{% endif %}" data-i18n="nav.podcast"><img class="icon icon-emoji" src="/static/icons/color/podcast.svg" alt="" aria-hidden="true"> Podcast</a>
+      <a href="/progress"  class="nav-link {% if request.path == '/progress'  %}active{% endif %}" data-i18n="nav.progress"><img class="icon icon-emoji" src="/static/icons/color/progress.svg" alt="" aria-hidden="true"> Progress</a>
+    </div>
+
+    <div class="nav-spacer"></div>
+
+    <div class="nav-links nav-links--footer">
+      <button type="button" class="nav-link nav-link--action" onclick="if(window.EduOnboarding){sessionStorage.removeItem('edu_tour_done');window.EduOnboarding.startTour();}">
+        <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-map"></use></svg> How to use
+      </button>
+      <button type="button" class="nav-link nav-link--action" id="prefsFab" aria-label="Settings">
+        <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-settings"></use></svg> Settings
+      </button>
+      <button type="button" class="nav-link nav-link--action" id="themeToggle" aria-label="Toggle theme">
+        <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-moon"></use></svg> <span class="toggle-label">Dark mode</span>
+      </button>
     </div>
   </div>
 </nav>
 
-<div class="page-wrap">
-  {% block content %}{% endblock %}
+<div class="page-wrap page-wrap--wide{% block page_wrap_class %}{% endblock %}">
+  <div class="page-layout">
+    <div class="page-main">
+      {% block content %}{% endblock %}
+    </div>
+    {% include "_sidebar.html" %}
+  </div>
 </div>
-
-<!-- Settings (accessibility + student switcher) -->
-<button class="prefs-fab" id="prefsFab" aria-label="Settings">
-  <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-settings"></use></svg><span class="toggle-label">Settings</span>
-</button>
-
-<!-- Floating theme toggle — must be in DOM before the script below -->
-<button class="theme-fab" id="themeToggle" aria-label="Toggle theme">
-  <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-moon"></use></svg><span class="toggle-label">Dark</span>
-</button>
 
 <script>
   const _sunSVG  = '<svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-sun"></use></svg>';
@@ -71,8 +77,8 @@
     localStorage.setItem('edu_theme', t);
     const btn = document.getElementById('themeToggle');
     btn.innerHTML = t === 'dark'
-      ? _sunSVG  + '<span class="toggle-label">Light</span>'
-      : _moonSVG + '<span class="toggle-label">Dark</span>';
+      ? _sunSVG  + '<span class="toggle-label">Light mode</span>'
+      : _moonSVG + '<span class="toggle-label">Dark mode</span>';
   }
 
   setTheme(localStorage.getItem('edu_theme') || 'light');
@@ -95,6 +101,23 @@
       window.location.reload();
     });
   }
+
+  // Nav progress pill — real badge count from the student's own progress record
+  (function () {
+    var name = localStorage.getItem('edu_student_name');
+    if (!name) return;
+    fetch('/api/progress/by-name/' + encodeURIComponent(name))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) return;
+        var n = (d.badges || []).length;
+        if (!n) return;
+        var pill = document.getElementById('nav-level-badge');
+        pill.innerHTML = '<svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-trophy"></use></svg> ' + n + ' badge' + (n === 1 ? '' : 's');
+        pill.classList.add('visible');
+      })
+      .catch(function () {});
+  })();
 </script>
 
 <script src="/static/js/i18n.js" defer></script>

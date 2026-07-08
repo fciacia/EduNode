@@ -1,0 +1,79 @@
+<aside class="sidebar" id="edgeSidebar">
+  <div class="card sidebar-card sidebar-card--challenge">
+    <svg class="icon sidebar-card-deco" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-target"></use></svg>
+    <p class="section-title" style="margin-top:0;color:var(--nav-quiz)"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-target"></use></svg> Daily Challenge</p>
+    <div class="sidebar-card-icon-row">
+      <span class="icon-badge" style="--card-accent:var(--nav-quiz)"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-brain"></use></svg></span>
+      <div>
+        <p class="card-label" id="sidebarChallengeTopic" style="margin-bottom:0">Take a quiz</p>
+        <p class="body-text" style="margin:0">Sharpen a subject in a few minutes.</p>
+      </div>
+    </div>
+    <a href="/quiz" class="btn-secondary">Start now →</a>
+  </div>
+
+  <div class="card sidebar-card" id="sidebarBadgesCard">
+    <svg class="icon sidebar-card-deco" aria-hidden="true" style="color:var(--nav-progress)"><use href="/static/icons/sprite.svg#icon-trophy"></use></svg>
+    <p class="section-title" style="margin-top:0;color:var(--nav-progress)"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-trophy"></use></svg> Your Badges</p>
+    <div id="sidebarBadgesBody" class="sidebar-empty">
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-bot"></use></svg>
+      <span>Enter your name on the Progress page to see your badges here.</span>
+    </div>
+  </div>
+
+  <div class="card sidebar-card" id="sidebarStatsCard">
+    <svg class="icon sidebar-card-deco" aria-hidden="true" style="color:var(--nav-chat)"><use href="/static/icons/sprite.svg#icon-clipboard"></use></svg>
+    <p class="section-title" style="margin-top:0;color:var(--nav-chat)"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-clipboard"></use></svg> This Week</p>
+    <div id="sidebarStatsBody" class="sidebar-empty">
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-sparkles"></use></svg>
+      <span>Your quiz and session activity will show up here once you start learning.</span>
+    </div>
+  </div>
+</aside>
+
+<script>
+(function () {
+  async function loadSidebar() {
+    var name = localStorage.getItem('edu_student_name');
+    if (!name) return;
+    try {
+      var r = await fetch('/api/progress/by-name/' + encodeURIComponent(name));
+      if (!r.ok) return;
+      var d = await r.json();
+      renderBadges(d);
+      renderStats(d);
+    } catch (e) { /* offline or no data yet — keep empty state */ }
+  }
+
+  function renderBadges(d) {
+    var body = document.getElementById('sidebarBadgesBody');
+    var badges = d.badges || [];
+    if (!badges.length) return;
+    var S = '/static/icons/sprite.svg';
+    var badgeIcons = {'First Step':'sparkles','Quiz Ace':'trophy','Week Warrior':'zap','Dialect Pioneer':'globe'};
+    body.classList.remove('sidebar-empty');
+    body.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:.4rem">' +
+      badges.slice(0, 6).map(function (b) {
+        return '<span class="badge-card" style="cursor:default"><svg class="icon" aria-hidden="true"><use href="' + S + '#icon-' + (badgeIcons[b] || 'award') + '"></use></svg> ' + b + '</span>';
+      }).join('') + '</div><a href="/progress" class="btn-secondary">View all →</a>';
+  }
+
+  function renderStats(d) {
+    var body = document.getElementById('sidebarStatsBody');
+    var quizzes = d.quiz_results || [];
+    var sessions = d.sessions || 0;
+    if (!sessions && !quizzes.length) return;
+    var best = quizzes.reduce(function (m, q) { return Math.max(m, Math.round(q.score / q.total * 100)); }, 0);
+    var goal = 5;
+    var pct = Math.min(100, Math.round(quizzes.length / goal * 100));
+    body.classList.remove('sidebar-empty');
+    body.innerHTML =
+      '<p class="card-label">' + quizzes.length + ' quizzes · ' + sessions + ' sessions</p>' +
+      (quizzes.length ? '<p class="body-text">Best score so far: ' + best + '%</p>' : '') +
+      '<div class="sidebar-progress-track"><div class="sidebar-progress-fill" style="width:' + pct + '%;--card-accent:var(--nav-chat)"></div></div>' +
+      '<p class="body-text" style="margin-top:.4rem">' + Math.min(quizzes.length, goal) + ' / ' + goal + ' recent quizzes</p>';
+  }
+
+  document.addEventListener('DOMContentLoaded', loadSidebar);
+})();
+</script>
