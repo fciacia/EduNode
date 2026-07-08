@@ -3,19 +3,31 @@
 
 {% block extra_style %}
 .page-hero {
-  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-  border-radius: var(--radius);
-  padding: 1.5rem 1.75rem;
-  margin-bottom: 1.75rem;
+  background: #D97706;
+  border: 1px solid #D97706;
+  border-radius: 20px;
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 1.25rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  box-shadow: 0 6px 0 #B45309;
+  gap: 1.1rem;
+  box-shadow: var(--shadow-sm);
   animation: fade-in .3s ease;
+  position: relative;
+  overflow: hidden;
 }
-.page-hero .hero-emoji { display:flex; align-items:center; animation: float 2.8s ease-in-out infinite; }
-.page-hero-text h2 { font-family: var(--font-display); font-size: 1.5rem; color: #fff; margin-bottom: .2rem; }
-.page-hero-text p  { font-size: .9rem; font-weight: 600; color: rgba(255,255,255,.85); }
+.page-hero .hero-emoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.page-hero .hero-emoji .icon-emoji { width: 3.6rem; height: 3.6rem; }
+.page-hero-text { position: relative; z-index: 1; }
+.page-hero-text h2 { font-family: var(--font-display); font-size: 1.35rem; color: #fff; margin-bottom: .1rem; }
+.page-hero-text p  { font-size: .87rem; font-weight: 600; color: rgba(255,255,255,.78); }
 
 .lookup-row {
   display: flex;
@@ -24,7 +36,7 @@
 }
 .id-input {
   flex: 1;
-  border: 2.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 99px;
   padding: .6rem 1.1rem;
   font-size: .95rem;
@@ -35,7 +47,7 @@
   outline: none;
   transition: border-color .15s;
 }
-.id-input:focus { border-color: #F59E0B; box-shadow: 0 0 0 3px rgba(245,158,11,.15); }
+.id-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
 .id-input::placeholder { color: var(--text-muted); font-weight: 600; }
 
 .btn-amber {
@@ -48,15 +60,13 @@
   font-weight: 800;
   font-family: var(--font);
   cursor: pointer;
-  box-shadow: 0 4px 0 #D97706;
-  transition: background .15s, transform .1s;
+  transition: background .15s;
 }
-.btn-amber:hover { background: #D97706; transform: translateY(-1px); }
-.btn-amber:active { transform: translateY(2px); box-shadow: 0 2px 0 #B45309; }
+.btn-amber:hover { background: #D97706; }
 
 /* Badges are tappable — show what each one means */
-.badge-card { cursor: pointer; font-family: var(--font); transition: transform .1s, background .15s; }
-.badge-card:hover { transform: translateY(-1px); }
+.badge-card { cursor: pointer; font-family: var(--font); transition: background .15s; }
+.badge-card:hover { background: var(--surface); }
 .badge-card.active { background: var(--accent); color: #fff; }
 .badge-desc {
   display: flex;
@@ -83,7 +93,7 @@
 
 {% block content %}
 <div class="page-hero">
-  <div class="hero-emoji"><svg class="icon icon-2xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-trophy"></use></svg></div>
+  <div class="hero-emoji"><img class="icon-emoji" src="/static/icons/color/progress.svg" alt="" aria-hidden="true"></div>
   <div class="page-hero-text">
     <h2>My Progress!</h2>
     <p>See your badges, quiz results and achievements</p>

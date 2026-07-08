@@ -34,7 +34,6 @@
 <nav class="nav">
   <div class="nav-inner">
     <a href="/" class="nav-brand">Edge</a>
-    <span id="nav-level-badge" class="nav-progress-pill"></span>
     <div class="nav-links">
       <a href="/chat"      class="nav-link {% if request.path == '/chat'      %}active{% endif %}"><img class="icon icon-emoji" src="/static/icons/color/chat.svg" alt="" aria-hidden="true"> Chat</a>
       <a href="/quiz"      class="nav-link {% if request.path == '/quiz'      %}active{% endif %}" data-i18n="nav.quiz"><img class="icon icon-emoji" src="/static/icons/color/quiz.svg" alt="" aria-hidden="true"> Quiz</a>
@@ -102,22 +101,6 @@
     });
   }
 
-  // Nav progress pill — real badge count from the student's own progress record
-  (function () {
-    var name = localStorage.getItem('edu_student_name');
-    if (!name) return;
-    fetch('/api/progress/by-name/' + encodeURIComponent(name))
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) {
-        if (!d) return;
-        var n = (d.badges || []).length;
-        if (!n) return;
-        var pill = document.getElementById('nav-level-badge');
-        pill.innerHTML = '<svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-trophy"></use></svg> ' + n + ' badge' + (n === 1 ? '' : 's');
-        pill.classList.add('visible');
-      })
-      .catch(function () {});
-  })();
 </script>
 
 <script src="/static/js/i18n.js" defer></script>

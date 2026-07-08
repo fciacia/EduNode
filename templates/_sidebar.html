@@ -52,10 +52,10 @@
     var C = '/static/icons/color/';
     var badgeIcons = {'First Step':'sparkles','Quiz Ace':'progress','Week Warrior':'zap','Dialect Pioneer':'globe'};
     body.classList.remove('sidebar-empty');
-    body.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:.4rem">' +
-      badges.slice(0, 6).map(function (b) {
+    body.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:.5rem">' +
+      badges.slice(0, 10).map(function (b) {
         return '<span class="badge-card" style="cursor:default"><img class="icon icon-emoji" src="' + C + (badgeIcons[b] || 'award') + '.svg" alt="" aria-hidden="true"> ' + b + '</span>';
-      }).join('') + '</div><a href="/progress" class="btn-secondary">View all →</a>';
+      }).join('') + '</div><a href="/progress" class="btn-secondary" style="margin-top:1.5rem">View all →</a>';
   }
 
   function renderStats(d) {

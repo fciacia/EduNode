@@ -3,34 +3,52 @@
 
 {% block extra_style %}
 .page-hero {
-  background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
-  border-radius: var(--radius);
-  padding: 1.5rem 1.75rem;
-  margin-bottom: 1.75rem;
+  background: var(--primary-dark);
+  border: 1px solid var(--primary-dark);
+  border-radius: 20px;
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 1.25rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  box-shadow: 0 6px 0 #3B1388;
+  gap: 1.1rem;
+  box-shadow: var(--shadow-sm);
   animation: fade-in .3s ease;
+  position: relative;
+  overflow: hidden;
 }
-.page-hero .hero-emoji { display:flex; align-items:center; animation: wiggle 2s ease-in-out infinite; }
-.page-hero-text h2 { font-family: var(--font-display); font-size: 1.5rem; color: #fff; margin-bottom: .2rem; }
-.page-hero-text p  { font-size: .9rem; font-weight: 600; color: rgba(255,255,255,.8); }
+.page-hero .hero-emoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.page-hero .hero-emoji .icon-emoji { width: 3.6rem; height: 3.6rem; }
+.page-hero-text { position: relative; z-index: 1; }
+.page-hero-text h2 { font-family: var(--font-display); font-size: 1.35rem; color: #fff; margin-bottom: .1rem; }
+.page-hero-text p  { font-size: .87rem; font-weight: 600; color: rgba(255,255,255,.78); }
 
 .controls-row {
   display: flex;
   gap: .65rem;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   background: var(--surface);
-  border: 2.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: .9rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: .85rem 1.1rem;
   box-shadow: var(--shadow-sm);
 }
-.sel {
-  border: 2.5px solid var(--border);
+
+/* Custom dropdown (replaces native <select>) — matches chat page */
+.dd { position: relative; }
+.dd-btn {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  border: 1px solid var(--border);
   border-radius: 99px;
   padding: .38rem .85rem;
   font-size: .87rem;
@@ -38,11 +56,52 @@
   font-family: var(--font);
   background: var(--surface2);
   color: var(--text);
-  outline: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color .15s, background .15s;
 }
-.sel:focus { border-color: var(--primary); }
+.dd-btn:hover { background: var(--surface); }
+.dd-btn .icon { width: 14px; height: 14px; color: var(--text-muted); transition: transform .15s; flex-shrink: 0; }
+.dd.open .dd-btn { border-color: var(--primary); }
+.dd.open .dd-btn .icon { transform: rotate(180deg); }
+
+.dd-list {
+  position: absolute;
+  top: calc(100% + .4rem);
+  left: 0;
+  min-width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  padding: .35rem;
+  display: none;
+  flex-direction: column;
+  gap: .1rem;
+  z-index: 30;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.dd.open .dd-list { display: flex; }
+
+.dd-opt {
+  border: none;
+  background: none;
+  text-align: left;
+  padding: .5rem .65rem;
+  border-radius: var(--radius-sm);
+  font-size: .87rem;
+  font-weight: 600;
+  font-family: var(--font);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dd-opt:hover { background: var(--surface2); }
+.dd-opt.active { background: var(--primary-light); color: var(--primary); font-weight: 800; }
+
 .name-input {
-  border: 2.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 99px;
   padding: .38rem .85rem;
   font-size: .87rem;
@@ -52,16 +111,18 @@
   color: var(--text);
   outline: none;
   width: 130px;
+  transition: border-color .15s;
 }
+.name-input:focus { border-color: var(--primary); }
 
 .generate-row {
   display: flex;
   gap: .65rem;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.5rem;
 }
 .topic-input {
   flex: 1;
-  border: 2.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 99px;
   padding: .6rem 1.1rem;
   font-size: .95rem;
@@ -146,7 +207,7 @@
 
 {% block content %}
 <div class="page-hero">
-  <div class="hero-emoji"><svg class="icon icon-2xl" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-brain"></use></svg></div>
+  <div class="hero-emoji"><img class="icon-emoji" src="/static/icons/color/target.svg" alt="" aria-hidden="true"></div>
   <div class="page-hero-text">
     <h2 data-i18n="quiz.title">Quiz Challenge!</h2>
     <p data-i18n="quiz.subtitle">Test your knowledge and earn certificates</p>
@@ -154,12 +215,30 @@
 </div>
 
 <div class="controls-row">
-  <select id="subjectSel" class="sel">
-    {% for s in subjects %}<option value="{{ s }}" data-i18n="subject.{{ s }}">{{ s }}</option>{% endfor %}
-  </select>
-  <select id="langSel" class="sel">
-    {% for l in languages %}<option value="{{ l }}">{{ l }}</option>{% endfor %}
-  </select>
+  <div class="dd" id="subjectDd" data-value="{{ subjects[0] }}">
+    <button type="button" class="dd-btn" onclick="toggleDd('subjectDd')">
+      <span id="subjectDdLabel">{{ subjects[0] }}</span>
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-arrow-down"></use></svg>
+    </button>
+    <div class="dd-list" role="listbox">
+      {% for s in subjects %}
+      <button type="button" class="dd-opt{% if loop.first %} active{% endif %}" data-value="{{ s }}" onclick="pickDd('subjectDd', '{{ s }}')">{{ s }}</button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="dd" id="langDd" data-value="{{ languages[0] }}">
+    <button type="button" class="dd-btn" onclick="toggleDd('langDd')">
+      <span id="langDdLabel">{{ languages[0] }}</span>
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-arrow-down"></use></svg>
+    </button>
+    <div class="dd-list" role="listbox">
+      {% for l in languages %}
+      <button type="button" class="dd-opt{% if loop.first %} active{% endif %}" data-value="{{ l }}" onclick="pickDd('langDd', '{{ l }}')">{{ l }}</button>
+      {% endfor %}
+    </div>
+  </div>
+
   <input id="studentName" class="name-input" type="text" data-i18n-ph="quiz.namePh" placeholder="Your name…">
 </div>
 
@@ -222,10 +301,30 @@ const selectedAnswers = {};
 const S = '/static/icons/sprite.svg';
 const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
 
-function getLang()    { return document.getElementById('langSel').value; }
-function getSubject() { return document.getElementById('subjectSel').value; }
+function getLang()    { return document.getElementById('langDd').dataset.value; }
+function getSubject() { return document.getElementById('subjectDd').dataset.value; }
 function getName()    { return document.getElementById('studentName').value.trim() || 'Student'; }
 function getLevel()   { return localStorage.getItem('edu_level') || ''; }
+
+// Custom dropdown (replaces native <select>) — matches chat page
+function toggleDd(id) {
+  const dd = document.getElementById(id);
+  const wasOpen = dd.classList.contains('open');
+  document.querySelectorAll('.dd.open').forEach(el => el.classList.remove('open'));
+  if (!wasOpen) dd.classList.add('open');
+}
+function pickDd(id, value) {
+  const dd = document.getElementById(id);
+  dd.dataset.value = value;
+  dd.querySelector(`[id$="Label"]`).textContent = value;
+  dd.querySelectorAll('.dd-opt').forEach(o => o.classList.toggle('active', o.dataset.value === value));
+  dd.classList.remove('open');
+  if (id === 'langDd') { localStorage.setItem('edu_lang', value); applyQuizLang(); }
+  if (id === 'subjectDd') renderTopics();
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.dd')) document.querySelectorAll('.dd.open').forEach(el => el.classList.remove('open'));
+});
 
 /* Localized UI string (falls back to the given English). */
 function T(key, fallback) { return (window.EduI18n && window.EduI18n.t) ? window.EduI18n.t(key) : fallback; }
@@ -467,13 +566,13 @@ function applyQuizLang() {
 
 (function() {
   const saved = localStorage.getItem('edu_lang');
-  if (saved) [...document.getElementById('langSel').options].forEach(o => o.selected = (o.value === saved));
+  if (!saved) return;
+  const dd = document.getElementById('langDd');
+  if (!dd.querySelector(`.dd-opt[data-value="${CSS.escape(saved)}"]`)) return;
+  dd.dataset.value = saved;
+  dd.querySelector('#langDdLabel').textContent = saved;
+  dd.querySelectorAll('.dd-opt').forEach(o => o.classList.toggle('active', o.dataset.value === saved));
 })();
-document.getElementById('langSel').addEventListener('change', e => {
-  localStorage.setItem('edu_lang', e.target.value);
-  applyQuizLang();
-});
-document.getElementById('subjectSel').addEventListener('change', renderTopics);
 window.addEventListener('DOMContentLoaded', applyQuizLang);
 </script>
 {% endblock %}

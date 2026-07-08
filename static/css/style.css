@@ -121,19 +121,6 @@ body { display: flex; flex-direction: column; }
   text-align: left;
 }
 
-.nav-brand .region-tag {
-  font-family: var(--font);
-  font-size: .72rem;
-  font-weight: 700;
-  background: var(--primary-light);
-  color: var(--primary);
-  padding: .15rem .5rem;
-  border-radius: 99px;
-  border: 2px solid var(--primary);
-  letter-spacing: .03em;
-  text-transform: uppercase;
-}
-
 .nav-progress-pill { margin: 0 .5rem .9rem; }
 
 .nav-links {
@@ -343,16 +330,16 @@ select { cursor: pointer; max-width: 160px; }
   padding: .5rem 1.25rem;
   background: transparent;
   color: var(--primary);
-  border: 2.5px solid var(--primary);
+  border: 1px solid var(--primary);
   border-radius: 99px;
   font-size: .88rem;
   font-weight: 800;
   font-family: var(--font);
   cursor: pointer;
-  transition: background .15s, color .15s, transform .1s;
+  transition: background .15s, color .15s;
 }
 
-.btn-outline:hover { background: var(--primary); color: #fff; transform: translateY(-1px); }
+.btn-outline:hover { background: var(--primary); color: #fff; }
 
 /* ── Icon buttons ────────────────────────────────────────────────────────── */
 .btn-icon {
@@ -512,7 +499,7 @@ select { cursor: pointer; max-width: 160px; }
 .question-card {
   background: var(--surface);
   border-radius: var(--radius);
-  border: 2.5px solid var(--border);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
   padding: 1.25rem 1.4rem;
   margin-bottom: 1rem;
@@ -530,7 +517,7 @@ select { cursor: pointer; max-width: 160px; }
 
 .opt-btn {
   padding: .65rem .85rem;
-  border: 2.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface2);
   cursor: pointer;
@@ -539,9 +526,9 @@ select { cursor: pointer; max-width: 160px; }
   font-family: var(--font);
   text-align: left;
   color: var(--text);
-  transition: border-color .15s, background .15s, transform .1s;
+  transition: border-color .15s, background .15s;
 }
-.opt-btn:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-light); transform: translateY(-1px); }
+.opt-btn:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-light); }
 .opt-btn.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
 .opt-btn.correct  { border-color: var(--accent-green); background: #D1FAE5; color: #065F46; }
 .opt-btn.wrong    { border-color: #EF4444; background: #FEE2E2; color: #991B1B; }
@@ -550,7 +537,7 @@ select { cursor: pointer; max-width: 160px; }
 .score-card {
   background: var(--surface);
   border-radius: var(--radius);
-  border: 2.5px solid var(--border);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow);
   padding: 2rem 1.5rem;
   text-align: center;
@@ -575,10 +562,9 @@ select { cursor: pointer; max-width: 160px; }
   text-decoration: none;
   font-weight: 800;
   font-size: .9rem;
-  box-shadow: 0 3px 0 #059669;
-  transition: transform .1s;
+  transition: background .15s;
 }
-.cert-link:hover { transform: translateY(-1px); }
+.cert-link:hover { background: #059669; }
 
 /* ── Flashcard ───────────────────────────────────────────────────────────── */
 .card-scene {
@@ -603,7 +589,7 @@ select { cursor: pointer; max-width: 160px; }
   position: absolute;
   inset: 0;
   border-radius: var(--radius);
-  border: 3px solid var(--border);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
@@ -657,7 +643,7 @@ select { cursor: pointer; max-width: 160px; }
 .script-card {
   background: var(--surface);
   border-radius: var(--radius);
-  border: 2.5px solid var(--border);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
   padding: 1.5rem;
   transition: background .25s;
@@ -671,7 +657,7 @@ select { cursor: pointer; max-width: 160px; }
 .audio-player {
   background: var(--surface);
   border-radius: var(--radius);
-  border: 2.5px solid var(--border);
+  border: 1px solid var(--border);
   padding: 1rem 1.25rem;
   margin-bottom: 1rem;
   display: flex;
@@ -684,7 +670,7 @@ select { cursor: pointer; max-width: 160px; }
 .student-card {
   background: var(--surface);
   border-radius: var(--radius);
-  border: 2.5px solid var(--border);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
   padding: 1.4rem 1.6rem;
   margin-bottom: 1.25rem;
@@ -699,7 +685,7 @@ select { cursor: pointer; max-width: 160px; }
 .badge-card {
   background: var(--surface2);
   border-radius: 99px;
-  border: 2.5px solid var(--accent);
+  border: 1px solid var(--accent);
   padding: .45rem 1rem;
   font-size: .84rem;
   font-weight: 800;
@@ -716,11 +702,11 @@ select { cursor: pointer; max-width: 160px; }
   text-align: left;
   font-weight: 800;
   color: var(--text-muted);
-  border-bottom: 2.5px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 .quiz-table td {
   padding: .6rem .85rem;
-  border-bottom: 1.5px solid var(--border);
+  border-bottom: 1px solid var(--border);
   font-weight: 600;
   color: var(--text);
 }
@@ -812,7 +798,6 @@ dl dd { color: var(--text-muted); margin-left: 1rem; font-size: .88rem; font-wei
   .input-row  { padding: .35rem .45rem; }
   .btn-icon   { width: 40px; height: 40px; }
   .page-wrap  { padding: 1rem .65rem 3.5rem; }
-  .hero-title { font-size: 2.3rem; }
 }
 
 /* ── Respect OS-level motion preference ──────────────────────────────────── */
@@ -1319,7 +1304,7 @@ dl dd { color: var(--text-muted); margin-left: 1rem; font-size: .88rem; font-wei
   border-radius: 99px;
   color: var(--text);
   background: color-mix(in srgb, var(--accent-green) 14%, var(--surface));
-  border: 2px solid color-mix(in srgb, var(--accent-green) 48%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-green) 48%, transparent);
 }
 .grounding-badge .icon { width: 14px; height: 14px; color: var(--accent-green); flex-shrink: 0; }
 .src-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
@@ -1333,12 +1318,12 @@ dl dd { color: var(--text-muted); margin-left: 1rem; font-size: .88rem; font-wei
   padding: .2rem .55rem;
   border-radius: 99px;
   background: var(--surface);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   color: var(--text);
   max-width: 200px;
-  transition: border-color .15s, transform .15s;
+  transition: border-color .15s;
 }
-.src-chip:hover { border-color: var(--primary); transform: translateY(-1px); }
+.src-chip:hover { border-color: var(--primary); }
 .src-chip .icon { width: 12px; height: 12px; color: var(--primary); flex-shrink: 0; }
 .src-chip .src-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .src-chip .src-page { color: var(--text-muted); font-weight: 800; flex-shrink: 0; }
@@ -1350,7 +1335,7 @@ dl dd { color: var(--text-muted); margin-left: 1rem; font-size: .88rem; font-wei
   gap: .6rem;
   flex-wrap: wrap;
   background: color-mix(in srgb, var(--accent) 12%, var(--surface));
-  border: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
   color: var(--text);
   border-radius: var(--radius);
   padding: .7rem 1rem;
@@ -1371,11 +1356,9 @@ dl dd { color: var(--text-muted); margin-left: 1rem; font-size: .88rem; font-wei
   background: var(--primary);
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 3px 0 var(--primary-dark);
-  transition: transform .1s;
+  transition: background .15s;
 }
-.btn-retry-gen:hover  { transform: translateY(-1px); }
-.btn-retry-gen:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--primary-dark); }
+.btn-retry-gen:hover { background: var(--primary-dark); }
 
 /* ── Topic suggestion chips (quiz + flashcard) ───────────────────────────── */
 .topic-suggest {
@@ -1401,15 +1384,14 @@ dl dd { color: var(--text-muted); margin-left: 1rem; font-size: .88rem; font-wei
   border-radius: 99px;
   background: var(--surface);
   color: var(--text);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   cursor: pointer;
-  transition: background .15s, border-color .15s, transform .1s;
+  transition: background .15s, border-color .15s;
 }
 .topic-chip:hover {
   background: var(--primary-light);
   border-color: var(--primary);
   color: var(--primary);
-  transform: translateY(-1px);
 }
 
 /* ══ Rural-learner accessibility modes ════════════════════════════════════ */
@@ -1549,14 +1531,14 @@ html.lite *, html.lite *::before, html.lite *::after {
 
 .sidebar-card {
   padding: 1.5rem 1.6rem;
-  min-height: 170px;
+  min-height: 220px;
   border-radius: 20px;
   border-color: var(--sidebar-border, #E5E7EB);
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
 }
 [data-theme="dark"] .sidebar-card { --sidebar-border: #2D2A3D; }
 
@@ -1631,7 +1613,7 @@ html.lite *, html.lite *::before, html.lite *::after {
   border-radius: 99px;
   background: var(--surface2);
   overflow: hidden;
-  margin-top: .5rem;
+  margin-top: 2.25rem;
 }
 .sidebar-progress-fill {
   height: 100%;
@@ -1661,24 +1643,6 @@ html.lite *, html.lite *::before, html.lite *::after {
   .sidebar { display: none; }
   .page-hint { bottom: 5.5rem; }
 }
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   CONFIDENCE BADGE — grounded-answer indicator (chat)
-═══════════════════════════════════════════════════════════════════════════ */
-.confidence-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: .3rem;
-  padding: .18rem .6rem;
-  border-radius: 99px;
-  font-size: .72rem;
-  font-weight: 800;
-  letter-spacing: .02em;
-}
-.confidence-badge.high { background: rgba(16,185,129,.15); color: #059669; }
-[data-theme="dark"] .confidence-badge.high { color: var(--accent-green); }
-.confidence-badge.low { background: rgba(245,158,11,.15); color: #B45309; }
-[data-theme="dark"] .confidence-badge.low { color: var(--accent); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    NAV PROGRESS PILL — real data from /api/progress, hidden until known
