@@ -169,9 +169,8 @@
   </symbol>
 
   <!-- send — send message -->
-  <symbol id="icon-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="22" y1="2" x2="11" y2="13"/>
-    <polygon points="22 2 15 22 11 13 2 9 22 2" fill="currentColor" stroke="none"/>
+  <symbol id="icon-send" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <path d="M3 11.5L20.5 3.5C21.3 3.13 22.1 3.9 21.75 4.7L14.5 21C14.16 21.77 13.06 21.75 12.76 20.96L10.5 15L4 12.5C3.23 12.2 3.2 11.83 3 11.5Z"/>
   </symbol>
 
   <!-- settings — system status -->
@@ -256,8 +255,7 @@
 
   <!-- arrow-down — tap to reveal hint -->
   <symbol id="icon-arrow-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="12" y1="5" x2="12" y2="19"/>
-    <polyline points="19 12 12 19 5 12"/>
+    <polyline points="6 9 12 15 18 9"/>
   </symbol>
 
   <!-- square — stop recording -->

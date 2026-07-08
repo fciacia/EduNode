@@ -1,42 +1,76 @@
 {% extends "base.html" %}
 {% block title %}Chat — Edge{% endblock %}
+{% block page_wrap_class %} chat-page{% endblock %}
 
 {% block extra_style %}
+/* No-scroll static chat page: header + input row stay fixed, only the
+   chat log itself scrolls once messages overflow. */
+.page-wrap.chat-page {
+  height: 100%;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.page-wrap.chat-page .page-layout { flex: 1; min-height: 0; }
+.page-wrap.chat-page .page-main { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.page-wrap.chat-page .sidebar { max-height: 100%; overflow-y: auto; }
+.page-wrap.chat-page .chat-header { flex-shrink: 0; }
+.page-wrap.chat-page .chat-log {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+.page-wrap.chat-page .input-row { flex-shrink: 0; }
+
 .math-diagram {
   margin-top: .65rem;
   padding: .6rem .75rem;
   background: var(--surface2);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   text-align: center;
 }
+
 .chat-header {
   display: flex;
   gap: .75rem;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 1.25rem;
   background: var(--surface);
-  border: 2.5px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  border-radius: 20px;
   padding: 1rem 1.25rem;
   box-shadow: var(--shadow-sm);
+  margin-bottom: 1.25rem;
   animation: fade-in .3s ease;
+  flex-shrink: 0;
 }
 
 .chat-title {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  color: var(--primary);
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--text);
   margin: 0;
   flex: 1;
   display: flex;
   align-items: center;
-  gap: .4rem;
+  gap: .5rem;
+  white-space: nowrap;
 }
+.chat-title .icon-emoji { width: 1.6rem; height: 1.6rem; flex-shrink: 0; }
 
-.sel {
-  border: 2.5px solid var(--border);
+/* Custom dropdown (replaces native <select>) */
+.dd {
+  position: relative;
+}
+.dd-btn {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  border: 1px solid var(--border);
   border-radius: 99px;
   padding: .38rem .85rem;
   font-size: .87rem;
@@ -44,13 +78,52 @@
   font-family: var(--font);
   background: var(--surface2);
   color: var(--text);
-  outline: none;
-  transition: border-color .15s;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color .15s, background .15s;
 }
-.sel:focus { border-color: var(--primary); }
+.dd-btn:hover { background: var(--surface); }
+.dd-btn .icon { width: 14px; height: 14px; color: var(--text-muted); transition: transform .15s; flex-shrink: 0; }
+.dd.open .dd-btn { border-color: var(--primary); }
+.dd.open .dd-btn .icon { transform: rotate(180deg); }
+
+.dd-list {
+  position: absolute;
+  top: calc(100% + .4rem);
+  left: 0;
+  min-width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  padding: .35rem;
+  display: none;
+  flex-direction: column;
+  gap: .1rem;
+  z-index: 30;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.dd.open .dd-list { display: flex; }
+
+.dd-opt {
+  border: none;
+  background: none;
+  text-align: left;
+  padding: .5rem .65rem;
+  border-radius: var(--radius-sm);
+  font-size: .87rem;
+  font-weight: 600;
+  font-family: var(--font);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dd-opt:hover { background: var(--surface2); }
+.dd-opt.active { background: var(--primary-light); color: var(--primary); font-weight: 800; }
 
 .name-input {
-  border: 2.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 99px;
   padding: .38rem .85rem;
   font-size: .87rem;
@@ -67,7 +140,7 @@
 /* New chat button */
 .btn-new-chat {
   width: 34px; height: 34px;
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 50%;
   background: var(--surface2);
   color: var(--text-muted);
@@ -103,14 +176,13 @@
   font-weight: 700;
   font-family: var(--font);
   background: none;
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 99px;
   padding: .18rem .55rem;
   cursor: pointer;
   color: var(--text-muted);
-  transition: background .15s, border-color .15s, color .15s;
+  transition: background .15s, border-color .15s, color .15s, opacity .2s;
   opacity: 0;
-  transition: opacity .2s;
 }
 .bubble:hover .copy-btn, .bubble:focus-within .copy-btn { opacity: 1; }
 .copy-btn:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
@@ -126,7 +198,7 @@
   font-weight: 700;
   font-family: var(--font);
   background: none;
-  border: 2px solid #EF4444;
+  border: 1px solid #EF4444;
   border-radius: 99px;
   padding: .18rem .55rem;
   cursor: pointer;
@@ -171,7 +243,7 @@
   font-family: var(--font);
   padding: .22rem .6rem .22rem .5rem;
   border-radius: 99px;
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   line-height: 1;
   color: var(--text);
   background: var(--surface2);
@@ -213,7 +285,7 @@
   padding: .2rem .55rem;
   border-radius: 99px;
   background: var(--surface);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   color: var(--text);
   max-width: 210px;
   transition: border-color .15s, transform .15s;
@@ -223,26 +295,35 @@
 .cite-chip .icon { width: 13px; height: 13px; color: var(--primary); flex-shrink: 0; }
 .cite-chip .cite-src { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cite-chip .cite-page { color: var(--text-muted); font-weight: 800; flex-shrink: 0; }
-
-/* Confidence accent on the answer bubble */
-.bubble.bot.is-verified .message { border-left: 4px solid var(--accent-green); }
-.bubble.bot.is-review   .message { border-left: 4px solid var(--accent); }
-.bubble.bot.is-none     .message { border-left: 4px solid var(--text-muted); }
 {% endblock %}
 
 {% block content %}
 <div class="chat-header">
-  <h2 class="chat-title"><svg class="icon icon-md" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-bot"></use></svg> Ask Edge</h2>
-  <select id="subjectSel" class="sel">
-    {% for s in subjects %}
-    <option value="{{ s }}" {% if s == default_subject %}selected{% endif %}>{{ s }}</option>
-    {% endfor %}
-  </select>
-  <select id="langSel" class="sel">
-    {% for l in languages %}
-    <option value="{{ l }}" {% if l == default_language %}selected{% endif %}>{{ l }}</option>
-    {% endfor %}
-  </select>
+  <h2 class="chat-title"><img class="icon-emoji" src="/static/icons/color/chat.svg" alt="" aria-hidden="true"> Ask Edge</h2>
+
+  <div class="dd" id="subjectDd" data-value="{{ default_subject }}">
+    <button type="button" class="dd-btn" onclick="toggleDd('subjectDd')">
+      <span id="subjectDdLabel">{{ default_subject }}</span>
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-arrow-down"></use></svg>
+    </button>
+    <div class="dd-list" role="listbox">
+      {% for s in subjects %}
+      <button type="button" class="dd-opt{% if s == default_subject %} active{% endif %}" data-value="{{ s }}" onclick="pickDd('subjectDd', '{{ s }}')">{{ s }}</button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="dd" id="langDd" data-value="{{ default_language }}">
+    <button type="button" class="dd-btn" onclick="toggleDd('langDd')">
+      <span id="langDdLabel">{{ default_language }}</span>
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-arrow-down"></use></svg>
+    </button>
+    <div class="dd-list" role="listbox">
+      {% for l in languages %}
+      <button type="button" class="dd-opt{% if l == default_language %} active{% endif %}" data-value="{{ l }}" onclick="pickDd('langDd', '{{ l }}')">{{ l }}</button>
+      {% endfor %}
+    </div>
+  </div>
   <input id="studentName" class="name-input" type="text" placeholder="Your name…"
          value="{{ request.args.get('name', '') }}">
   <button class="btn-new-chat" onclick="newChat()" title="Start a new conversation">
@@ -286,9 +367,28 @@ const HISTORY_KEY = () => 'edu_chat_' + (document.getElementById('studentName').
 // Read-aloud playback state (for proper play/pause toggling).
 let ttsAudio = null, ttsBtn = null, ttsSeq = 0;
 
-function getLang()    { return document.getElementById('langSel').value; }
-function getSubject() { return document.getElementById('subjectSel').value; }
+function getLang()    { return document.getElementById('langDd').dataset.value; }
+function getSubject() { return document.getElementById('subjectDd').dataset.value; }
 function getName()    { return document.getElementById('studentName').value.trim() || 'Student'; }
+
+// Custom dropdown (replaces native <select>)
+function toggleDd(id) {
+  const dd = document.getElementById(id);
+  const wasOpen = dd.classList.contains('open');
+  document.querySelectorAll('.dd.open').forEach(el => el.classList.remove('open'));
+  if (!wasOpen) dd.classList.add('open');
+}
+function pickDd(id, value) {
+  const dd = document.getElementById(id);
+  dd.dataset.value = value;
+  dd.querySelector(`[id$="Label"]`).textContent = value;
+  dd.querySelectorAll('.dd-opt').forEach(o => o.classList.toggle('active', o.dataset.value === value));
+  dd.classList.remove('open');
+  if (id === 'langDd') localStorage.setItem('edu_lang', value);
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.dd')) document.querySelectorAll('.dd.open').forEach(el => el.classList.remove('open'));
+});
 
 function newId() { return (crypto.randomUUID ? crypto.randomUUID() : 'c' + Date.now() + Math.random().toString(36).slice(2)); }
 function getConversationId() {
@@ -702,13 +802,10 @@ input.addEventListener('input', function() {
 // Restore saved language on load
 (function() {
   const saved = localStorage.getItem('edu_lang');
-  const sel = document.getElementById('langSel');
-  if (saved) {
-    const match = [...sel.options].find(o => o.value === saved);
-    if (match) sel.value = match.value;
-  }
+  if (!saved) return;
+  const dd = document.getElementById('langDd');
+  if (dd.querySelector(`.dd-opt[data-value="${CSS.escape(saved)}"]`)) pickDd('langDd', saved);
 })();
-document.getElementById('langSel').addEventListener('change', e => localStorage.setItem('edu_lang', e.target.value));
 
 // Restore chat history on load
 (function() {

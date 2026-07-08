@@ -371,12 +371,10 @@ select { cursor: pointer; max-width: 160px; }
 .btn-send {
   background: var(--primary);
   color: #fff;
-  box-shadow: var(--shadow-sm);
 }
-.btn-send:hover  { background: var(--primary-dark); transform: scale(1.04); box-shadow: var(--shadow); }
-.btn-send:active { transform: scale(.97); }
+.btn-send:hover { background: var(--primary-dark); }
 
-.btn-mic { background: var(--surface2); color: var(--primary); border: 2px solid var(--border); }
+.btn-mic { background: var(--surface2); color: var(--primary); border: 1px solid var(--border); }
 .btn-mic:hover { background: var(--primary-light); }
 .btn-mic.recording { background: #EF4444; color: #fff; border-color: #EF4444; animation: pulse-red 1s infinite; }
 
@@ -388,8 +386,8 @@ select { cursor: pointer; max-width: 160px; }
 /* ── Chat ────────────────────────────────────────────────────────────────── */
 .chat-log {
   background: var(--surface);
-  border-radius: var(--radius);
-  border: 2.5px solid var(--border);
+  border-radius: 20px;
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
   min-height: 360px;
   max-height: 54vh;
@@ -433,14 +431,12 @@ select { cursor: pointer; max-width: 160px; }
   background: var(--bot-bg);
   color: var(--bot-fg);
   border-bottom-left-radius: 4px;
-  border: 2px solid var(--border);
 }
 
 .bubble.user .message {
   background: var(--user-bg);
   color: var(--user-fg);
   border-bottom-right-radius: 4px;
-  box-shadow: 0 3px 0 var(--primary-dark);
 }
 
 .play-btn {
@@ -452,7 +448,7 @@ select { cursor: pointer; max-width: 160px; }
   font-weight: 700;
   font-family: var(--font);
   background: none;
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 99px;
   padding: .2rem .65rem;
   cursor: pointer;
@@ -489,7 +485,7 @@ select { cursor: pointer; max-width: 160px; }
   gap: .5rem;
   align-items: flex-end;
   background: var(--surface);
-  border: 2.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 99px;
   padding: .45rem .6rem;
   transition: border-color .15s, background .25s;
