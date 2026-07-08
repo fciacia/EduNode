@@ -105,7 +105,7 @@ body { display: flex; flex-direction: column; }
   flex-direction: column;
   align-items: stretch;
   gap: .2rem;
-  padding: 1.1rem 1.1rem;
+  padding: 1.1rem 1.1rem 1.1rem 1.6rem;
   height: 100%;
 }
 
@@ -116,9 +116,9 @@ body { display: flex; flex-direction: column; }
   text-decoration: none;
   letter-spacing: .01em;
   white-space: nowrap;
-  padding: .5rem .5rem 1.3rem;
+  padding: .5rem 0 1.3rem 1rem;
   display: block;
-  text-align: center;
+  text-align: left;
 }
 
 .nav-brand .region-tag {
@@ -139,7 +139,7 @@ body { display: flex; flex-direction: column; }
 .nav-links {
   display: flex;
   flex-direction: column;
-  gap: 1.4rem;
+  gap: .5rem;
   align-items: stretch;
 }
 
@@ -1569,7 +1569,7 @@ html.lite *, html.lite *::before, html.lite *::after {
   min-height: 240px;
 }
 
-.sidebar-card .section-title { margin: 0 0 .8rem; font-size: .85rem; font-weight: 700; }
+.sidebar-card .section-title { margin: 0 0 .8rem; font-size: 1rem; font-weight: 700; }
 
 .sidebar-card .card-label {
   font-family: var(--font);
@@ -1610,11 +1610,8 @@ html.lite *, html.lite *::before, html.lite *::after {
   width: 7rem;
   height: 7rem;
   opacity: .08;
-  color: var(--card-accent, var(--primary));
   pointer-events: none;
 }
-
-.sidebar-card--challenge .sidebar-card-deco { color: var(--nav-quiz); }
 
 .sidebar-card-icon-row {
   display: flex;
@@ -1623,17 +1620,14 @@ html.lite *, html.lite *::before, html.lite *::after {
   margin-top: .3rem;
 }
 .sidebar-card-icon-row .icon-badge {
-  width: 2.8rem;
-  height: 2.8rem;
-  border-radius: 50%;
+  width: 3.2rem;
+  height: 3.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: color-mix(in srgb, var(--card-accent, var(--primary)) 16%, transparent);
-  color: var(--card-accent, var(--primary));
 }
-.sidebar-card-icon-row .icon-badge .icon { width: 1.5rem; height: 1.5rem; }
+.sidebar-card-icon-row .icon-badge .icon { width: 3.2rem; height: 3.2rem; }
 
 .sidebar-progress-track {
   width: 100%;
@@ -1661,8 +1655,8 @@ html.lite *, html.lite *::before, html.lite *::after {
 }
 .sidebar-empty .icon {
   flex-shrink: 0;
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 3rem;
+  height: 3rem;
   color: var(--primary);
 }
 
