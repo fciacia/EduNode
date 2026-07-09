@@ -1018,6 +1018,60 @@ def api_recommendations_by_name(name: str):
 
 
 # ---------------------------------------------------------------------------
+# API: content history (quiz/cards/slides/podcast — reopen-and-replay)
+# ---------------------------------------------------------------------------
+
+_HISTORY_KINDS = {"quiz", "cards", "slides", "podcast"}
+
+@app.post("/api/history/save")
+def api_history_save():
+    """Save a generated quiz/deck/episode so the student can reopen it later.
+    Called by the frontend right after a successful generation (or quiz submit,
+    where the summary includes the score)."""
+    data = request.get_json(silent=True) or {}
+    kind = (data.get("kind") or "").strip()
+    if kind not in _HISTORY_KINDS:
+        return jsonify({"error": "invalid kind"}), 400
+
+    topic        = (data.get("topic") or "").strip()
+    subject      = (data.get("subject") or "").strip()
+    language     = (data.get("language") or cfg.HUB_LANGUAGES[0]).strip()
+    summary      = (data.get("summary") or "").strip()
+    student_name = (data.get("student_name") or "").strip()
+    payload      = data.get("payload")
+    if not topic or payload is None or not student_name:
+        return jsonify({"error": "topic, payload and student_name are required"}), 400
+
+    from core.progress_tracker import get_or_create_student, log_content_history
+    sid = get_or_create_student(student_name, language)
+    item_id = log_content_history(sid, kind, topic, payload, subject, language, summary)
+    return jsonify({"id": item_id, "student_id": sid})
+
+
+@app.get("/api/history/<kind>/by-name/<name>")
+def api_history_list(kind: str, name: str):
+    if kind not in _HISTORY_KINDS:
+        return jsonify({"error": "invalid kind"}), 400
+    from core.progress_tracker import find_student_by_name, get_content_history
+    student_id = find_student_by_name(name)
+    if student_id is None:
+        return jsonify({"items": []})
+    return jsonify({"items": get_content_history(student_id, kind)})
+
+
+@app.get("/api/history/item/<int:item_id>/by-name/<name>")
+def api_history_item(item_id: int, name: str):
+    from core.progress_tracker import find_student_by_name, get_content_history_item
+    student_id = find_student_by_name(name)
+    if student_id is None:
+        return jsonify({"error": "Student not found"}), 404
+    item = get_content_history_item(item_id, student_id)
+    if item is None:
+        return jsonify({"error": "Not found"}), 404
+    return jsonify(item)
+
+
+# ---------------------------------------------------------------------------
 # API: flashcards
 # ---------------------------------------------------------------------------
 

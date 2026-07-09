@@ -3,8 +3,8 @@
 
 {% block extra_style %}
 .page-hero {
-  background: #059669;
-  border: 1px solid #059669;
+  background: linear-gradient(120deg, #064E3B 0%, #059669 55%, #34D399 100%);
+  border: none;
   border-radius: 20px;
   padding: 1.4rem 1.6rem;
   margin-bottom: 1.25rem;
@@ -161,6 +161,14 @@
   </div>
 </div>
 
+<div class="history-section" id="historySection" style="--history-accent: var(--nav-podcast)">
+  <div class="history-head">
+    <p class="section-title" data-i18n="history.pastEpisodes">Past episodes</p>
+    <button type="button" class="history-toggle" id="historyToggle" data-i18n="history.hide">Hide</button>
+  </div>
+  <div class="history-strip" id="historyStrip"></div>
+</div>
+
 <div class="controls-row">
   <div class="dd" id="langDd" data-value="{{ languages[0] }}">
     <button type="button" class="dd-btn" onclick="toggleDd('langDd')">
@@ -265,6 +273,18 @@ async function generatePodcast() {
     }
     document.getElementById('podcastResult').style.display = 'block';
     document.getElementById('podcastResult').scrollIntoView({behavior:'smooth'});
+    const savedName = localStorage.getItem('edu_student_name');
+    if (window.EdgeHistory && savedName && d.script) {
+      EdgeHistory.save({
+        kind: 'podcast',
+        topic: topic,
+        subject: '',
+        language: getLang(),
+        summary: d.audio_url ? T('podcast.hasAudio', 'With audio') : '',
+        student_name: savedName,
+        payload: { script: d.script, audio_url: d.audio_url || '' }
+      });
+    }
   } catch(e) { EdgeToast.show('Error: ' + e.message, 'error'); }
   finally { btn.disabled = false; btn.innerHTML = ico('mic') + ' ' + T('podcast.generate', 'Generate Episode'); }
 }
@@ -303,5 +323,29 @@ function escHtml(s) {
   dd.querySelectorAll('.dd-opt').forEach(o => o.classList.toggle('active', o.dataset.value === saved));
 })();
 window.addEventListener('DOMContentLoaded', applyPodcastLang);
+
+// Reopen a past episode from History — loads the same script/audio fresh.
+if (window.EdgeHistory) {
+  EdgeHistory.init({
+    kind: 'podcast',
+    icon: 'mic',
+    getName: () => localStorage.getItem('edu_student_name') || '',
+    onOpen: (item) => {
+      document.getElementById('topicInput').value = item.topic;
+      renderScript(item.payload.script || '');
+      document.getElementById('audioUnavailable').style.display = 'none';
+      if (item.payload.audio_url) {
+        const el = document.getElementById('audioEl');
+        el.src = item.payload.audio_url;
+        document.getElementById('audioPlayer').style.display = 'flex';
+      } else {
+        document.getElementById('audioPlayer').style.display = 'none';
+        document.getElementById('audioUnavailable').style.display = 'flex';
+      }
+      document.getElementById('podcastResult').style.display = 'block';
+      document.getElementById('podcastResult').scrollIntoView({behavior:'smooth'});
+    }
+  });
+}
 </script>
 {% endblock %}

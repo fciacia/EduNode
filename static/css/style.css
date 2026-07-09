@@ -82,9 +82,9 @@ body { display: flex; flex-direction: column; }
   --nav-chat:     #3B82F6;
   --nav-quiz:     #7C3AED;
   --nav-cards:    #EC4899;
-  --nav-slides:   #F59E0B;
+  --nav-slides:   #4338CA;
   --nav-podcast:  #10B981;
-  --nav-progress: #F59E0B;
+  --nav-progress: #D97706;
 }
 
 .nav {
@@ -777,16 +777,23 @@ select { cursor: pointer; max-width: 160px; }
 .badges-grid { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.25rem; }
 
 .badge-card {
-  background: var(--surface2);
+  background: color-mix(in srgb, var(--badge-color, var(--accent)) 12%, var(--surface2));
   border-radius: 99px;
-  border: 1px solid var(--accent);
-  padding: .45rem 1rem;
+  border: none;
+  padding: .45rem 1rem .45rem .45rem;
   font-size: .84rem;
   font-weight: 800;
   display: flex;
   align-items: center;
-  gap: .4rem;
-  color: var(--text);
+  gap: .5rem;
+  color: var(--badge-color, var(--text));
+}
+.badge-card .icon-emoji {
+  width: 1.6rem;
+  height: 1.6rem;
+  background: var(--surface);
+  border-radius: 50%;
+  padding: .25rem;
 }
 
 .quiz-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
@@ -818,6 +825,124 @@ select { cursor: pointer; max-width: 160px; }
 .pct-fail { background: #FEE2E2; color: #991B1B; }
 
 .empty-state { text-align: center; color: var(--text-muted); padding: 2.5rem; font-size: .92rem; font-weight: 700; }
+
+/* ── History (quiz/cards/slides/podcast — reopen a past generation) ────────── */
+.history-section { margin-bottom: 1.75rem; }
+
+.history-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: .75rem;
+}
+.history-head .section-title { margin: 0; }
+.history-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: .8rem;
+  color: var(--primary);
+  cursor: pointer;
+}
+.history-toggle:hover { text-decoration: underline; }
+
+.history-strip {
+  display: flex;
+  gap: .75rem;
+  overflow-x: auto;
+  padding-bottom: .4rem;
+  scrollbar-width: thin;
+}
+.history-strip.collapsed { max-height: 0; overflow: hidden; padding: 0; margin: 0; }
+
+.history-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: 224px;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  background: color-mix(in srgb, var(--history-accent, var(--primary)) 7%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--history-accent, var(--primary)) 25%, var(--border));
+  border-radius: 22px;
+  padding: 1rem 1.05rem 1.1rem;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font);
+  overflow: hidden;
+  transition: background .15s, border-color .15s;
+  animation: pop-in .25s cubic-bezier(.34,1.56,.64,1) backwards;
+}
+.history-card:hover {
+  background: color-mix(in srgb, var(--history-accent, var(--primary)) 14%, var(--surface));
+  border-color: var(--history-accent, var(--primary));
+}
+
+.history-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+}
+
+.history-card-icon {
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--history-accent, var(--primary));
+  flex-shrink: 0;
+}
+.history-card-icon .icon { width: 1.5rem; height: 1.5rem; color: #fff; }
+.history-card-icon .icon-emoji { width: 1.6rem; height: 1.6rem; }
+
+.history-card-tag {
+  font-size: .66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  color: var(--history-accent, var(--primary));
+  padding: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 116px;
+}
+
+.history-card-topic {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1rem;
+  color: var(--text);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.history-card-meta {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .76rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  min-height: 1.2em;
+}
+.history-card-meta .pct-chip { margin-left: 0; }
+
+.history-card-date {
+  font-size: .68rem;
+  color: var(--history-accent, var(--primary));
+  font-weight: 800;
+  padding-top: .3rem;
+  opacity: .8;
+}
 
 /* ── Admin ───────────────────────────────────────────────────────────────── */
 .status-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .85rem; margin-bottom: 1.5rem; }

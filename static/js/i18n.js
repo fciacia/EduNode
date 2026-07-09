@@ -493,6 +493,25 @@
     if (TRANSLATIONS[l]) Object.assign(TRANSLATIONS[l], FINAL_SWEEP_I18N[l]);
   });
 
+  // History feature (quiz/cards/slides/podcast — reopen a past generation),
+  // merged into the per-language tables above.
+  const HISTORY_I18N = {
+    'English':          { 'history.pastQuizzes':'Past quizzes', 'history.pastDecks':'Past decks', 'history.pastEpisodes':'Past episodes', 'history.loadError':'Could not load that item.', 'podcast.hasAudio':'With audio', 'history.show':'Show', 'history.hide':'Hide' },
+    'Filipino':         { 'history.pastQuizzes':'Mga nakaraang quiz', 'history.pastDecks':'Mga nakaraang deck', 'history.pastEpisodes':'Mga nakaraang episode', 'history.loadError':'Hindi ma-load ang item na iyon.', 'podcast.hasAudio':'May audio', 'history.show':'Ipakita', 'history.hide':'Itago' },
+    'Bahasa Melayu':    { 'history.pastQuizzes':'Kuiz lepas', 'history.pastDecks':'Dek lepas', 'history.pastEpisodes':'Episod lepas', 'history.loadError':'Tidak dapat memuatkan item itu.', 'podcast.hasAudio':'Dengan audio', 'history.show':'Tunjuk', 'history.hide':'Sembunyi' },
+    'Bahasa Indonesia': { 'history.pastQuizzes':'Kuis sebelumnya', 'history.pastDecks':'Dek sebelumnya', 'history.pastEpisodes':'Episode sebelumnya', 'history.loadError':'Tidak dapat memuat item itu.', 'podcast.hasAudio':'Dengan audio', 'history.show':'Tampilkan', 'history.hide':'Sembunyikan' },
+    'Thai':             { 'history.pastQuizzes':'ควิซที่ผ่านมา', 'history.pastDecks':'ชุดที่ผ่านมา', 'history.pastEpisodes':'ตอนที่ผ่านมา', 'history.loadError':'ไม่สามารถโหลดรายการนั้นได้', 'podcast.hasAudio':'มีเสียง', 'history.show':'แสดง', 'history.hide':'ซ่อน' },
+    'Vietnamese':       { 'history.pastQuizzes':'Bài kiểm tra trước', 'history.pastDecks':'Bộ thẻ trước', 'history.pastEpisodes':'Tập trước', 'history.loadError':'Không thể tải mục đó.', 'podcast.hasAudio':'Có âm thanh', 'history.show':'Hiện', 'history.hide':'Ẩn' },
+    'Khmer':            { 'history.pastQuizzes':'សំណួរពីមុន', 'history.pastDecks':'កញ្ចប់ពីមុន', 'history.pastEpisodes':'វគ្គពីមុន', 'history.loadError':'មិនអាចផ្ទុកធាតុនោះបានទេ។', 'podcast.hasAudio':'មានសំឡេង', 'history.show':'បង្ហាញ', 'history.hide':'លាក់' },
+    'Lao':              { 'history.pastQuizzes':'ແບບທົດສອບທີ່ຜ່ານມາ', 'history.pastDecks':'ຊຸດທີ່ຜ່ານມາ', 'history.pastEpisodes':'ຕອນທີ່ຜ່ານມາ', 'history.loadError':'ບໍ່ສາມາດໂຫຼດລາຍການນັ້ນໄດ້.', 'podcast.hasAudio':'ມີສຽງ', 'history.show':'ສະແດງ', 'history.hide':'ເຊື່ອງ' },
+    'Burmese':          { 'history.pastQuizzes':'ယခင် Quiz များ', 'history.pastDecks':'ယခင်အစုံများ', 'history.pastEpisodes':'ယခင်အပိုင်းများ', 'history.loadError':'ထိုအရာကို တင်၍မရပါ။', 'podcast.hasAudio':'အသံပါ', 'history.show':'ပြရန်', 'history.hide':'ဖျောက်ရန်' },
+    'Cebuano':          { 'history.pastQuizzes':'Nangaging mga quiz', 'history.pastDecks':'Nangaging mga deck', 'history.pastEpisodes':'Nangaging mga episode', 'history.loadError':'Dili ma-load kana nga item.', 'podcast.hasAudio':'Adunay audio', 'history.show':'Ipakita', 'history.hide':'Itago' },
+    'Iban':             { 'history.pastQuizzes':'Quiz kelia', 'history.pastDecks':'Dek kelia', 'history.pastEpisodes':'Episod kelia', 'history.loadError':'Enda ulih ngemuatka utai nya.', 'podcast.hasAudio':'Enggau nyawa', 'history.show':'Pandang', 'history.hide':'Rahsiaka' },
+  };
+  Object.keys(HISTORY_I18N).forEach(function (l) {
+    if (TRANSLATIONS[l]) Object.assign(TRANSLATIONS[l], HISTORY_I18N[l]);
+  });
+
   var _current = 'English';
 
   function applyLang(lang) {

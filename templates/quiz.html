@@ -3,8 +3,8 @@
 
 {% block extra_style %}
 .page-hero {
-  background: var(--primary-dark);
-  border: 1px solid var(--primary-dark);
+  background: linear-gradient(120deg, #3B1874 0%, #7C3AED 55%, #C026D3 100%);
+  border: none;
   border-radius: 20px;
   padding: 1.4rem 1.6rem;
   margin-bottom: 1.25rem;
@@ -212,6 +212,14 @@
     <h2 data-i18n="quiz.title">Quiz Challenge!</h2>
     <p data-i18n="quiz.subtitle">Test your knowledge and earn certificates</p>
   </div>
+</div>
+
+<div class="history-section" id="historySection" style="--history-accent: var(--nav-quiz)">
+  <div class="history-head">
+    <p class="section-title" data-i18n="history.pastQuizzes">Past quizzes</p>
+    <button type="button" class="history-toggle" id="historyToggle" data-i18n="history.hide">Hide</button>
+  </div>
+  <div class="history-strip" id="historyStrip"></div>
 </div>
 
 <div class="controls-row">
@@ -472,6 +480,17 @@ async function submitQuiz() {
     localStorage.setItem('edu_student_name', getName());
     showResults(d.result, d.microcredentials_earned || []);
     markAnswers(d.result);
+    if (window.EdgeHistory && d.result) {
+      EdgeHistory.save({
+        kind: 'quiz',
+        topic: document.getElementById('topicInput').value.trim(),
+        subject: getSubject(),
+        language: getLang(),
+        summary: d.result.score + '/' + d.result.total + ' (' + d.result.pct + '%)',
+        student_name: getName(),
+        payload: { questions: currentQuestions }
+      });
+    }
   } catch(e) { EdgeToast.show('Submit error: ' + e.message, 'error'); }
 }
 
@@ -576,5 +595,29 @@ function applyQuizLang() {
   dd.querySelectorAll('.dd-opt').forEach(o => o.classList.toggle('active', o.dataset.value === saved));
 })();
 window.addEventListener('DOMContentLoaded', applyQuizLang);
+
+// Reopen a past quiz from History — loads the same questions as a fresh attempt.
+if (window.EdgeHistory) {
+  EdgeHistory.init({
+    kind: 'quiz',
+    icon: 'target',
+    getName: () => localStorage.getItem('edu_student_name') || '',
+    onOpen: (item) => {
+      document.getElementById('topicInput').value = item.topic;
+      currentQuestions = item.payload.questions || [];
+      Object.keys(selectedAnswers).forEach(k => delete selectedAnswers[k]);
+      document.getElementById('scoreCard').style.display = 'none';
+      renderQuestions(currentQuestions);
+      document.getElementById('quizProgressLabel').textContent = answeredLabel(0, currentQuestions.length);
+      document.getElementById('quizProgressBar').style.width = '0%';
+      document.getElementById('quizArea').style.display = 'block';
+      document.getElementById('quizArea').scrollIntoView({behavior:'smooth'});
+    }
+  });
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const name = localStorage.getItem('edu_student_name');
+  if (name) document.getElementById('studentName').value = name;
+});
 </script>
 {% endblock %}

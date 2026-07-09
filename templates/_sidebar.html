@@ -63,10 +63,11 @@
     if (!badges.length) return;
     var C = '/static/icons/color/';
     var badgeIcons = {'First Step':'sparkles','Quiz Ace':'progress','Week Warrior':'zap','Dialect Pioneer':'globe'};
+    var badgeColors = {'First Step':'var(--nav-quiz)','Quiz Ace':'var(--nav-progress)','Week Warrior':'var(--nav-chat)','Dialect Pioneer':'var(--nav-podcast)'};
     body.classList.remove('sidebar-empty');
     body.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:.5rem">' +
       badges.slice(0, 10).map(function (b) {
-        return '<span class="badge-card" style="cursor:default"><img class="icon icon-emoji" src="' + C + (badgeIcons[b] || 'award') + '.svg" alt="" aria-hidden="true"> ' + T('badge.' + b, b) + '</span>';
+        return '<span class="badge-card" style="cursor:default;--badge-color:' + (badgeColors[b] || 'var(--accent)') + '"><img class="icon icon-emoji" src="' + C + (badgeIcons[b] || 'award') + '.svg" alt="" aria-hidden="true"> ' + T('badge.' + b, b) + '</span>';
       }).join('') + '</div><a href="/progress" class="btn-secondary" style="margin-top:1.5rem">' + T('sidebar.viewAll', 'View all →') + '</a>';
   }
 

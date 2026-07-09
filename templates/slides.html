@@ -3,8 +3,8 @@
 
 {% block extra_style %}
 .page-hero {
-  background: #4338CA;
-  border: 1px solid #4338CA;
+  background: linear-gradient(120deg, #312E81 0%, #4338CA 55%, #2563EB 100%);
+  border: none;
   border-radius: 20px;
   padding: 1.4rem 1.6rem;
   margin-bottom: 1.25rem;
@@ -200,6 +200,14 @@
   </div>
 </div>
 
+<div class="history-section" id="historySection" style="--history-accent: var(--nav-slides)">
+  <div class="history-head">
+    <p class="section-title" data-i18n="history.pastDecks">Past decks</p>
+    <button type="button" class="history-toggle" id="historyToggle" data-i18n="history.hide">Hide</button>
+  </div>
+  <div class="history-strip" id="historyStrip"></div>
+</div>
+
 <div class="controls-row">
   <div class="dd" id="subjectDd" data-value="{{ subjects[0] }}">
     <button type="button" class="dd-btn" onclick="toggleDd('subjectDd')">
@@ -234,6 +242,7 @@
 </div>
 
 <div id="topicSuggest" class="topic-suggest" style="display:none"></div>
+
 <div id="genError" class="gen-error" style="display:none"></div>
 
 <div id="deckArea" style="display:none">
@@ -398,6 +407,18 @@ async function generateSlides() {
     buildDots(); showSlide(); showGrounding(d);
     document.getElementById('deckArea').style.display = 'block';
     document.getElementById('deckArea').scrollIntoView({behavior:'smooth'});
+    const savedName = localStorage.getItem('edu_student_name');
+    if (window.EdgeHistory && savedName) {
+      EdgeHistory.save({
+        kind: 'slides',
+        topic: topic,
+        subject: getSubject(),
+        language: getLang(),
+        summary: slides.length + (slides.length === 1 ? ' slide' : ' slides'),
+        student_name: savedName,
+        payload: { slides: slides }
+      });
+    }
   } catch(e) { showGenError('offline'); }
   finally { btn.disabled = false; btn.innerHTML = ico('monitor') + ' ' + T('slides.make','Make Slides'); }
 }
@@ -607,5 +628,23 @@ function applySlidesLang() {
   dd.querySelectorAll('.dd-opt').forEach(o => o.classList.toggle('active', o.dataset.value === saved));
 })();
 window.addEventListener('DOMContentLoaded', applySlidesLang);
+
+// Reopen a past deck from History — loads the same slides fresh.
+if (window.EdgeHistory) {
+  EdgeHistory.init({
+    kind: 'slides',
+    icon: 'monitor',
+    getName: () => localStorage.getItem('edu_student_name') || '',
+    onOpen: (item) => {
+      document.getElementById('topicInput').value = item.topic;
+      currentTopic = item.topic;
+      slides = item.payload.slides || [];
+      idx = 0;
+      buildDots(); showSlide();
+      document.getElementById('deckArea').style.display = 'block';
+      document.getElementById('deckArea').scrollIntoView({behavior:'smooth'});
+    }
+  });
+}
 </script>
 {% endblock %}

@@ -26,6 +26,15 @@ get_progress(student_id) -> dict
 
 log_dialect(language, raw_input, dialect_variant="")
     Append an entry to dialect_logs for future analysis.
+
+log_content_history(student_id, kind, topic, payload, subject, language, summary) -> int
+    Save a generated quiz/deck/episode so it can be reopened later.
+
+get_content_history(student_id, kind, limit) -> list[dict]
+    Return recent history entries (list view — no payload) for (student, kind).
+
+get_content_history_item(item_id, student_id) -> dict | None
+    Return one history entry with its full payload, scoped to student_id.
 """
 
 from __future__ import annotations
@@ -157,6 +166,23 @@ CREATE TABLE IF NOT EXISTS teachers (
     role       TEXT    NOT NULL DEFAULT 'teacher',
     created_at TEXT    NOT NULL
 );
+
+-- Per-student history of generated content (quiz/cards/slides/podcast), so a
+-- student can reopen and replay something they made before instead of losing
+-- it on refresh. `payload` is the exact JSON the generate endpoint returned,
+-- so reopening an item feeds the page the same shape as a fresh generation.
+CREATE TABLE IF NOT EXISTS content_history (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL REFERENCES students(id),
+    kind       TEXT    NOT NULL,   -- 'quiz' | 'cards' | 'slides' | 'podcast'
+    topic      TEXT    NOT NULL,
+    subject    TEXT    NOT NULL DEFAULT '',
+    language   TEXT    NOT NULL DEFAULT 'English',
+    summary    TEXT    NOT NULL DEFAULT '',   -- short list-view text, e.g. "4/5 (80%)"
+    payload    TEXT    NOT NULL,              -- JSON blob of the generated content
+    created_at TEXT    NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_content_history ON content_history(student_id, kind, created_at);
 """
 
 # Columns added after v1 — applied by _migrate() so existing hub DBs upgrade in place.
@@ -258,6 +284,7 @@ def get_or_create_student(name: str, language: str = "English", grade: int = 0) 
     Return the student_id for *name*, creating the record if it does not exist.
     Matching is case-insensitive on name.
     """
+    name = name.strip()
     with _db() as conn:
         row = conn.execute(
             "SELECT id FROM students WHERE lower(name) = lower(?) LIMIT 1",
@@ -269,7 +296,7 @@ def get_or_create_student(name: str, language: str = "English", grade: int = 0) 
 
         cur = conn.execute(
             "INSERT INTO students (name, language, grade, created_at) VALUES (?,?,?,?)",
-            (name.strip(), language, grade, _now()),
+            (name, language, grade, _now()),
         )
         return cur.lastrowid
 
@@ -308,6 +335,74 @@ def log_quiz_result(student_id: int, topic: str, score: int, total: int) -> None
             (student_id, topic, score, total, _now()),
         )
     check_and_award_badges(student_id)
+
+
+# ---------------------------------------------------------------------------
+# Content history (quiz / cards / slides / podcast — reopen-and-replay)
+# ---------------------------------------------------------------------------
+
+_HISTORY_LIMIT_PER_STUDENT = 30  # keep the table small on constrained hub devices
+
+def log_content_history(
+    student_id: int,
+    kind: str,
+    topic: str,
+    payload: dict,
+    subject: str = "",
+    language: str = "English",
+    summary: str = "",
+) -> int:
+    """Save a generated quiz/deck/episode so the student can reopen it later.
+
+    Also prunes older rows beyond _HISTORY_LIMIT_PER_STUDENT for this
+    (student, kind) pair, oldest first, so history can't grow unbounded."""
+    import json
+    with _db() as conn:
+        cur = conn.execute(
+            "INSERT INTO content_history"
+            " (student_id, kind, topic, subject, language, summary, payload, created_at)"
+            " VALUES (?,?,?,?,?,?,?,?)",
+            (student_id, kind, topic, subject, language, summary, json.dumps(payload), _now()),
+        )
+        new_id = cur.lastrowid
+        conn.execute(
+            "DELETE FROM content_history WHERE id IN ("
+            "  SELECT id FROM content_history WHERE student_id=? AND kind=?"
+            "  ORDER BY created_at DESC LIMIT -1 OFFSET ?"
+            ")",
+            (student_id, kind, _HISTORY_LIMIT_PER_STUDENT),
+        )
+        return new_id
+
+
+def get_content_history(student_id: int, kind: str, limit: int = 20) -> list[dict]:
+    """Return recent history entries for (student, kind), newest first, without
+    the full payload (list view only — call get_content_history_item for the body)."""
+    with _db() as conn:
+        rows = conn.execute(
+            "SELECT id, topic, subject, language, summary, created_at"
+            " FROM content_history WHERE student_id=? AND kind=?"
+            " ORDER BY created_at DESC LIMIT ?",
+            (student_id, kind, limit),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_content_history_item(item_id: int, student_id: int) -> dict | None:
+    """Return one history entry's full payload, scoped to student_id so a
+    student can only reopen their own items."""
+    import json
+    with _db() as conn:
+        row = conn.execute(
+            "SELECT id, kind, topic, subject, language, summary, payload, created_at"
+            " FROM content_history WHERE id=? AND student_id=?",
+            (item_id, student_id),
+        ).fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    d["payload"] = json.loads(d["payload"])
+    return d
 
 
 # ---------------------------------------------------------------------------

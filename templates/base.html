@@ -169,6 +169,106 @@
     }
     return { show };
   })();
+
+  // History (quiz/cards/slides/podcast) — shared list-fetch/render logic.
+  // Each page calls EdgeHistory.init({kind, icon, getName, onOpen}) once
+  // (renders immediately, always visible above the generate controls), then
+  // EdgeHistory.save({...}) right after a successful generation.
+  window.EdgeHistory = (function () {
+    const S = '/static/icons/sprite.svg';
+    const ico = (n) => '<svg class="icon" aria-hidden="true"><use href="' + S + '#icon-' + n + '"></use></svg>';
+    let _kind = null, _onOpen = null, _getName = null, _icon = 'refresh';
+
+    function T(key, fallback) { return (window.EduI18n && window.EduI18n.t) ? window.EduI18n.t(key) : fallback; }
+
+    function init(opts) {
+      _kind = opts.kind;
+      _onOpen = opts.onOpen;
+      _getName = opts.getName;
+      _icon = opts.icon || 'refresh';
+      const strip = document.getElementById('historyStrip');
+      if (!strip) return;
+      const toggle = document.getElementById('historyToggle');
+      if (toggle) toggle.addEventListener('click', () => {
+        const willCollapse = !strip.classList.contains('collapsed');
+        strip.classList.toggle('collapsed', willCollapse);
+        toggle.textContent = willCollapse ? T('history.show', 'Show') : T('history.hide', 'Hide');
+      });
+      refresh();
+    }
+
+    async function refresh() {
+      const name = _getName ? _getName() : '';
+      const strip = document.getElementById('historyStrip');
+      const section = document.getElementById('historySection');
+      if (!strip) return;
+      if (!name) { setVisible(section, false); return; }
+      try {
+        const r = await fetch('/api/history/' + _kind + '/by-name/' + encodeURIComponent(name));
+        const d = await r.json();
+        const items = d.items || [];
+        if (!items.length) { setVisible(section, false); return; }
+        setVisible(section, true);
+        strip.innerHTML = items.map(renderCard).join('');
+        strip.querySelectorAll('.history-card').forEach(el => {
+          el.addEventListener('click', () => openItem(el.dataset.id, name));
+        });
+      } catch (e) { /* offline — leave strip as-is */ }
+    }
+
+    function setVisible(section, visible) {
+      if (section) section.style.display = visible ? '' : 'none';
+    }
+
+    function fmtDate(iso) {
+      try { return new Date(iso).toLocaleDateString(undefined, {month:'short', day:'numeric'}); }
+      catch (e) { return (iso || '').split('T')[0]; }
+    }
+
+    function renderCard(item) {
+      const pct = item.summary && item.summary.match(/\((\d+)%\)/);
+      const metaText = pct ? item.summary.replace(/\s*\(\d+%\)/, '') : (item.summary || '');
+      const chip = pct ? '<span class="pct-chip ' + (Number(pct[1]) >= 70 ? 'pct-pass' : 'pct-fail') + '">' + pct[1] + '%</span>' : '';
+      const subject = item.subject ? '<span class="history-card-tag">' + escHtml(item.subject) + '</span>' : '';
+      return '<button type="button" class="history-card" data-id="' + item.id + '">' +
+        '<span class="history-card-top">' +
+          '<span class="history-card-icon">' + ico(_icon) + '</span>' +
+          subject +
+        '</span>' +
+        '<span class="history-card-topic">' + escHtml(item.topic) + '</span>' +
+        '<span class="history-card-meta">' +
+          (metaText ? '<span>' + escHtml(metaText) + '</span>' : '') +
+          chip +
+        '</span>' +
+        '<span class="history-card-date">' + fmtDate(item.created_at) + '</span>' +
+      '</button>';
+    }
+
+    async function openItem(id, name) {
+      try {
+        const r = await fetch('/api/history/item/' + id + '/by-name/' + encodeURIComponent(name));
+        if (!r.ok) { EdgeToast.show(T('history.loadError', 'Could not load that item.'), 'error'); return; }
+        const item = await r.json();
+        if (_onOpen) _onOpen(item);
+      } catch (e) { EdgeToast.show(T('history.loadError', 'Could not load that item.'), 'error'); }
+    }
+
+    async function save(entry) {
+      try {
+        await fetch('/api/history/save', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(entry)
+        });
+        refresh();
+      } catch (e) { /* best-effort — don't block the UI on a save failure */ }
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    return { init, save, refresh };
+  })();
 </script>
 
 <script src="/static/js/i18n.js" defer></script>

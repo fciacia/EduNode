@@ -3,8 +3,8 @@
 
 {% block extra_style %}
 .page-hero {
-  background: #D97706;
-  border: 1px solid #D97706;
+  background: linear-gradient(120deg, #7C2D12 0%, #D97706 55%, #FBBF24 100%);
+  border: none;
   border-radius: 20px;
   padding: 1.4rem 1.6rem;
   margin-bottom: 1.25rem;
@@ -52,7 +52,7 @@
 
 .btn-amber {
   padding: .55rem 1.4rem;
-  background: #F59E0B;
+  background: #D97706;
   color: #fff;
   border: none;
   border-radius: 99px;
@@ -62,7 +62,7 @@
   cursor: pointer;
   transition: background .15s;
 }
-.btn-amber:hover { background: #D97706; }
+.btn-amber:hover { background: #B45309; }
 
 /* Badges are tappable — show what each one means */
 .badge-card { cursor: pointer; font-family: var(--font); transition: background .15s; }
@@ -185,12 +185,14 @@ function renderProgress(d) {
   const badgesGrid = document.getElementById('badgesGrid');
   badgesGrid.innerHTML = '';
   const badgeIcons = {'First Step':'sparkles','Quiz Ace':'trophy','Week Warrior':'zap','Dialect Pioneer':'globe'};
+  const badgeColors = {'First Step':'var(--nav-quiz)','Quiz Ace':'var(--nav-progress)','Week Warrior':'var(--nav-chat)','Dialect Pioneer':'var(--nav-podcast)'};
   const badgeDescs = d.badge_descriptions || {};
   const desc = document.getElementById('badgeDesc');
   (d.badges || []).forEach(b => {
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'badge-card';
+    el.style.setProperty('--badge-color', badgeColors[b] || 'var(--accent)');
     const label = T('badge.' + b, b);
     const text = T('badge.desc.' + b, badgeDescs[b] || '');
     el.innerHTML = ico(badgeIcons[b] || 'award') + ' ' + escHtml(label);
