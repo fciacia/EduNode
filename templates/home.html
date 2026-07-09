@@ -329,11 +329,11 @@
 {% block content %}
 <div class="hero-card reveal" id="heroCard">
   <div class="hero-card-text">
-    <p class="hero-card-eyebrow">Edge Tutor</p>
-    <h2 class="hero-card-title" id="heroCardTitle">Hey there, learner!</h2>
-    <p class="hero-card-body" id="heroCardBody">Pick a subject below to start chatting with your AI tutor — ask questions, take quizzes, study flashcards, or listen to a podcast.</p>
+    <p class="hero-card-eyebrow" data-i18n="home.eyebrow">Edge Tutor</p>
+    <h2 class="hero-card-title" id="heroCardTitle" data-i18n="home.guide.title">Hey there, learner!</h2>
+    <p class="hero-card-body" id="heroCardBody" data-i18n="home.guide.body">Pick a subject below to start chatting with your AI tutor — ask questions, take quizzes, study flashcards, or listen to a podcast.</p>
     <a href="/chat" class="hero-card-cta" id="heroCardCta">
-      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-message-square"></use></svg> Start learning
+      <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-message-square"></use></svg> <span id="heroCardCtaText" data-i18n="home.startLearning">Start learning</span>
     </a>
   </div>
   <div class="hero-blob">
@@ -342,10 +342,10 @@
 </div>
 
 <div class="quick-ask">
-  <input type="text" id="quickAskInput" placeholder="Ask me anything…" autocomplete="off"
+  <input type="text" id="quickAskInput" data-i18n-ph="home.askPh" placeholder="Ask me anything…" autocomplete="off"
          onkeydown="if(event.key==='Enter') quickAsk()">
   <button onclick="quickAsk()">
-    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-send"></use></svg> Ask
+    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-send"></use></svg> <span data-i18n="home.ask">Ask</span>
   </button>
 </div>
 
@@ -378,7 +378,7 @@
   <a href="/chat?subject={{ subject | urlencode }}" class="subject-card reveal" onclick="attachLang(this)">
     <div class="subject-card-text">
       <span class="name" data-i18n="subject.{{ subject }}">{{ subject }}</span>
-      <p class="desc">{{ desc_map.get(subject, "Learn something new today") }}</p>
+      <p class="desc" data-i18n="subject.desc.{{ subject }}">{{ desc_map.get(subject, "Learn something new today") }}</p>
     </div>
     <span class="icon-wrap">
       <img class="icon icon-emoji" src="/static/icons/color/{{ icon_map.get(subject, 'english') }}.svg" alt="" aria-hidden="true">
@@ -396,28 +396,28 @@
   <a href="/quiz" class="activity-card reveal" id="act-quiz" onclick="highlightActivity(this)">
     <div class="act-info">
       <span class="act-name" data-i18n="home.quiz">Take a Quiz</span>
-      <span class="act-desc">Test your knowledge!</span>
+      <span class="act-desc" data-i18n="home.act.quizDesc">Test your knowledge!</span>
     </div>
     <span class="act-icon-wrap"><img class="icon icon-emoji act-icon" src="/static/icons/color/quiz.svg" alt="" aria-hidden="true"></span>
   </a>
   <a href="/flashcard" class="activity-card reveal" id="act-flashcard" onclick="highlightActivity(this)">
     <div class="act-info">
       <span class="act-name" data-i18n="home.flashcard">Flashcards</span>
-      <span class="act-desc">Study key words!</span>
+      <span class="act-desc" data-i18n="home.act.cardsDesc">Study key words!</span>
     </div>
     <span class="act-icon-wrap"><img class="icon icon-emoji act-icon" src="/static/icons/color/cards.svg" alt="" aria-hidden="true"></span>
   </a>
   <a href="/podcast" class="activity-card reveal" id="act-podcast" onclick="highlightActivity(this)">
     <div class="act-info">
       <span class="act-name" data-i18n="home.podcast">Podcast</span>
-      <span class="act-desc">Listen &amp; learn!</span>
+      <span class="act-desc" data-i18n="home.act.podcastDesc">Listen &amp; learn!</span>
     </div>
     <span class="act-icon-wrap"><img class="icon icon-emoji act-icon" src="/static/icons/color/podcast.svg" alt="" aria-hidden="true"></span>
   </a>
   <a href="/progress" class="activity-card reveal" id="act-progress" onclick="highlightActivity(this)">
     <div class="act-info">
       <span class="act-name" data-i18n="home.progress">My Progress</span>
-      <span class="act-desc">See your stars!</span>
+      <span class="act-desc" data-i18n="home.act.progressDesc">See your stars!</span>
     </div>
     <span class="act-icon-wrap"><img class="icon icon-emoji act-icon" src="/static/icons/color/progress.svg" alt="" aria-hidden="true"></span>
   </a>
@@ -463,15 +463,16 @@
         var title = document.getElementById('heroCardTitle');
         var body = document.getElementById('heroCardBody');
         var cta = document.getElementById('heroCardCta');
+        var T = (window.EduI18n && window.EduI18n.t) ? window.EduI18n.t : function (k, f) { return f; };
         if (quizzes.length) {
           var last = quizzes[0];
-          title.textContent = 'Welcome back, ' + name + '!';
-          body.textContent = 'Last time you studied ' + last.topic + '. Keep your streak going with another round.';
+          title.textContent = T('home.welcomeBack', 'Welcome back, {name}!').replace('{name}', name);
+          body.textContent = T('home.lastStudied', 'Last time you studied {topic}. Keep your streak going with another round.').replace('{topic}', last.topic);
           cta.href = '/quiz';
-          cta.lastChild.textContent = ' Continue learning';
+          document.getElementById('heroCardCtaText').textContent = T('home.continueLearning', 'Continue learning');
         } else {
-          title.textContent = 'Ready when you are, ' + name + '!';
-          body.textContent = 'Start your first quiz or chat session to begin building your progress.';
+          title.textContent = T('home.readyWhenYouAre', 'Ready when you are, {name}!').replace('{name}', name);
+          body.textContent = T('home.startFirstQuiz', 'Start your first quiz or chat session to begin building your progress.');
         }
       })
       .catch(function () {});

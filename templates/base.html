@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#7C3AED">
   <link rel="manifest" href="/static/icons/manifest.json">
-  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+  <link rel="icon" type="image/png" href="/static/icons/edge-shortlogo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="/static/css/style.css">
@@ -28,14 +28,16 @@
 </svg>
 <div id="offlineBanner" class="offline-banner">
   <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-wifi-off"></use></svg>
-  You are offline — Edge is running locally on this device!
+  <span data-i18n="base.offline">You are offline — Edge is running locally on this device!</span>
 </div>
+
+<div id="toastStack" class="toast-stack" aria-live="polite"></div>
 
 <nav class="nav">
   <div class="nav-inner">
-    <a href="/" class="nav-brand">Edge</a>
+    <a href="/" class="nav-brand"><img src="/static/icons/edge-logo.png" alt="Edge"></a>
     <div class="nav-links">
-      <a href="/chat"      class="nav-link {% if request.path == '/chat'      %}active{% endif %}"><img class="icon icon-emoji" src="/static/icons/color/chat.svg" alt="" aria-hidden="true"> Chat</a>
+      <a href="/chat"      class="nav-link {% if request.path == '/chat'      %}active{% endif %}" data-i18n="nav.chat"><img class="icon icon-emoji" src="/static/icons/color/chat.svg" alt="" aria-hidden="true"> Chat</a>
       <a href="/quiz"      class="nav-link {% if request.path == '/quiz'      %}active{% endif %}" data-i18n="nav.quiz"><img class="icon icon-emoji" src="/static/icons/color/quiz.svg" alt="" aria-hidden="true"> Quiz</a>
       <a href="/flashcard" class="nav-link {% if request.path == '/flashcard' %}active{% endif %}" data-i18n="nav.cards"><img class="icon icon-emoji" src="/static/icons/color/cards.svg" alt="" aria-hidden="true"> Cards</a>
       <a href="/slides"    class="nav-link {% if request.path == '/slides'    %}active{% endif %}" data-i18n="nav.slides"><img class="icon icon-emoji" src="/static/icons/color/slides.svg" alt="" aria-hidden="true"> Slides</a>
@@ -47,13 +49,13 @@
 
     <div class="nav-links nav-links--footer">
       <button type="button" class="nav-link nav-link--action" onclick="if(window.EduOnboarding){sessionStorage.removeItem('edu_tour_done');window.EduOnboarding.startTour();}">
-        <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-map"></use></svg> How to use
+        <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-map"></use></svg> <span data-i18n="nav.howToUse">How to use</span>
       </button>
-      <button type="button" class="nav-link nav-link--action" id="prefsFab" aria-label="Settings">
-        <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-settings"></use></svg> Settings
+      <button type="button" class="nav-link nav-link--action" id="prefsFab" aria-label="Settings" data-i18n-aria="base.settingsAria">
+        <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-settings"></use></svg> <span data-i18n="nav.settings">Settings</span>
       </button>
-      <button type="button" class="nav-link nav-link--action" id="themeToggle" aria-label="Toggle theme">
-        <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-moon"></use></svg> <span class="toggle-label">Dark mode</span>
+      <button type="button" class="nav-link nav-link--action" id="themeToggle" aria-label="Toggle theme" data-i18n-aria="base.toggleThemeAria">
+        <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-moon"></use></svg> <span class="toggle-label" data-i18n="nav.darkMode">Dark mode</span>
       </button>
     </div>
   </div>
@@ -75,9 +77,10 @@
     document.documentElement.setAttribute('data-theme', t);
     localStorage.setItem('edu_theme', t);
     const btn = document.getElementById('themeToggle');
+    const T = (window.EduI18n && window.EduI18n.t) ? window.EduI18n.t : function (k, f) { return f; };
     btn.innerHTML = t === 'dark'
-      ? _sunSVG  + '<span class="toggle-label">Light mode</span>'
-      : _moonSVG + '<span class="toggle-label">Dark mode</span>';
+      ? _sunSVG  + '<span class="toggle-label" data-i18n="nav.lightMode">' + T('nav.lightMode', 'Light mode') + '</span>'
+      : _moonSVG + '<span class="toggle-label" data-i18n="nav.darkMode">'  + T('nav.darkMode',  'Dark mode')  + '</span>';
   }
 
   setTheme(localStorage.getItem('edu_theme') || 'light');
@@ -101,6 +104,71 @@
     });
   }
 
+  // Toast notifications — replaces browser alert() with an in-page card.
+  // Usage: EdgeToast.show('message') or EdgeToast.show('message', 'error')
+  window.EdgeToast = (function () {
+    const ICONS = {
+      info:  '<svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-sparkles"></use></svg>',
+      error: '<svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-wifi-off"></use></svg>'
+    };
+    function show(message, kind) {
+      kind = (kind === 'error') ? 'error' : 'info';
+      const stack = document.getElementById('toastStack');
+      if (!stack) { window.alert(message); return; }
+      const T = (window.EduI18n && window.EduI18n.t) ? window.EduI18n.t : function (k, f) { return f; };
+      const el = document.createElement('div');
+      el.className = 'toast toast-' + kind;
+      el.innerHTML = ICONS[kind] + '<span class="toast-msg"></span>' +
+        '<button type="button" class="toast-close" aria-label="' + T('base.dismissAria', 'Dismiss') + '">&times;</button>';
+      el.querySelector('.toast-msg').textContent = message;
+      const remove = () => {
+        el.classList.add('hiding');
+        setTimeout(() => el.remove(), 250);
+      };
+      el.querySelector('.toast-close').addEventListener('click', remove);
+      stack.appendChild(el);
+      setTimeout(remove, 4500);
+    }
+    return { show };
+  })();
+
+  // Confirm dialog — replaces browser confirm() with an in-page modal.
+  // Usage: EdgeConfirm.show('message').then(ok => { if (ok) ... })
+  window.EdgeConfirm = (function () {
+    function show(message, opts) {
+      opts = opts || {};
+      return new Promise(function (resolve) {
+        var T = (window.EduI18n && window.EduI18n.t) ? window.EduI18n.t : function (k, f) { return f; };
+        var overlay = document.createElement('div');
+        overlay.className = 'confirm-overlay';
+        overlay.innerHTML =
+          '<div class="confirm-card" role="alertdialog" aria-modal="true">' +
+            '<p class="confirm-msg"></p>' +
+            '<div class="confirm-actions">' +
+              '<button type="button" class="btn-outline confirm-cancel"></button>' +
+              '<button type="button" class="btn-primary confirm-ok"></button>' +
+            '</div>' +
+          '</div>';
+        overlay.querySelector('.confirm-msg').textContent = message;
+        overlay.querySelector('.confirm-cancel').textContent = opts.cancelLabel || T('ui.cancel', 'Cancel');
+        overlay.querySelector('.confirm-ok').textContent = opts.okLabel || T('ui.ok', 'OK');
+        function close(result) {
+          overlay.classList.add('hiding');
+          setTimeout(function () { overlay.remove(); }, 200);
+          resolve(result);
+        }
+        overlay.querySelector('.confirm-cancel').addEventListener('click', function () { close(false); });
+        overlay.querySelector('.confirm-ok').addEventListener('click', function () { close(true); });
+        overlay.addEventListener('click', function (e) { if (e.target === overlay) close(false); });
+        document.addEventListener('keydown', function esc(e) {
+          if (e.key === 'Escape') { document.removeEventListener('keydown', esc); close(false); }
+        });
+        document.body.appendChild(overlay);
+        overlay.querySelector('.confirm-ok').focus();
+      });
+    }
+    return { show };
+  })();
 </script>
 
 <script src="/static/js/i18n.js" defer></script>

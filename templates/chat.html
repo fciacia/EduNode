@@ -299,7 +299,7 @@
 
 {% block content %}
 <div class="chat-header">
-  <h2 class="chat-title"><img class="icon-emoji" src="/static/icons/color/chat.svg" alt="" aria-hidden="true"> Ask Edge</h2>
+  <h2 class="chat-title"><img class="icon-emoji" src="/static/icons/color/chat.svg" alt="" aria-hidden="true"> <span data-i18n="chat.title">Ask Edge</span></h2>
 
   <div class="dd" id="subjectDd" data-value="{{ default_subject }}">
     <button type="button" class="dd-btn" onclick="toggleDd('subjectDd')">
@@ -324,9 +324,9 @@
       {% endfor %}
     </div>
   </div>
-  <input id="studentName" class="name-input" type="text" placeholder="Your name…"
+  <input id="studentName" class="name-input" type="text" data-i18n-ph="chat.namePh" placeholder="Your name…"
          value="{{ request.args.get('name', '') }}">
-  <button class="btn-new-chat" onclick="newChat()" title="Start a new conversation">
+  <button class="btn-new-chat" onclick="newChat()" title="Start a new conversation" data-i18n-title="chat.newChatTitle">
     <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-refresh"></use></svg>
   </button>
 </div>
@@ -334,20 +334,20 @@
 <div id="chatLog" class="chat-log">
   <div class="bubble bot">
     <span class="bubble-avatar"><svg class="icon icon-lg" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-bot"></use></svg></span>
-    <div class="message">Hi there! I'm <strong>Edge</strong>, your AI tutor!<br>Pick a subject up top and ask me anything — I'm here to help you learn!</div>
+    <div class="message" id="chatGreeting">Hi there! I'm <strong>Edge</strong>, your AI tutor!<br>Pick a subject up top and ask me anything — I'm here to help you learn!</div>
   </div>
 </div>
 
 <div class="input-row">
-  <textarea id="msgInput" rows="1" placeholder="Type your question here…" maxlength="2000"
+  <textarea id="msgInput" rows="1" data-i18n-ph="chat.inputPh" placeholder="Type your question here…" maxlength="2000"
     onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
   <span id="charCounter" class="char-counter" style="display:none"></span>
   <span id="micTimer" class="mic-timer"><span class="mic-dot"></span><span id="micTimerLabel">0:00</span></span>
-  <button class="btn-icon btn-mic" id="micBtn" title="Hold to record voice"
+  <button class="btn-icon btn-mic" id="micBtn" title="Hold to record voice" data-i18n-title="chat.micTitle"
     onmousedown="startRec()" onmouseup="stopRec()" ontouchstart="startRec()" ontouchend="stopRec()">
     <svg class="icon icon-md" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-mic"></use></svg>
   </button>
-  <button class="btn-icon btn-send" onclick="sendMsg()" title="Send message">
+  <button class="btn-icon btn-send" onclick="sendMsg()" title="Send message" data-i18n-title="chat.sendTitle">
     <svg class="icon icon-md" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-send"></use></svg>
   </button>
 </div>
@@ -367,6 +367,15 @@ const HISTORY_KEY = () => 'edu_chat_' + (document.getElementById('studentName').
 // Read-aloud playback state (for proper play/pause toggling).
 let ttsAudio = null, ttsBtn = null, ttsSeq = 0;
 
+/* Localized UI string (falls back to the given English). */
+function T(key, fallback) { return (window.EduI18n && window.EduI18n.t) ? window.EduI18n.t(key) : fallback; }
+
+function greetingHtml() {
+  const raw = T('chat.greeting', "Hi there! I'm {name}, your AI tutor!\nPick a subject up top and ask me anything — I'm here to help you learn!");
+  const [line1, line2] = raw.split('\n');
+  return escapeHtml(line1 || '').replace(/\{name\}/, '<strong>Edge</strong>') + '<br>' + escapeHtml(line2 || '');
+}
+
 function getLang()    { return document.getElementById('langDd').dataset.value; }
 function getSubject() { return document.getElementById('subjectDd').dataset.value; }
 function getName()    { return document.getElementById('studentName').value.trim() || 'Student'; }
@@ -384,7 +393,10 @@ function pickDd(id, value) {
   dd.querySelector(`[id$="Label"]`).textContent = value;
   dd.querySelectorAll('.dd-opt').forEach(o => o.classList.toggle('active', o.dataset.value === value));
   dd.classList.remove('open');
-  if (id === 'langDd') localStorage.setItem('edu_lang', value);
+  if (id === 'langDd') {
+    localStorage.setItem('edu_lang', value);
+    if (window.EduI18n) window.EduI18n.applyLang(value);
+  }
 }
 document.addEventListener('click', e => {
   if (!e.target.closest('.dd')) document.querySelectorAll('.dd.open').forEach(el => el.classList.remove('open'));
@@ -458,12 +470,15 @@ function renderSavedDiagrams() {
 }
 window.addEventListener('DOMContentLoaded', renderSavedDiagrams);
 
-function newChat() {
-  if (!confirm('Start a new conversation? This will clear the current chat.')) return;
+async function newChat() {
+  const ok = window.EdgeConfirm
+    ? await EdgeConfirm.show(T('chat.confirmNewChat', 'Start a new conversation? This will clear the current chat.'))
+    : confirm(T('chat.confirmNewChat', 'Start a new conversation? This will clear the current chat.'));
+  if (!ok) return;
   try { localStorage.removeItem(HISTORY_KEY()); localStorage.setItem('edu_convo', newId()); } catch(e) {}
   log.innerHTML = `<div class="bubble bot">
     <span class="bubble-avatar">${ico('bot','icon-lg')}</span>
-    <div class="message">Hi there! I'm <strong>Edge</strong>, your AI tutor!<br>Pick a subject up top and ask me anything — I'm here to help you learn!</div>
+    <div class="message">${greetingHtml()}</div>
   </div>`;
 }
 
@@ -483,18 +498,18 @@ function addPlayBtn(msgEl, text) {
 
   const playBtn = document.createElement('button');
   playBtn.className = 'play-btn';
-  playBtn.innerHTML = ico('volume') + ' Listen';
+  playBtn.innerHTML = ico('volume') + ' ' + T('chat.listen', 'Listen');
   playBtn.onclick = () => playTTS(text, playBtn);
   msgEl.appendChild(playBtn);
 
   const copyBtn = document.createElement('button');
   copyBtn.className = 'copy-btn';
-  copyBtn.innerHTML = ico('file-text') + ' Copy';
+  copyBtn.innerHTML = ico('file-text') + ' ' + T('chat.copy', 'Copy');
   copyBtn.onclick = () => {
     navigator.clipboard?.writeText(text).then(() => {
-      copyBtn.innerHTML = ico('check-circle') + ' Copied';
+      copyBtn.innerHTML = ico('check-circle') + ' ' + T('chat.copied', 'Copied');
       copyBtn.classList.add('copied');
-      setTimeout(() => { copyBtn.innerHTML = ico('file-text') + ' Copy'; copyBtn.classList.remove('copied'); }, 1800);
+      setTimeout(() => { copyBtn.innerHTML = ico('file-text') + ' ' + T('chat.copy', 'Copy'); copyBtn.classList.remove('copied'); }, 1800);
     }).catch(() => {});
   };
   msgEl.appendChild(document.createTextNode(' '));
@@ -523,10 +538,10 @@ function decorateAnswer(msgEl, d) {
 
   // Bubble accent + badge kind
   let kind, icon, label, showPct;
-  if (verified)           { kind = 'verified'; icon = 'check-circle'; label = 'Verified';            showPct = true; }
-  else if (supplementary) { kind = 'review';   icon = 'lightbulb';    label = 'General knowledge';   showPct = false; }
-  else if (noCurriculum)  { kind = 'none';     icon = 'book-open';    label = 'Not in my books yet';  showPct = false; }
-  else                    { kind = 'review';   icon = 'lightbulb';    label = 'Check with teacher';   showPct = true; }
+  if (verified)           { kind = 'verified'; icon = 'check-circle'; label = T('chat.verified', 'Verified');                showPct = true; }
+  else if (supplementary) { kind = 'review';   icon = 'lightbulb';    label = T('chat.generalKnowledge', 'General knowledge'); showPct = false; }
+  else if (noCurriculum)  { kind = 'none';     icon = 'book-open';    label = T('chat.notInBooks', 'Not in my books yet');    showPct = false; }
+  else                    { kind = 'review';   icon = 'lightbulb';    label = T('chat.checkTeacher', 'Check with teacher');   showPct = true; }
   wrap.classList.add('is-' + kind);
 
   const meta = document.createElement('div');
@@ -535,7 +550,7 @@ function decorateAnswer(msgEl, d) {
   const pct = Math.round(conf * 100);
   const badge = document.createElement('span');
   badge.className = 'conf-badge ' + kind;
-  badge.title = showPct ? 'Confidence: ' + pct + '%' : 'No matching curriculum found';
+  badge.title = showPct ? T('chat.confidencePct', 'Confidence: {pct}%').replace('{pct}', pct) : T('chat.noCurriculumMatch', 'No matching curriculum found');
   badge.innerHTML = ico(icon) + ' ' + label +
     (showPct ? ' <span class="conf-pct">' + pct + '%</span>' : '');
   meta.appendChild(badge);
@@ -546,7 +561,7 @@ function decorateAnswer(msgEl, d) {
     row.className = 'cite-row';
     const lbl = document.createElement('span');
     lbl.className = 'cite-label';
-    lbl.textContent = 'Sources';
+    lbl.textContent = T('chat.sources', 'Sources');
     row.appendChild(lbl);
     cites.forEach((c, i) => {
       const chip = document.createElement('span');
@@ -593,7 +608,7 @@ function stopTTS() {
   if (ttsAudio) { ttsAudio.onended = null; ttsAudio.onerror = null; ttsAudio.pause(); ttsAudio = null; }
   if (ttsBtn) {
     ttsBtn.closest('.message')?.classList.remove('speaking');
-    ttsBtn.innerHTML = ico('volume') + ' Listen';
+    ttsBtn.innerHTML = ico('volume') + ' ' + T('chat.listen', 'Listen');
     ttsBtn = null;
   }
 }
@@ -612,14 +627,14 @@ async function playTTS(text, btn) {
   if (voice) {
     const u = new SpeechSynthesisUtterance(text);
     u.voice = voice; u.lang = voice.lang;
-    const done = () => { if (mySeq === ttsSeq) { ttsBtn = null; btn.innerHTML = ico('volume') + ' Listen'; msgEl && msgEl.classList.remove('speaking'); } };
+    const done = () => { if (mySeq === ttsSeq) { ttsBtn = null; btn.innerHTML = ico('volume') + ' ' + T('chat.listen', 'Listen'); msgEl && msgEl.classList.remove('speaking'); } };
     u.onend = done; u.onerror = done;
-    btn.innerHTML = ico('pause') + ' Pause';
+    btn.innerHTML = ico('pause') + ' ' + T('chat.pause', 'Pause');
     window.speechSynthesis.speak(u);
     return;
   }
 
-  btn.innerHTML = ico('loader','icon-spin') + ' Loading…';
+  btn.innerHTML = ico('loader','icon-spin') + ' ' + T('chat.loading', 'Loading…');
   try {
     const r = await fetch('/api/voice/tts', {
       method: 'POST', headers: {'Content-Type':'application/json'},
@@ -630,10 +645,10 @@ async function playTTS(text, btn) {
     if (mySeq !== ttsSeq) return;               // stopped/superseded while loading
     const audio = new Audio(URL.createObjectURL(blob));
     ttsAudio = audio;
-    btn.innerHTML = ico('pause') + ' Pause';
+    btn.innerHTML = ico('pause') + ' ' + T('chat.pause', 'Pause');
     const done = () => {
       if (ttsAudio === audio) { ttsAudio = null; ttsBtn = null; }
-      btn.innerHTML = ico('volume') + ' Listen';
+      btn.innerHTML = ico('volume') + ' ' + T('chat.listen', 'Listen');
       msgEl && msgEl.classList.remove('speaking');
     };
     audio.onended = done; audio.onerror = done;
@@ -713,8 +728,8 @@ async function sendMsg(retryMsg) {
     const errWrap = document.createElement('div');
     errWrap.className = 'bubble bot';
     errWrap.innerHTML = `<span class="bubble-avatar">${ico('bot','icon-lg')}</span>
-      <div class="message">Connection error — is Edge running?
-        <br><button class="retry-btn" onclick="this.closest('.bubble').remove();sendMsg(${JSON.stringify(msg)})">${ico('refresh')} Retry</button>
+      <div class="message">${escapeHtml(T('chat.connError', 'Connection error — is Edge running?'))}
+        <br><button class="retry-btn" onclick="this.closest('.bubble').remove();sendMsg(${JSON.stringify(msg)})">${ico('refresh')} ${escapeHtml(T('chat.retry', 'Retry'))}</button>
       </div>`;
     log.appendChild(errWrap);
     log.scrollTop = log.scrollHeight;
@@ -741,7 +756,7 @@ async function startRec() {
       const s = (recSeconds % 60).toString().padStart(2, '0');
       timerLabel.textContent = m + ':' + s;
     }, 1000);
-  } catch(e) { alert('Microphone not available: ' + e.message); }
+  } catch(e) { EdgeToast.show(T('chat.micError', 'Microphone not available: {err}').replace('{err}', e.message), 'error'); }
 }
 
 async function stopRec() {
@@ -759,7 +774,7 @@ async function stopRec() {
 
     // Guard against taps / near-empty clips that can't be transcribed.
     if (durMs < 600 || blob.size < 2500) {
-      addBubble('Hold the mic button and speak clearly for a moment, then release.', 'bot');
+      addBubble(T('chat.micTooShort', 'Hold the mic button and speak clearly for a moment, then release.'), 'bot');
       return;
     }
 
@@ -772,10 +787,10 @@ async function stopRec() {
       const d = await r.json();
       removeTyping();
       if (d.text) { input.value = d.text; sendMsg(); }
-      else addBubble("I didn't catch that — please hold the mic and speak a little louder.", 'bot');
+      else addBubble(T('chat.sttFail', "I didn't catch that — please hold the mic and speak a little louder."), 'bot');
     } catch(e) {
       removeTyping();
-      addBubble("I couldn't reach the voice service. Please try again.", 'bot');
+      addBubble(T('chat.voiceUnreachable', "I couldn't reach the voice service. Please try again."), 'bot');
     }
   };
 }
@@ -799,12 +814,23 @@ input.addEventListener('input', function() {
   updateCharCounter();
 });
 
+// Re-render the seeded greeting bubble in the current language — only while
+// it's still the sole bubble (i.e. no conversation has started yet), so a
+// language switch never rewrites real chat history.
+window.EdgeChatRefresh = function () {
+  const bubbles = log.querySelectorAll('.bubble');
+  if (bubbles.length !== 1 || !bubbles[0].classList.contains('bot')) return;
+  const msg = bubbles[0].querySelector('.message');
+  if (msg && !msg.dataset.text) msg.innerHTML = greetingHtml();
+};
+
 // Restore saved language on load
 (function() {
   const saved = localStorage.getItem('edu_lang');
   if (!saved) return;
   const dd = document.getElementById('langDd');
   if (dd.querySelector(`.dd-opt[data-value="${CSS.escape(saved)}"]`)) pickDd('langDd', saved);
+  EdgeChatRefresh();
 })();
 
 // Restore chat history on load

@@ -156,8 +156,8 @@
 <div class="page-hero">
   <div class="hero-emoji"><img class="icon-emoji" src="/static/icons/color/podcast.svg" alt="" aria-hidden="true"></div>
   <div class="page-hero-text">
-    <h2>Edge Podcast!</h2>
-    <p>Maya &amp; Niko explain topics in a fun way</p>
+    <h2 data-i18n="podcast.title">Edge Podcast!</h2>
+    <p data-i18n="podcast.subtitle">Maya &amp; Niko explain topics in a fun way</p>
   </div>
 </div>
 
@@ -176,9 +176,9 @@
 </div>
 
 <div class="generate-row">
-  <input id="topicInput" class="topic-input" type="text" placeholder="Enter a topic (e.g. photosynthesis, fractions…)">
+  <input id="topicInput" class="topic-input" type="text" data-i18n-ph="podcast.topicPh" placeholder="Enter a topic (e.g. photosynthesis, fractions…)">
   <button class="btn-green" id="generateBtn" onclick="generatePodcast()">
-    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-mic"></use></svg> Generate Episode
+    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-mic"></use></svg> <span data-i18n="podcast.generate">Generate Episode</span>
   </button>
 </div>
 
@@ -187,14 +187,18 @@
     <svg class="icon icon-lg" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-volume"></use></svg>
     <audio id="audioEl" controls style="flex:1"></audio>
   </div>
+  <div class="gen-error" id="audioUnavailable" style="display:none;margin-bottom:1rem">
+    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-volume"></use></svg>
+    <span data-i18n="podcast.audioUnavailable">Audio narration isn't available on this device right now — you can still read the script below.</span>
+  </div>
 
   <div class="speakers-info">
-    <span class="speaker-badge maya"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-mic"></use></svg> Maya — Curious Student</span>
-    <span class="speaker-badge niko"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-graduation-cap"></use></svg> Niko — Friendly Teacher</span>
+    <span class="speaker-badge maya"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-mic"></use></svg> <span data-i18n="podcast.maya">Maya — Curious Student</span></span>
+    <span class="speaker-badge niko"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-graduation-cap"></use></svg> <span data-i18n="podcast.niko">Niko — Friendly Teacher</span></span>
   </div>
 
   <div class="script-card">
-    <h3 style="font-family:var(--font-display);font-size:1rem;color:var(--text-muted);margin-bottom:1rem;display:flex;align-items:center;gap:.4rem"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-scroll"></use></svg> Episode Script</h3>
+    <h3 style="font-family:var(--font-display);font-size:1rem;color:var(--text-muted);margin-bottom:1rem;display:flex;align-items:center;gap:.4rem"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-scroll"></use></svg> <span data-i18n="podcast.script">Episode Script</span></h3>
     <div id="scriptContainer"></div>
   </div>
 </div>
@@ -206,6 +210,16 @@ const S = '/static/icons/sprite.svg';
 const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
 
 function getLang() { return document.getElementById('langDd').dataset.value; }
+
+/* Localized UI string (falls back to the given English). */
+function T(key, fallback) { return (window.EduI18n && window.EduI18n.t) ? window.EduI18n.t(key) : fallback; }
+
+/* Localize the page (nav + static text via i18n) — re-run whenever language changes. */
+function applyPodcastLang() {
+  if (window.EduI18n) window.EduI18n.applyLang(getLang());
+  const gb = document.getElementById('generateBtn');
+  if (gb && !gb.disabled) gb.innerHTML = ico('mic') + ' ' + T('podcast.generate', 'Generate Episode');
+}
 
 // Custom dropdown (replaces native <select>) — matches chat/quiz/cards/slides pages
 function toggleDd(id) {
@@ -220,7 +234,7 @@ function pickDd(id, value) {
   dd.querySelector(`[id$="Label"]`).textContent = value;
   dd.querySelectorAll('.dd-opt').forEach(o => o.classList.toggle('active', o.dataset.value === value));
   dd.classList.remove('open');
-  if (id === 'langDd') localStorage.setItem('edu_lang', value);
+  if (id === 'langDd') { localStorage.setItem('edu_lang', value); applyPodcastLang(); }
 }
 document.addEventListener('click', e => {
   if (!e.target.closest('.dd')) document.querySelectorAll('.dd.open').forEach(el => el.classList.remove('open'));
@@ -228,9 +242,9 @@ document.addEventListener('click', e => {
 
 async function generatePodcast() {
   const topic = document.getElementById('topicInput').value.trim();
-  if (!topic) { alert('Please enter a topic!'); return; }
+  if (!topic) { EdgeToast.show(T('ui.enterTopic', 'Please enter a topic!')); return; }
   const btn = document.getElementById('generateBtn');
-  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' Generating…';
+  btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' ' + T('slides.making', 'Generating…');
   document.getElementById('podcastResult').style.display = 'none';
   try {
     const r = await fetch('/api/podcast/generate', {
@@ -239,6 +253,7 @@ async function generatePodcast() {
     });
     const d = await r.json();
     renderScript(d.script || '');
+    document.getElementById('audioUnavailable').style.display = 'none';
     if (d.audio_url) {
       const el = document.getElementById('audioEl');
       el.src = d.audio_url;
@@ -246,11 +261,12 @@ async function generatePodcast() {
       el.play().catch(()=>{});
     } else {
       document.getElementById('audioPlayer').style.display = 'none';
+      document.getElementById('audioUnavailable').style.display = 'flex';
     }
     document.getElementById('podcastResult').style.display = 'block';
     document.getElementById('podcastResult').scrollIntoView({behavior:'smooth'});
-  } catch(e) { alert('Error: ' + e.message); }
-  finally { btn.disabled = false; btn.innerHTML = ico('mic') + ' Generate Episode'; }
+  } catch(e) { EdgeToast.show('Error: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.innerHTML = ico('mic') + ' ' + T('podcast.generate', 'Generate Episode'); }
 }
 
 function renderScript(script) {
@@ -286,5 +302,6 @@ function escHtml(s) {
   dd.querySelector('#langDdLabel').textContent = saved;
   dd.querySelectorAll('.dd-opt').forEach(o => o.classList.toggle('active', o.dataset.value === saved));
 })();
+window.addEventListener('DOMContentLoaded', applyPodcastLang);
 </script>
 {% endblock %}

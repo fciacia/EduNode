@@ -95,14 +95,14 @@
 <div class="page-hero">
   <div class="hero-emoji"><img class="icon-emoji" src="/static/icons/color/progress.svg" alt="" aria-hidden="true"></div>
   <div class="page-hero-text">
-    <h2>My Progress!</h2>
-    <p>See your badges, quiz results and achievements</p>
+    <h2 data-i18n="progress.title">My Progress!</h2>
+    <p data-i18n="progress.subtitle">See your badges, quiz results and achievements</p>
   </div>
 </div>
 
 <div class="lookup-row">
-  <input id="studentNameInput" class="id-input" type="text" placeholder="Enter your name (e.g. Ali, Maria…)">
-  <button class="btn-amber" onclick="loadProgress()">View Progress</button>
+  <input id="studentNameInput" class="id-input" type="text" data-i18n-ph="progress.namePh" placeholder="Enter your name (e.g. Ali, Maria…)">
+  <button class="btn-amber" onclick="loadProgress()" data-i18n="progress.viewProgress">View Progress</button>
 </div>
 
 <div id="progressResult" style="display:none">
@@ -114,31 +114,38 @@
   </div>
 
   <div id="recommendWrap" style="display:none">
-    <p class="section-title"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-sparkles"></use></svg> Recommended next steps</p>
+    <p class="section-title"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-sparkles"></use></svg> <span data-i18n="progress.recommended">Recommended next steps</span></p>
     <div class="card" id="recommendList"></div>
   </div>
 
-  <p class="section-title"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-clipboard"></use></svg> Quiz History</p>
+  <p class="section-title"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-clipboard"></use></svg> <span data-i18n="progress.quizHistory">Quiz History</span></p>
   <div class="card" style="padding:0;overflow:hidden" id="quizHistoryWrap">
-    <div class="empty-state">No quizzes yet.</div>
+    <div class="empty-state" data-i18n="progress.noQuizzesShort">No quizzes yet.</div>
   </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
+function T(key, fallback) { return (window.EduI18n && window.EduI18n.t) ? window.EduI18n.t(key) : fallback; }
+
+let _lastProgressData = null;   // cached so a language switch can re-render without refetching
+let _lastStudentName = null;
+
 async function loadProgress() {
   const name = document.getElementById('studentNameInput').value.trim();
-  if (!name) { alert('Please enter your name!'); return; }
+  if (!name) { EdgeToast.show(T('progress.enterName', 'Please enter your name!')); return; }
   try {
     const r = await fetch(`/api/progress/by-name/${encodeURIComponent(name)}`);
-    if (!r.ok) { alert('No progress found for "' + name + '". Complete a quiz or chat session first!'); return; }
+    if (!r.ok) { EdgeToast.show(T('progress.notFound', 'No progress found for "{name}". Complete a quiz or chat session first!').replace('{name}', name), 'error'); return; }
     const d = await r.json();
+    _lastProgressData = d;
+    _lastStudentName = name;
     renderProgress(d);
     document.getElementById('progressResult').style.display = 'block';
     document.getElementById('progressResult').scrollIntoView({behavior:'smooth'});
     loadRecommendations(name);
-  } catch(e) { alert('Error: ' + e.message); }
+  } catch(e) { EdgeToast.show('Error: ' + e.message, 'error'); }
 }
 
 async function loadRecommendations(name) {
@@ -173,7 +180,7 @@ function renderProgress(d) {
   const ico = (n,c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
   document.getElementById('studentName').textContent = (student.name || 'Unknown');
   document.getElementById('studentMeta').innerHTML =
-    `${ico('globe','icon-xs')} ${student.language || '—'} &nbsp;·&nbsp; ${ico('message-square','icon-xs')} ${d.sessions || 0} sessions &nbsp;·&nbsp; Last active: ${student.last_active || 'never'}`;
+    `${ico('globe','icon-xs')} ${student.language || '—'} &nbsp;·&nbsp; ${ico('message-square','icon-xs')} ${d.sessions || 0} sessions &nbsp;·&nbsp; ${T('progress.lastActive','Last active: {date}').replace('{date}', student.last_active || 'never')}`;
 
   const badgesGrid = document.getElementById('badgesGrid');
   badgesGrid.innerHTML = '';
@@ -184,31 +191,32 @@ function renderProgress(d) {
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'badge-card';
-    el.innerHTML = ico(badgeIcons[b] || 'award') + ' ' + b;
-    const text = badgeDescs[b] || '';
+    const label = T('badge.' + b, b);
+    const text = T('badge.desc.' + b, badgeDescs[b] || '');
+    el.innerHTML = ico(badgeIcons[b] || 'award') + ' ' + escHtml(label);
     el.title = text;                         // hover tooltip on desktop
     el.onclick = () => {                      // tap reveals what it means (mobile-friendly)
       const active = el.classList.contains('active');
       badgesGrid.querySelectorAll('.badge-card').forEach(c => c.classList.remove('active'));
       if (active) { desc.style.display = 'none'; return; }
       el.classList.add('active');
-      desc.innerHTML = ico(badgeIcons[b] || 'award') + '<span><strong>' + escHtml(b) + '</strong> — ' + escHtml(text) + '</span>';
+      desc.innerHTML = ico(badgeIcons[b] || 'award') + '<span><strong>' + escHtml(label) + '</strong> — ' + escHtml(text) + '</span>';
       desc.style.display = 'flex';
     };
     badgesGrid.appendChild(el);
   });
   desc.style.display = 'none';
   if (!d.badges?.length) {
-    badgesGrid.innerHTML = '<span style="color:var(--text-muted);font-size:.88rem;font-weight:700">No badges yet — keep learning!</span>';
+    badgesGrid.innerHTML = '<span style="color:var(--text-muted);font-size:.88rem;font-weight:700">' + escHtml(T('progress.noBadgesYet', 'No badges yet — keep learning!')) + '</span>';
   }
 
   const wrap = document.getElementById('quizHistoryWrap');
   const quizzes = d.quiz_results || [];
   if (!quizzes.length) {
-    wrap.innerHTML = `<div class="empty-state">${ico('brain')} No quizzes yet — go try one!</div>`;
+    wrap.innerHTML = `<div class="empty-state">${ico('brain')} ${escHtml(T('progress.noQuizzesLong', 'No quizzes yet — go try one!'))}</div>`;
     return;
   }
-  let html = '<table class="quiz-table"><thead><tr><th>Topic</th><th>Score</th><th>Date</th></tr></thead><tbody>';
+  let html = '<table class="quiz-table"><thead><tr><th>' + escHtml(T('progress.colTopic','Topic')) + '</th><th>' + escHtml(T('progress.colScore','Score')) + '</th><th>' + escHtml(T('progress.colDate','Date')) + '</th></tr></thead><tbody>';
   quizzes.forEach(q => {
     const pct = Math.round((q.score / q.total) * 100);
     const cls = pct >= 70 ? 'pct-pass' : 'pct-fail';
@@ -226,6 +234,15 @@ function renderProgress(d) {
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+// Re-render badges/quiz-history/recommendations in the newly selected
+// language, without a network round-trip (recommendations are re-fetched
+// since their text comes straight from the API, not from i18n keys).
+window.EdgeProgressRefresh = function () {
+  if (!_lastProgressData) return;
+  renderProgress(_lastProgressData);
+  if (_lastStudentName) loadRecommendations(_lastStudentName);
+};
 
 document.addEventListener('DOMContentLoaded', () => {
   const savedName = localStorage.getItem('edu_student_name');

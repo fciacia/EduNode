@@ -110,16 +110,12 @@ body { display: flex; flex-direction: column; }
 }
 
 .nav-brand {
-  font-family: var(--font-display);
-  font-size: 1.85rem;
-  color: var(--primary);
   text-decoration: none;
-  letter-spacing: .01em;
-  white-space: nowrap;
   padding: .5rem 0 1.3rem 1rem;
   display: block;
   text-align: left;
 }
+.nav-brand img { height: 2.6rem; display: block; }
 
 .nav-progress-pill { margin: 0 .5rem .9rem; }
 
@@ -243,6 +239,95 @@ body { display: flex; flex-direction: column; }
   border-bottom: 2px solid #F59E0B;
 }
 .offline-banner.visible { display: block; }
+
+/* ── Toast notifications (replaces browser alert()) ─────────────────────── */
+.toast-stack {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 950;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: .6rem;
+  max-width: 340px;
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: .6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: .8rem 2.1rem .8rem 1rem;
+  font-family: var(--font);
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--text);
+  animation: pop-in .25s cubic-bezier(.34,1.56,.64,1);
+}
+.toast-error { border-color: color-mix(in srgb, #EF4444 45%, var(--border)); }
+.toast .icon { width: 18px; height: 18px; flex-shrink: 0; margin-top: .1rem; color: var(--primary); }
+.toast-error .icon { color: #EF4444; }
+.toast-msg { line-height: 1.4; }
+.toast-close {
+  position: absolute;
+  top: .5rem;
+  right: .6rem;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: .2rem;
+}
+.toast-close:hover { color: var(--text); }
+.toast.hiding { animation: fade-out .25s ease forwards; }
+
+/* ── Confirm dialog (replaces browser confirm()) ─────────────────────────── */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 960;
+  background: rgba(15, 12, 30, .45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: fade-in .15s ease;
+}
+.confirm-overlay.hiding { animation: fade-out .2s ease forwards; }
+.confirm-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  max-width: 360px;
+  width: 100%;
+  animation: pop-in .2s cubic-bezier(.34,1.56,.64,1);
+}
+.confirm-msg {
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+.confirm-actions {
+  display: flex;
+  gap: .65rem;
+  justify-content: flex-end;
+}
+.confirm-actions .btn-outline,
+.confirm-actions .btn-primary {
+  padding: .5rem 1.1rem;
+  font-size: .87rem;
+}
 
 /* ── Page wrap ───────────────────────────────────────────────────────────── */
 .page-wrap {
@@ -566,13 +651,13 @@ select { cursor: pointer; max-width: 160px; }
 }
 .cert-link:hover { background: #059669; }
 
-/* ── Flashcard ───────────────────────────────────────────────────────────── */
+/* ── Flashcard (Duolingo-style flip card) ───────────────────────────────── */
 .card-scene {
   width: 100%;
   max-width: 540px;
-  height: 260px;
+  height: 300px;
   margin: 0 auto;
-  perspective: 1000px;
+  perspective: 1400px;
   cursor: pointer;
 }
 
@@ -580,7 +665,7 @@ select { cursor: pointer; max-width: 160px; }
   width: 100%; height: 100%;
   position: relative;
   transform-style: preserve-3d;
-  transition: transform .5s cubic-bezier(.34,1.2,.64,1);
+  transition: transform .45s cubic-bezier(.68,-0.4,.27,1.4);
 }
 
 .card-3d.flipped { transform: rotateY(180deg); }
@@ -588,44 +673,53 @@ select { cursor: pointer; max-width: 160px; }
 .card-face {
   position: absolute;
   inset: 0;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  border-radius: 28px;
+  border: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1.75rem;
+  padding: 2rem 1.75rem 1.6rem;
   backface-visibility: hidden;
   text-align: center;
-  transition: background .25s;
+  box-shadow: 0 6px 0 var(--card-edge, var(--primary-dark));
 }
 
 .card-face.front {
-  background: var(--surface);
-  border-top: 6px solid var(--primary);
+  background: var(--primary);
+  --card-edge: var(--primary-dark);
 }
 
 .card-face.back {
-  background: var(--surface2);
+  background: var(--accent-green);
+  --card-edge: #059669;
   transform: rotateY(180deg);
-  border-top: 6px solid var(--accent-green);
 }
+
+.card-face .card-mascot { font-size: 2.6rem; line-height: 1; margin-bottom: .5rem; filter: drop-shadow(0 2px 0 rgba(0,0,0,.12)); }
 
 .card-label {
   font-size: .72rem;
   font-weight: 800;
   letter-spacing: .1em;
-  color: var(--text-muted);
+  color: rgba(255,255,255,.75);
   text-transform: uppercase;
-  margin-bottom: .6rem;
+  margin-bottom: .5rem;
 }
 
-.card-title { font-family: var(--font-display); font-size: 1.35rem; color: var(--text); }
-.card-body  { font-size: .95rem; font-weight: 600; color: var(--text); line-height: 1.65; margin-top: .5rem; }
-.card-hint  { margin-top: 1rem; font-size: .78rem; font-weight: 700; color: var(--text-muted); }
+.card-title { font-family: var(--font-display); font-size: 1.5rem; color: #fff; }
+.card-body  { font-size: 1.02rem; font-weight: 700; color: #fff; line-height: 1.6; margin-top: .5rem; }
+.card-hint  {
+  margin-top: 1.1rem;
+  font-size: .78rem;
+  font-weight: 800;
+  color: rgba(255,255,255,.85);
+  background: rgba(255,255,255,.16);
+  padding: .3rem .8rem;
+  border-radius: 99px;
+}
 
-.deck-dots { display: flex; gap: .4rem; justify-content: center; margin-top: 1rem; }
+.deck-dots { display: flex; gap: .4rem; justify-content: center; margin-top: 1.1rem; }
 .deck-dot  { width: 9px; height: 9px; border-radius: 50%; background: var(--border); transition: background .2s, transform .2s; }
 .deck-dot.active { background: var(--primary); transform: scale(1.3); }
 
@@ -787,7 +881,7 @@ dl dd { color: var(--text-muted); margin-left: 1rem; font-size: .88rem; font-wei
 @media (max-width: 520px) {
   .options { grid-template-columns: 1fr; }
   .message  { max-width: 90%; }
-  .nav-brand { font-size: 1.2rem; }
+  .nav-brand img { height: 2.4rem; }
   select { max-width: 120px; }
   .page-wrap { padding: 1.25rem .85rem 4rem; }
 }

@@ -250,8 +250,8 @@
       <span class="dl-wrap">
         <button class="btn-outline" id="downloadBtn" onclick="toggleDlMenu(event)"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-arrow-down"></use></svg> Download</button>
         <div class="dl-menu" id="dlMenu">
-          <button type="button" onclick="downloadDeck('pdf')"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-file-text"></use></svg> PDF</button>
-          <button type="button" onclick="downloadDeck('pptx')"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg> PowerPoint (.pptx)</button>
+          <button type="button" onclick="downloadDeck('pdf')"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-file-text"></use></svg> <span data-i18n="slides.pdf">PDF</span></button>
+          <button type="button" onclick="downloadDeck('pptx')"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg> <span data-i18n="slides.pptx">PowerPoint (.pptx)</span></button>
         </div>
       </span>
       <button class="btn-indigo" id="presentBtn" onclick="enterPresent()"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-monitor"></use></svg> Present</button>
@@ -380,7 +380,7 @@ function showGenError(kind){
 
 async function generateSlides() {
   const topic = document.getElementById('topicInput').value.trim();
-  if (!topic) { alert('Please enter a topic!'); return; }
+  if (!topic) { EdgeToast.show(T('ui.enterTopic','Please enter a topic!')); return; }
   currentTopic = topic;
   const btn = document.getElementById('generateBtn');
   btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' ' + T('slides.making','Generating…');
@@ -489,7 +489,7 @@ async function downloadDeck(fmt) {
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
   } catch(e) {
-    alert('Could not prepare the download. Please try again.');
+    EdgeToast.show('Could not prepare the download. Please try again.', 'error');
   } finally {
     btn.disabled = false; btn.innerHTML = orig;
   }

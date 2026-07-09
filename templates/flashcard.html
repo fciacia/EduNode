@@ -133,15 +133,17 @@
 .btn-blue:disabled { opacity: .5; cursor: not-allowed; }
 
 /* Responsive card height */
-.card-scene { height: min(260px, 44vw); min-height: 180px; }
+.card-scene { height: min(300px, 50vw); min-height: 200px; }
 
 /* Flashcard diagram (shown on the back when curriculum media exists) */
 .card-image {
-  max-width: 60%;
-  max-height: 42%;
+  max-width: 55%;
+  max-height: 38%;
   object-fit: contain;
   border-radius: var(--radius-sm);
   margin: .25rem auto .5rem;
+  background: #fff;
+  padding: .4rem;
 }
 
 /* Deck toolbar */
@@ -290,11 +292,13 @@
   <div class="card-scene" id="cardScene" onclick="flipCard()" title="Click to flip!">
     <div class="card-3d" id="card3d">
       <div class="card-face front">
+        <span class="card-mascot">🤔</span>
         <div class="card-label" id="frontLabel"><svg class="icon icon-xs" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-lightbulb"></use></svg> Concept</div>
         <div class="card-title" id="cardFront">—</div>
         <div class="card-hint" id="revealHint"><svg class="icon icon-xs" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-arrow-down"></use></svg> Tap to reveal!</div>
       </div>
       <div class="card-face back">
+        <span class="card-mascot">💡</span>
         <div class="card-label" id="backLabel"><svg class="icon icon-xs" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-book-open"></use></svg> Definition</div>
         <img id="cardImage" class="card-image" alt="" style="display:none">
         <div class="card-body" id="cardBack">—</div>
@@ -466,7 +470,7 @@ function showGrounding(d) {
 
 async function generateDeck() {
   const topic = document.getElementById('topicInput').value.trim();
-  if (!topic) { alert(T('ui.enterTopic','Please enter a topic!')); return; }
+  if (!topic) { EdgeToast.show(T('ui.enterTopic','Please enter a topic!')); return; }
   currentTopic = topic;
   const btn = document.getElementById('generateBtn');
   btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' ' + T('slides.making','Generating…');
@@ -639,6 +643,7 @@ function applyCardsLang() {
   set('gotItBtn', ico('check-circle') + ' ' + escHtml(T('cards.gotIt','Got it!')));
   set('restartBtn', ico('refresh') + ' ' + escHtml(T('cards.restart','Restart')));
   set('reviewOnlyBtn', ico('brain') + ' ' + escHtml(T('cards.reviewMarked','Review marked')));
+  set('summaryTitle', escHtml(T('cards.deckComplete','Deck complete!')));
   if (cards.length) updateMasteryCounters();
   renderTopics();
 }

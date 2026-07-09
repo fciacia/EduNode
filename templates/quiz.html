@@ -352,7 +352,7 @@ async function renderTopics() {
 
 async function generateQuiz() {
   const topic = document.getElementById('topicInput').value.trim();
-  if (!topic) { alert(T('ui.enterTopic','Please enter a topic!')); return; }
+  if (!topic) { EdgeToast.show(T('ui.enterTopic','Please enter a topic!')); return; }
   const btn = document.getElementById('generateBtn');
   btn.disabled = true; btn.innerHTML = ico('loader','icon-spin') + ' ' + T('slides.making','Generating…');
   hideGenError();
@@ -452,7 +452,9 @@ document.addEventListener('keydown', function(e) {
 
 async function submitQuiz() {
   if (Object.keys(selectedAnswers).length < currentQuestions.length) {
-    if (!confirm(T('quiz.confirmSubmit','You have unanswered questions. Submit anyway?'))) return;
+    const msg = T('quiz.confirmSubmit','You have unanswered questions. Submit anyway?');
+    const ok = window.EdgeConfirm ? await EdgeConfirm.show(msg) : confirm(msg);
+    if (!ok) return;
   }
   try {
     const r = await fetch('/api/quiz/submit', {
@@ -470,7 +472,7 @@ async function submitQuiz() {
     localStorage.setItem('edu_student_name', getName());
     showResults(d.result, d.microcredentials_earned || []);
     markAnswers(d.result);
-  } catch(e) { alert('Submit error: ' + e.message); }
+  } catch(e) { EdgeToast.show('Submit error: ' + e.message, 'error'); }
 }
 
 function markAnswers(result) {
