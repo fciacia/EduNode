@@ -446,7 +446,7 @@
     // the ?onboarding=1 URL or window.EduOnboarding.restart().
     var forceOnboarding = new URLSearchParams(window.location.search).get('onboarding') === '1';
 
-    if (false && (!ls('edu_onboarded') || forceOnboarding)) {
+    if (!ls('edu_onboarded') || forceOnboarding) {
       showOnboarding();
       return;
     }

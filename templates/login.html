@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#7C3AED">
+  <link rel="icon" type="image/png" href="/static/icons/edge-shortlogo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <title>Log in — Edge</title>
+  <style>
+    body.login-body {
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.25rem;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #2E1065 0%, #5B21B6 50%, #7C3AED 100%);
+    }
+    .login-bg-dots {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: radial-gradient(rgba(255,255,255,.16) 1.5px, transparent 1.5px);
+      background-size: 28px 28px;
+      -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 45%, transparent 85%);
+              mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 45%, transparent 85%);
+    }
+    .login-bg-blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .login-bg-blob--1 { width: 420px; height: 420px; top: -140px; left: -120px; background: #A855F7; opacity: .22; animation: blob-float 10s ease-in-out infinite; }
+    .login-bg-blob--2 { width: 420px; height: 420px; bottom: -150px; right: -120px; background: #A855F7; opacity: .22; animation: blob-float 12s ease-in-out infinite 1s; }
+    @keyframes blob-float {
+      0%,100% { transform: translateY(0) scale(1); }
+      50%     { transform: translateY(-24px) scale(1.05); }
+    }
+    .login-wrap { width: 100%; max-width: 760px; position: relative; z-index: 1; }
+    .login-brand {
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+      margin-bottom: 2.4rem;
+    }
+    .login-brand img { height: 5rem; filter: brightness(0) invert(1); }
+    .login-cards {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;
+    }
+    .login-card {
+      background: rgba(0,0,0,.12);
+      border: 1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px; padding: 2rem 1.75rem; text-align: center;
+      display: flex; flex-direction: column; align-items: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.18);
+    }
+    .login-card-icon {
+      width: 3.4rem; height: 3.4rem; border-radius: 50%;
+      background: rgba(255,255,255,.3); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1rem;
+    }
+    .login-card-icon .icon { width: 1.7rem; height: 1.7rem; }
+    .login-card h2 {
+      font-family: var(--font-display); font-weight: 400; font-size: 1.2rem;
+      color: #fff; margin: 0 0 .4rem;
+    }
+    .login-card p {
+      color: rgba(255,255,255,.9); font-weight: 600; font-size: .87rem;
+      line-height: 1.5; margin: 0 0 1.4rem;
+    }
+    .login-card input {
+      width: 100%; border: 1px solid rgba(255,255,255,.4); border-radius: 99px;
+      padding: .65rem 1.1rem; font-family: var(--font); font-weight: 700;
+      font-size: .95rem; background: rgba(255,255,255,.14); color: #fff;
+      outline: none; text-align: center; margin-bottom: .85rem;
+    }
+    .login-card input::placeholder { color: rgba(255,255,255,.75); }
+    .login-card input:focus { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.25); }
+    .login-card .btn-primary {
+      width: 100%; padding: .7rem 1.2rem; background: #fff; color: #6D28D9;
+      border: none; border-radius: 99px; font-family: var(--font); font-weight: 800;
+      font-size: .92rem; cursor: pointer; transition: background .15s;
+    }
+    .login-card .btn-primary:hover { background: rgba(255,255,255,.85); }
+    .login-card .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .login-error {
+      color: #FEE2E2; font-weight: 700; font-size: .82rem; margin-top: .7rem; display: none;
+    }
+    @media (max-width: 620px) {
+      .login-cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="login-body">
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <use href="/static/icons/sprite.svg"></use>
+</svg>
+
+<div class="login-bg-dots" aria-hidden="true"></div>
+<div class="login-bg-blob login-bg-blob--1" aria-hidden="true"></div>
+<div class="login-bg-blob login-bg-blob--2" aria-hidden="true"></div>
+
+<div class="login-wrap">
+  <div class="login-brand">
+    <img src="/static/icons/edge-logo.png" alt="Edge">
+  </div>
+
+  <div class="login-cards">
+    <div class="login-card">
+      <span class="login-card-icon"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-message-square"></use></svg></span>
+      <h2>I'm a Student</h2>
+      <p>Enter your name so Edge can remember your progress, badges and quizzes.</p>
+      <input id="studentNameInput" type="text" placeholder="Your name…" maxlength="24" autocomplete="off">
+      <button class="btn-primary" id="studentEnterBtn">Start learning</button>
+    </div>
+
+    <div class="login-card">
+      <span class="login-card-icon"><svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-trophy"></use></svg></span>
+      <h2>I'm a Teacher</h2>
+      <p>View the class dashboard, learning gaps and AI usage. Requires an access code.</p>
+      <input id="teacherTokenInput" type="password" placeholder="Access code…" autocomplete="off">
+      <button class="btn-primary" id="teacherEnterBtn">Teacher login</button>
+      <p class="login-error" id="teacherError">That access code wasn't recognized.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('studentEnterBtn').addEventListener('click', enterAsStudent);
+  document.getElementById('studentNameInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') enterAsStudent();
+  });
+  function enterAsStudent() {
+    var input = document.getElementById('studentNameInput');
+    var name = input.value.trim();
+    if (!name) { input.focus(); return; }
+    try {
+      var list = JSON.parse(localStorage.getItem('edge_students') || '[]')
+        .filter(function (n) { return n.toLowerCase() !== name.toLowerCase(); });
+      list.unshift(name);
+      localStorage.setItem('edge_students', JSON.stringify(list.slice(0, 8)));
+      localStorage.setItem('edu_student_name', name);
+    } catch (e) {}
+    location.href = '/';
+  }
+
+  document.getElementById('teacherEnterBtn').addEventListener('click', enterAsTeacher);
+  document.getElementById('teacherTokenInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') enterAsTeacher();
+  });
+  async function enterAsTeacher() {
+    var input = document.getElementById('teacherTokenInput');
+    var errEl = document.getElementById('teacherError');
+    var btn = document.getElementById('teacherEnterBtn');
+    var token = input.value.trim();
+    errEl.style.display = 'none';
+    if (!token) { input.focus(); return; }
+    btn.disabled = true;
+    try {
+      var r = await fetch('/api/admin/login', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({token: token})
+      });
+      if (!r.ok) { errEl.style.display = 'block'; btn.disabled = false; return; }
+      location.href = '/teacher';
+    } catch (e) {
+      errEl.style.display = 'block';
+      btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>

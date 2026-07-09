@@ -319,6 +319,11 @@ def home():
     )
 
 
+@app.get("/login")
+def login():
+    return render_template("login.html", hub_id=cfg.HUB_ID)
+
+
 @app.get("/chat")
 def chat():
     subject  = request.args.get("subject", "General")
@@ -432,6 +437,18 @@ def api_admin_login():
     resp = jsonify({"ok": True, "actor": actor})
     resp.set_cookie(ADMIN_COOKIE, token, httponly=True, samesite="Strict", max_age=43200)
     log_audit("admin_login", actor=actor, detail="/api/admin/login", outcome="ok")
+    return resp
+
+
+@app.post("/api/admin/logout")
+def api_admin_logout():
+    """Clear the admin cookie so a shared device doesn't stay signed in."""
+    from core.progress_tracker import log_audit
+    token = request.cookies.get(ADMIN_COOKIE, "")
+    actor = _resolve_actor(token)
+    resp = jsonify({"ok": True})
+    resp.delete_cookie(ADMIN_COOKIE)
+    log_audit("admin_logout", actor=actor, detail="/api/admin/logout", outcome="ok")
     return resp
 
 

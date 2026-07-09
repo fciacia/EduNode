@@ -1,90 +1,138 @@
-{% extends "base.html" %}
-{% block title %}Teacher Dashboard — Edge{% endblock %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#7C3AED">
+  <link rel="icon" type="image/png" href="/static/icons/edge-shortlogo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <title>Teacher Dashboard — Edge</title>
+  <style>
+    body.teacher-body { align-items: stretch; background: var(--bg); }
+    .teacher-nav {
+      display: flex; align-items: center; gap: .9rem;
+      padding: 1.4rem 1.75rem;
+      background: linear-gradient(120deg, #3B1874 0%, #5B21B6 45%, #7C3AED 75%, #C026D3 100%);
+      position: relative; overflow: hidden;
+    }
+    .teacher-nav img { height: 2.1rem; filter: brightness(0) invert(1); position: relative; z-index: 1; }
+    .teacher-nav .hub-badge {
+      padding: .3rem .8rem; background: rgba(255,255,255,.18); color: #fff;
+      border-radius: 99px; font-size: .74rem; font-weight: 800; text-transform: uppercase;
+      position: relative; z-index: 1;
+    }
+    .teacher-nav .dash-title {
+      font-family: var(--font-display); font-weight: 400; font-size: 1.05rem; color: #fff;
+      margin: 0; position: relative; z-index: 1;
+    }
+    .teacher-nav .spacer { flex: 1; }
+    .teacher-nav .btn-outline {
+      padding: .5rem 1.15rem; background: rgba(255,255,255,.12); color: #fff;
+      border: 1px solid rgba(255,255,255,.55); border-radius: 99px; font-family: var(--font);
+      font-weight: 800; font-size: .84rem; cursor: pointer; transition: background .15s;
+      display: inline-flex; align-items: center; gap: .4rem; text-decoration: none;
+      position: relative; z-index: 1;
+    }
+    .teacher-nav .btn-outline:hover { background: rgba(255,255,255,.26); }
 
-{% block extra_style %}
-.dash-header { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.5rem; }
-.dash-header h2 { font-size: 1.1rem; color: var(--primary); margin: 0; flex: 1; }
-.hub-badge { padding: .25rem .75rem; background: #e8f0fe; color: var(--primary); border-radius: 12px; font-size: .8rem; font-weight: 700; text-transform: uppercase; }
-.section { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.25rem; margin-bottom: 1.5rem; }
-.section h3 { font-size: .95rem; font-weight: 700; color: #444; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: .5rem; }
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .75rem; }
-.kpi { background: #f8f9fa; border-radius: 8px; padding: .9rem 1rem; }
-.kpi .num { font-size: 1.6rem; font-weight: 800; color: var(--primary); line-height: 1; }
-.kpi .lbl { color: #777; font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-top: .35rem; }
-.tbl { width: 100%; border-collapse: collapse; font-size: .87rem; }
-.tbl th { background: #f1f3f4; padding: .45rem .75rem; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid var(--border); }
-.tbl td { padding: .45rem .75rem; border-bottom: 1px solid var(--border); }
-.pct-chip { padding: .1rem .5rem; border-radius: 99px; font-weight: 800; font-size: .78rem; }
-.pct-low { background: #fce8e6; color: #c62828; }
-.pct-mid { background: #fef7e0; color: #b06000; }
-.pct-ok  { background: #e6f4ea; color: #1e8e3e; }
-.bar-row { display: flex; align-items: center; gap: .6rem; margin: .35rem 0; font-size: .85rem; }
-.bar-row .name { width: 130px; flex: 0 0 auto; font-weight: 600; color: #444; }
-.bar-track { flex: 1; background: #eef1f4; border-radius: 99px; height: 14px; overflow: hidden; }
-.bar-fill { height: 100%; background: var(--primary); border-radius: 99px; }
-.bar-row .val { width: 36px; text-align: right; font-weight: 700; color: #555; }
-.flag { padding: .55rem .75rem; border-bottom: 1px solid var(--border); font-size: .85rem; }
-.flag .lang { font-weight: 700; color: var(--primary); }
-.flag .note { color: #555; }
-.flag .ts { color: #999; font-size: .75rem; }
-.fix-row { display: flex; gap: .4rem; margin-top: .45rem; flex-wrap: wrap; }
-.fix-row input { flex: 1; min-width: 180px; border: 1px solid var(--border); border-radius: 8px; padding: .35rem .6rem; font-size: .82rem; }
-.fix-row button { padding: .35rem .9rem; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: .82rem; font-weight: 700; cursor: pointer; }
-.fix-done { color: #1e8e3e; font-weight: 700; font-size: .8rem; }
-.empty { color: #999; font-size: .85rem; padding: .5rem 0; }
-{% endblock %}
+    .teacher-wrap { max-width: 1080px; margin: 0 auto; padding: 1.75rem 1.75rem 3rem; width: 100%; }
 
-{% block content %}
-<div class="dash-header">
-  <h2>Teacher Dashboard</h2>
+    .t-section { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 1.4rem 1.5rem; margin-bottom: 1.25rem; }
+    .t-section h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.02rem; color: var(--primary); margin: 0 0 1rem; }
+    .t-section .hint { color: var(--text-muted); font-weight: 600; font-size: .82rem; margin: -.6rem 0 1rem; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .85rem; }
+    .kpi { background: var(--surface2); border-radius: 14px; padding: 1rem 1.1rem; }
+    .kpi .num { font-family: var(--font-display); font-weight: 400; font-size: 1.55rem; color: var(--primary); line-height: 1; }
+    .kpi .lbl { color: var(--text-muted); font-size: .74rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; margin-top: .4rem; }
+
+    .tbl { width: 100%; border-collapse: collapse; font-size: .87rem; }
+    .tbl th { background: var(--surface2); padding: .55rem .8rem; text-align: left; font-weight: 800; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+    .tbl td { padding: .55rem .8rem; border-bottom: 1px solid var(--border); color: var(--text); font-weight: 600; }
+    .tbl tr:last-child td { border-bottom: none; }
+
+    .pct-chip { padding: .15rem .6rem; border-radius: 99px; font-weight: 800; font-size: .76rem; }
+    .pct-low { background: color-mix(in srgb, #DC2626 14%, var(--surface)); color: #DC2626; }
+    .pct-mid { background: color-mix(in srgb, #D97706 14%, var(--surface)); color: #D97706; }
+    .pct-ok  { background: color-mix(in srgb, #10B981 14%, var(--surface)); color: #10B981; }
+
+    .bar-row { display: flex; align-items: center; gap: .7rem; margin: .5rem 0; font-size: .85rem; }
+    .bar-row .name { width: 130px; flex: 0 0 auto; font-weight: 700; color: var(--text); }
+    .bar-track { flex: 1; background: var(--surface2); border-radius: 99px; height: 12px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--primary); border-radius: 99px; }
+    .bar-row .val { width: 36px; text-align: right; font-weight: 800; color: var(--text-muted); }
+
+    .flag { padding: .8rem 0; border-bottom: 1px solid var(--border); font-size: .87rem; }
+    .flag:last-child { border-bottom: none; }
+    .flag .lang { font-weight: 800; color: var(--primary); }
+    .flag .note { color: var(--text); font-weight: 600; }
+    .flag .ts { color: var(--text-muted); font-size: .74rem; }
+    .fix-row { display: flex; gap: .5rem; margin-top: .55rem; flex-wrap: wrap; }
+    .fix-row input {
+      flex: 1; min-width: 180px; border: 1px solid var(--border); border-radius: 99px;
+      padding: .45rem .9rem; font-family: var(--font); font-weight: 700; font-size: .85rem;
+      background: var(--surface); color: var(--text); outline: none;
+    }
+    .fix-row input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .fix-row button {
+      padding: .45rem 1.1rem; background: var(--primary); color: #fff; border: none;
+      border-radius: 99px; font-family: var(--font); font-size: .85rem; font-weight: 800; cursor: pointer;
+    }
+    .fix-row button:hover { background: var(--primary-dark); }
+    .fix-row button:disabled { opacity: .5; cursor: not-allowed; }
+    .fix-done { color: #10B981; font-weight: 800; font-size: .84rem; }
+
+    .empty { color: var(--text-muted); font-size: .87rem; font-weight: 600; padding: .5rem 0; }
+    .load-error { color: #DC2626; font-weight: 700; font-size: .9rem; }
+  </style>
+</head>
+<body class="teacher-body">
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <use href="/static/icons/sprite.svg"></use>
+</svg>
+
+<nav class="teacher-nav">
+  <img src="/static/icons/edge-logo.png" alt="Edge">
   <span class="hub-badge">{{ hub_id }}</span>
+  <h2 class="dash-title">Teacher Dashboard</h2>
+  <div class="spacer"></div>
+  <button type="button" class="btn-outline" id="logoutBtn">
+    <svg class="icon" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-log-out"></use></svg> Log out
+  </button>
+</nav>
+
+<div class="teacher-wrap">
+  <div class="t-section">
+    <h3>Class Overview</h3>
+    <div class="kpi-grid" id="kpiGrid"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="t-section">
+    <h3>Most-Missed Concepts</h3>
+    <div id="missedWrap"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="t-section">
+    <h3>AI Usage by Subject</h3>
+    <div id="subjectWrap"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="t-section">
+    <h3>Daily Activity</h3>
+    <div id="dayWrap"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="t-section">
+    <h3>Flagged Translations / Answers</h3>
+    <p class="hint">Reports students/teachers raised — review and correct to improve the local language.</p>
+    <div id="flagsWrap"><div class="empty">Loading…</div></div>
+  </div>
 </div>
 
-<div class="section">
-  <h3>Class Overview</h3>
-  <div class="kpi-grid" id="kpiGrid"><div class="empty">Loading…</div></div>
-</div>
-
-<div class="section">
-  <h3>Most-Missed Concepts</h3>
-  <div id="missedWrap"><div class="empty">Loading…</div></div>
-</div>
-
-<div class="section">
-  <h3>AI Usage by Subject</h3>
-  <div id="subjectWrap"><div class="empty">Loading…</div></div>
-</div>
-
-<div class="section">
-  <h3>Daily Activity</h3>
-  <div id="dayWrap"><div class="empty">Loading…</div></div>
-</div>
-
-<div class="section">
-  <h3>Flagged Translations / Answers</h3>
-  <p style="color:#777;font-size:.83rem;margin:-.5rem 0 .8rem">Reports students/teachers raised — review and correct to improve the local language.</p>
-  <div id="flagsWrap"><div class="empty">Loading…</div></div>
-</div>
-{% endblock %}
-
-{% block extra_scripts %}
 <script>
-// Exchange any ?token= in the URL for an HttpOnly cookie, then strip it from the
-// URL so the admin secret isn't left in browser history or server logs.
-async function ensureAuth() {
-  const params = new URLSearchParams(location.search);
-  const urlToken = params.get('token') || '';
-  if (!urlToken) return;
-  try {
-    await fetch('/api/admin/login', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({token: urlToken}),
-    });
-  } catch (e) { /* fall back to cookie if already set */ }
-  params.delete('token');
-  history.replaceState({}, '', location.pathname + (params.toString() ? '?' + params : ''));
-}
-
 function pctClass(p) { return p < 50 ? 'pct-low' : (p < 80 ? 'pct-mid' : 'pct-ok'); }
 function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -100,14 +148,32 @@ function bars(rows, nameKey, valKey, target) {
     </div>`).join('');
 }
 
+// If a ?token= is still in the URL (e.g. an old shared link), exchange it for
+// the HttpOnly cookie so subsequent API calls are authenticated, then strip it
+// from the URL so the secret isn't left in browser history.
+async function ensureAuth() {
+  const params = new URLSearchParams(location.search);
+  const urlToken = params.get('token') || '';
+  if (!urlToken) return;
+  try {
+    await fetch('/api/admin/login', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({token: urlToken}),
+    });
+  } catch (e) { /* fall back to cookie if already set */ }
+  params.delete('token');
+  history.replaceState({}, '', location.pathname + (params.toString() ? '?' + params : ''));
+}
+
 async function load() {
   let d;
   try {
     const r = await fetch('/api/teacher/analytics');
-    if (!r.ok) throw new Error('Unauthorized (status ' + r.status + '). Open this page with ?token=YOUR_ADMIN_TOKEN');
+    if (r.status === 401 || r.status === 403) { location.href = '/login'; return; }
+    if (!r.ok) throw new Error('Could not load dashboard data (status ' + r.status + ').');
     d = await r.json();
   } catch (e) {
-    document.getElementById('kpiGrid').innerHTML = '<div class="empty">' + esc(e.message) + '</div>';
+    document.getElementById('kpiGrid').innerHTML = '<div class="load-error">' + esc(e.message) + '</div>';
     return;
   }
 
@@ -137,7 +203,7 @@ async function load() {
           <button onclick="submitFix(this)">Save correction</button>
         </div>
       </div>`).join('')
-    : '<div class="empty">No flags raised. 🎉</div>';
+    : '<div class="empty">No flags raised.</div>';
 }
 
 async function submitFix(btn) {
@@ -153,13 +219,18 @@ async function submitFix(btn) {
       }),
     });
     if (!r.ok) throw new Error('save failed');
-    btn.parentElement.innerHTML = '<span class="fix-done">✓ Saved — will improve future translations.</span>';
+    btn.parentElement.innerHTML = '<span class="fix-done">Saved — will improve future translations.</span>';
   } catch (e) {
     btn.disabled = false;
-    alert('Could not save correction: ' + e.message);
+    input.insertAdjacentHTML('afterend', '<span class="load-error" style="display:block;margin-top:.4rem">Could not save correction.</span>');
   }
 }
 
+document.getElementById('logoutBtn').addEventListener('click', function () {
+  fetch('/api/admin/logout', { method: 'POST' }).finally(function () { location.href = '/login'; });
+});
+
 document.addEventListener('DOMContentLoaded', () => ensureAuth().then(load));
 </script>
-{% endblock %}
+</body>
+</html>

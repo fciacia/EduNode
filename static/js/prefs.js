@@ -71,6 +71,9 @@
             '<button class="pref-switch" role="switch" aria-checked="' + on + '" data-key="' + p.key + '" data-cls="' + (p.cls || '') + '"></button>' +
           '</div>';
         }).join('') +
+        '<button class="btn-outline" id="logoutBtn" style="width:100%;justify-content:center;display:flex;align-items:center;gap:.4rem;margin-top:1rem">' +
+          ico('log-out') + ' Log out' +
+        '</button>' +
       '</div>';
 
     document.body.appendChild(overlay);
@@ -93,6 +96,13 @@
     });
     overlay.querySelector('#studentAdd').addEventListener('keydown', function (e) {
       if (e.key === 'Enter') switchStudent(e.target.value);
+    });
+    overlay.querySelector('#logoutBtn').addEventListener('click', function () {
+      try {
+        localStorage.removeItem('edu_student_name');
+        localStorage.removeItem('edu_convo');
+      } catch (e) {}
+      fetch('/api/admin/logout', { method: 'POST' }).finally(function () { location.href = '/login'; });
     });
   }
 
