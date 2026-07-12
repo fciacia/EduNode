@@ -364,29 +364,108 @@ def _say_tts(text: str, voice: str) -> bytes:
 
 
 # ---------------------------------------------------------------------------
-# Podcast audio
+# Podcast audio — two-voice dialogue
 # ---------------------------------------------------------------------------
+
+# MAYA → female voice, NIKO → male voice (per language, macOS `say` voices)
+_MAYA_VOICE: dict[str, str] = {
+    "English": "Samantha",
+    "Bahasa Melayu": "Amira",
+    "Bahasa Indonesia": "Damayanti",
+    "Thai": "Kanya",
+    "Vietnamese": "Linh",
+}
+_NIKO_VOICE: dict[str, str] = {
+    "English": "Daniel",
+    "Bahasa Melayu": "Amira",   # no male ms voice; falls back gracefully
+    "Bahasa Indonesia": "Damayanti",
+    "Thai": "Kanya",
+    "Vietnamese": "Linh",
+}
+
+
+def _generate_silence(duration_ms: int = 500, sample_rate: int = 22050) -> bytes:
+    """Return WAV bytes of silence for *duration_ms* at *sample_rate*."""
+    import io, wave
+    num_samples = int(sample_rate * duration_ms / 1000)
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sample_rate)
+        wf.writeframes(b"\x00\x00" * num_samples)
+    return buf.getvalue()
+
+
+def _concat_wavs(chunks: list[bytes]) -> bytes:
+    """Merge a list of WAV-byte chunks into one continuous WAV."""
+    import io, wave
+    if not chunks:
+        return b""
+    all_pcm: list[bytes] = []
+    sr = 22050  # default; overridden by first chunk's actual rate
+    for chunk in chunks:
+        with wave.open(io.BytesIO(chunk), "rb") as wf:
+            sr = wf.getframerate()
+            all_pcm.append(wf.readframes(wf.getnframes()))
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as out:
+        out.setnchannels(1)
+        out.setsampwidth(2)
+        out.setframerate(sr)
+        for pcm in all_pcm:
+            out.writeframes(pcm)
+    return buf.getvalue()
+
 
 def generate_podcast_audio(script: str, language: str = "English") -> bytes:
     """
-    Extract the spoken lines from a MAYA/NIKO script and synthesise to WAV.
+    Synthesise a MAYA/NIKO podcast with two distinct voices.
 
-    Lines are joined with a short pause marker " ... " so the voice produces a
-    natural-sounding pause between speaker turns.
+    Each spoken line is synthesised separately using the appropriate voice for
+    the speaker, with a short silence (~500 ms) between turns.
 
     Returns b"" if no voice is available for *language*.
     """
-    lines: list[str] = []
+    chunks: list[bytes] = []
+    silence = _generate_silence(500)
+    log.info("generate_podcast_audio: script has %d lines, language=%s", len(script.splitlines()), language)
+
     for line in script.splitlines():
-        # Match "MAYA: ..." or "NIKO: ..." — extract just the spoken part
-        match = re.match(r"^(?:MAYA|NIKO)\s*:\s*(.+)$", line.strip(), re.IGNORECASE)
-        if match:
-            lines.append(match.group(1).strip())
+        stripped = line.strip()
+        if not stripped:
+            continue
+        # Normalise: strip leading/trailing markdown bold/italic markers around
+        # the speaker name so we handle **MAYA**:  **Maya:**  *NIKO*: etc.
+        cleaned = re.sub(r"^[*_]+", "", stripped)          # leading ** or *
+        cleaned = re.sub(r"^(MAYA|NIKO)[*_]+\s*:", r"\1:", cleaned, flags=re.IGNORECASE)  # **MAYA**:
+        is_maya = re.match(r"^MAYA\s*:", cleaned, re.IGNORECASE)
+        is_niko = re.match(r"^NIKO\s*:", cleaned, re.IGNORECASE)
 
-    if not lines:
-        # Fall back: just use the whole script
-        combined = script.strip()
-    else:
-        combined = " ... ".join(lines)
+        if is_maya or is_niko:
+            # Extract spoken text: strip any markdown prefix, speaker label,
+            # optional trailing markdown after the name, and the colon.
+            text = re.sub(r"^[*_]*(?:MAYA|NIKO)[*_]*\s*:[*_]*\s*", "", stripped, flags=re.IGNORECASE).strip()
+            if not text:
+                continue
+            # Choose voice based on speaker
+            if is_maya and sys.platform == "darwin" and shutil.which("say"):
+                voice = _MAYA_VOICE.get(language, "Samantha")
+                wav = _say_tts(text, voice)
+            elif is_niko and sys.platform == "darwin" and shutil.which("say"):
+                voice = _NIKO_VOICE.get(language, "Daniel")
+                wav = _say_tts(text, voice)
+            else:
+                # Fallback: use the default text_to_speech for this language
+                wav = text_to_speech(text, language)
 
-    return text_to_speech(combined, language)
+            if wav:
+                if chunks:
+                    chunks.append(silence)
+                chunks.append(wav)
+        # Non-speaker lines (narration, titles) are skipped for audio
+
+    if not chunks:
+        return b""
+
+    return _concat_wavs(chunks)
