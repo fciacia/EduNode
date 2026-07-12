@@ -343,8 +343,8 @@
     onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
   <span id="charCounter" class="char-counter" style="display:none"></span>
   <span id="micTimer" class="mic-timer"><span class="mic-dot"></span><span id="micTimerLabel">0:00</span></span>
-  <button class="btn-icon btn-mic" id="micBtn" title="Hold to record voice" data-i18n-title="chat.micTitle"
-    onmousedown="startRec()" onmouseup="stopRec()" ontouchstart="startRec()" ontouchend="stopRec()">
+  <button class="btn-icon btn-mic" id="micBtn" title="Tap to record voice" data-i18n-title="chat.micTitle"
+    onclick="toggleRec()">
     <svg class="icon icon-md" aria-hidden="true"><use href="/static/icons/sprite.svg#icon-mic"></use></svg>
   </button>
   <button class="btn-icon btn-send" onclick="sendMsg()" title="Send message" data-i18n-title="chat.sendTitle">
@@ -359,6 +359,7 @@
 const log = document.getElementById('chatLog');
 const input = document.getElementById('msgInput');
 let mediaRec = null, audioChunks = [], recTimerInterval = null, recSeconds = 0, recStartMs = 0;
+let _isRecording = false;   // true from the moment the user taps until recording actually stops
 const S = '/static/icons/sprite.svg';
 const ico = (n, c='') => `<svg class="icon ${c}" aria-hidden="true"><use href="${S}#icon-${n}"></use></svg>`;
 const MAX_CHARS = 2000;
@@ -737,15 +738,21 @@ async function sendMsg(retryMsg) {
 }
 
 async function startRec() {
+  // Show recording UI immediately so the user sees the state change
+  const btn = document.getElementById('micBtn');
+  _isRecording = true;
+  btn.classList.add('recording');
+  btn.innerHTML = ico('square','icon-md');
+  btn.title = T('chat.micStop', 'Tap to stop recording');
   try {
     const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    // User may have tapped stop while we were waiting for permission
+    if (!_isRecording) { stream.getTracks().forEach(t => t.stop()); return; }
     mediaRec = new MediaRecorder(stream);
     audioChunks = [];
     mediaRec.ondataavailable = e => audioChunks.push(e.data);
     mediaRec.start();
     recStartMs = Date.now();
-    document.getElementById('micBtn').classList.add('recording');
-    document.getElementById('micBtn').innerHTML = ico('square','icon-md');
     recSeconds = 0;
     const timerEl = document.getElementById('micTimer');
     const timerLabel = document.getElementById('micTimerLabel');
@@ -756,17 +763,34 @@ async function startRec() {
       const s = (recSeconds % 60).toString().padStart(2, '0');
       timerLabel.textContent = m + ':' + s;
     }, 1000);
-  } catch(e) { EdgeToast.show(T('chat.micError', 'Microphone not available: {err}').replace('{err}', e.message), 'error'); }
+  } catch(e) {
+    // Failed — reset UI and flag
+    _isRecording = false;
+    btn.classList.remove('recording');
+    btn.innerHTML = ico('mic','icon-md');
+    btn.title = T('chat.micTitle', 'Tap to record voice');
+    EdgeToast.show(T('chat.micError', 'Microphone not available: {err}').replace('{err}', e.message), 'error');
+  }
+}
+
+function _resetMicUI() {
+  const btn = document.getElementById('micBtn');
+  _isRecording = false;
+  btn.classList.remove('recording');
+  btn.innerHTML = ico('mic','icon-md');
+  btn.title = T('chat.micTitle', 'Tap to record voice');
+  clearInterval(recTimerInterval);
+  document.getElementById('micTimer').classList.remove('active');
 }
 
 async function stopRec() {
-  if (!mediaRec || mediaRec.state === 'inactive') return;
+  if (!mediaRec || mediaRec.state === 'inactive') {
+    // MediaRecorder not started yet (still waiting for mic permission) — just cancel
+    _resetMicUI();
+    return;
+  }
   mediaRec.stop();
-  const btn = document.getElementById('micBtn');
-  btn.classList.remove('recording');
-  btn.innerHTML = ico('mic','icon-md');
-  clearInterval(recTimerInterval);
-  document.getElementById('micTimer').classList.remove('active');
+  _resetMicUI();
   mediaRec.onstop = async () => {
     const blob = new Blob(audioChunks, {type: 'audio/webm'});
     const durMs = Date.now() - recStartMs;
@@ -774,7 +798,7 @@ async function stopRec() {
 
     // Guard against taps / near-empty clips that can't be transcribed.
     if (durMs < 600 || blob.size < 2500) {
-      addBubble(T('chat.micTooShort', 'Hold the mic button and speak clearly for a moment, then release.'), 'bot');
+      addBubble(T('chat.micTooShort', 'Tap the mic button to start recording, speak, then tap again to stop.'), 'bot');
       return;
     }
 
@@ -787,12 +811,17 @@ async function stopRec() {
       const d = await r.json();
       removeTyping();
       if (d.text) { input.value = d.text; sendMsg(); }
-      else addBubble(T('chat.sttFail', "I didn't catch that — please hold the mic and speak a little louder."), 'bot');
+      else addBubble(T('chat.sttFail', "I didn't catch that — please try again and speak a little louder."), 'bot');
     } catch(e) {
       removeTyping();
       addBubble(T('chat.voiceUnreachable', "I couldn't reach the voice service. Please try again."), 'bot');
     }
   };
+}
+
+function toggleRec() {
+  if (_isRecording) stopRec();
+  else startRec();
 }
 
 // Auto-resize textarea + char counter
